@@ -1,0 +1,4 @@
+venv/
+snet_sdk.egg-info/
+.idea
+__pycache__
