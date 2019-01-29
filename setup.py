@@ -14,6 +14,8 @@ setup(
     author_email='info@singularitynet.io',
     description='SingularityNET Python SDK',
     install_requires=[
-        'grpcio-tools==1.17.1'
+        'grpcio-tools==1.17.1',
+        'ecdsa==0.13',
+        'web3==4.2.1'
     ]
 )
