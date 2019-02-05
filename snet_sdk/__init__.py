@@ -210,14 +210,12 @@ class Snet:
 
 
     # Service client
-    def client(self, *args, org_id=None, service_id=None, channel_id=None, service_endpoint=None):
+    def client(self, *args, org_id=None, service_id=None):
         client = web3.utils.datastructures.MutableAttributeDict({})
 
         # Determine org_id, service_id and channel_id for client
         _org_id = org_id
         _service_id = service_id
-        _channel_id = channel_id
-        _service_endpoint = service_endpoint
 
         if len(args) == 2:
             (_org_id, _service_id) = args
@@ -231,18 +229,9 @@ class Snet:
             _org_id = org_id
             _service_id = service_id
 
-        if (_org_id is None or _service_id is None) and _channel_id is not None:
-            (_org_id, _service_id) = self._get_org_id_and_service_id(_channel_id)
-
-        if _org_id is not None and _service_id is not None and _channel_id is None:
-            _channel_id = self._get_channel_id(_org_id, _service_id)
-
-        if _service_endpoint is None:
-            _service_endpoint = self._get_service_endpoint(_channel_id)
-
-        if _org_id is None or _service_id is None or _channel_id is None or _service_endpoint is None:
+        if _org_id is None or _service_id is None:
             raise ValueError("""Could not instantiate client.
-            Please provide at least a client_id and an org_id and a service_id either as positional or keyword arguments""")
+            Please provide at least an org_id and a service_id either as positional or keyword arguments""")
 
 
         # Get client metadata for service
@@ -251,6 +240,11 @@ class Snet:
         default_group = web3.utils.datastructures.AttributeDict(client.metadata.groups[0])
         default_channel_value = client.metadata.pricing["price_in_cogs"]*100
         default_channel_expiration = self.web3.eth.getBlock('latest').number + client.metadata.payment_expiration_threshold+1
+        service_endpoint = None
+        for endpoint in client.metadata["endpoints"]:
+            if (endpoint["group_name"] == default_group["group_name"]):
+                service_endpoint = endpoint["endpoint"]
+                break
 
 
         # Export service channel utility methods
@@ -293,7 +287,7 @@ class Snet:
 
 
         # Export grpc_channel
-        grpc_channel = grpc.insecure_channel(_service_endpoint)
+        grpc_channel = grpc.insecure_channel(service_endpoint[7:])
         client.grpc_channel = grpc_channel
 
 
