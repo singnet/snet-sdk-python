@@ -16,6 +16,8 @@ setup(
     install_requires=[
         'grpcio-tools==1.17.1',
         'ecdsa==0.13',
-        'web3==4.2.1'
+        'web3==4.2.1',
+        'ipfsapi==0.4.2.post1',
+        'rfc3986==1.1.0'
     ]
 )
