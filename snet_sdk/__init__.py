@@ -11,6 +11,7 @@ import hashlib
 import grpc
 import web3
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
+from eth_account.messages import defunct_hash_message
 from rfc3986 import urlparse
 import ipfsapi
 
@@ -210,12 +211,13 @@ class Snet:
 
 
     # Service client
-    def client(self, *args, org_id=None, service_id=None):
+    def client(self, *args, org_id=None, service_id=None, channel_id=None):
         client = web3.utils.datastructures.MutableAttributeDict({})
 
         # Determine org_id, service_id and channel_id for client
         _org_id = org_id
         _service_id = service_id
+        _channel_id = channel_id
 
         if len(args) == 2:
             (_org_id, _service_id) = args
@@ -246,17 +248,12 @@ class Snet:
                 service_endpoint = endpoint["endpoint"]
                 break
 
-
-        # Export service channel utility methods
-        def _client_open_channel(value, expiration):
-            mpe_balance = self.mpe_contract.functions.balances(self.address).call()
-            group_id = base64.b64decode(default_group.group_id)
-            if value > mpe_balance:
-                return(self.mpe_deposit_and_open_channel(default_group.payment_address, group_id, value - mpe_balance, expiration))
-            else:
-                return(self.mpe_open_channel(default_group.payment_address, group_id, value, expiration))
-
-        client.open_channel = lambda value=default_channel_value, expiration=default_channel_expiration: _client_open_channel(value, expiration)
+        if _channel_id is not None:
+            channel_state_service_proto_path = str(cur_dir.joinpath("resources", "proto"))
+            sys.path.insert(0, channel_state_service_proto_path)
+            _state_service_pb2 = importlib.import_module("state_service_pb2")
+            _state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
+            sys.path.remove(channel_state_service_proto_path)
 
 
         # Import modules and add them to client grpc object
@@ -289,6 +286,28 @@ class Snet:
         # Export grpc_channel
         grpc_channel = grpc.insecure_channel(service_endpoint[7:])
         client.grpc_channel = grpc_channel
+
+
+        # Export service channel utility methods
+        def _client_open_channel(value, expiration):
+            mpe_balance = self.mpe_contract.functions.balances(self.address).call()
+            group_id = base64.b64decode(default_group.group_id)
+            if value > mpe_balance:
+                return(self.mpe_deposit_and_open_channel(default_group.payment_address, group_id, value - mpe_balance, expiration))
+            else:
+                return(self.mpe_open_channel(default_group.payment_address, group_id, value, expiration))
+
+
+        def _get_channel_state(channel_id):
+            stub = _state_service_pb2_grpc.PaymentChannelStateServiceStub(grpc_channel)
+            message = web3.Web3.soliditySha3(["uint256"], [channel_id])
+            signature = self.web3.eth.account.signHash(defunct_hash_message(message), self.private_key).signature
+            request = _state_service_pb2.ChannelStateRequest(channel_id=web3.Web3.toBytes(channel_id), signature=bytes(signature))
+            return stub.GetChannelState(request)
+
+
+        client.open_channel = lambda value=default_channel_value, expiration=default_channel_expiration: _client_open_channel(value, expiration)
+        client.get_channel_state = lambda: _get_channel_state(_channel_id)
 
 
         return client 
