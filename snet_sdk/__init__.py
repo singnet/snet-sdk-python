@@ -303,11 +303,24 @@ class Snet:
             message = web3.Web3.soliditySha3(["uint256"], [channel_id])
             signature = self.web3.eth.account.signHash(defunct_hash_message(message), self.private_key).signature
             request = _state_service_pb2.ChannelStateRequest(channel_id=web3.Web3.toBytes(channel_id), signature=bytes(signature))
-            return stub.GetChannelState(request)
+            response = stub.GetChannelState(request)
+            return {
+                "current_nonce": int.from_bytes(response.current_nonce, byteorder="big"),
+                "current_signed_amount": int.from_bytes(response.current_signed_amount, byteorder="big")
+            }
+
+        def _get_channel_signature_bin(channel_id):
+            state = _get_channel_state(channel_id)
+            message = web3.Web3.soliditySha3(
+                ["address",                 "uint256",  "uint256",              "uint256"],
+                [self.mpe_contract.address, channel_id, state["current_nonce"], state["current_signed_amount"] + int(client.metadata.pricing["price_in_cogs"])]
+            )
+            return bytes(self.web3.eth.account.signHash(defunct_hash_message(message), self.private_key))
 
 
         client.open_channel = lambda value=default_channel_value, expiration=default_channel_expiration: _client_open_channel(value, expiration)
         client.get_channel_state = lambda: _get_channel_state(_channel_id)
+        client.get_grpc_metadata = lambda: _get_channel_signature_bin(_channel_id)
 
 
         return client 
