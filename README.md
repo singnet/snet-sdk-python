@@ -47,7 +47,7 @@ This is an example of how to make a call to a SingularityNET service in the `sne
 ```python
 stub = client.grpc.example_service_pb2_grpc.CalculatorStub(client.grpc_channel)
 request = calculator.grpc.example_service_pb2.Numbers(a=10, b=12)
-result = stub.add(request, metadata=calculator.get_service_call_metadata())
+result = stub.add(request)
 print(result)
 ```
 If you have no open state channels with the service provider, you can create one by calling the following function:

@@ -9,13 +9,14 @@ from urllib.parse import urljoin
 import ecdsa
 import hashlib
 import grpc
+import collections
 import web3
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from eth_account.messages import defunct_hash_message
 from rfc3986 import urlparse
 import ipfsapi
 
-import snet_sdk.header_manipulator_client_interceptor
+import snet_sdk.generic_client_interceptor as generic_client_interceptor
 
 __version__ = "0.0.1"
 
@@ -39,6 +40,14 @@ class ChannelOpenEncoder(json.JSONEncoder):
             return base64.b64encode(obj).decode("ascii")
         else:
             super().default(self, obj)
+
+
+class _ClientCallDetails(
+        collections.namedtuple(
+            '_ClientCallDetails',
+            ('method', 'timeout', 'metadata', 'credentials')),
+        grpc.ClientCallDetails):
+    pass
 
 
 snet_sdk_defaults = {
@@ -345,8 +354,20 @@ class Snet:
         # Client exports
         client.open_channel = lambda value=default_channel_value, expiration=default_channel_expiration: _client_open_channel(value, expiration)
         client.get_service_call_metadata = lambda: _get_service_call_metadata(_channel_id)
-        client.grpc_channel = grpc_channel
         client.grpc = imported_modules
+
+        def intercept_call(client_call_details, request_iterator, request_streaming,
+                           response_streaming):
+            metadata = []
+            if client_call_details.metadata is not None:
+                metadata = list(client_call_details.metadata)
+            metadata.extend(client.get_service_call_metadata())
+            client_call_details = _ClientCallDetails(
+                client_call_details.method, client_call_details.timeout, metadata,
+                client_call_details.credentials)
+            return client_call_details, request_iterator, None
+
+        client.grpc_channel = grpc.intercept_channel(grpc_channel, generic_client_interceptor.create(intercept_call))
 
 
         return client 
