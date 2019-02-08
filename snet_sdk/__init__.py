@@ -203,19 +203,6 @@ class Snet:
         return self._parse_receipt(receipt, mpe_contract.events.ChannelAddFunds)
 
 
-    # Channel utility functions
-    def _get_channel_id(self, org_id, service_id):
-        raise NotImplementedError("Not yet implemented. Please manually provide a channel id")
-
-
-    def _get_service_endpoint(self, channel_id):
-        raise NotImplementedError("Not yet implemented. Please manually provide service endpoint")
-
-
-    def _get_org_id_and_service_id(self, channel_id):
-        raise NotImplementedError("Not yet implemented. Please manually provide an org id and service id")
-
-
     # Generic utility functions
     def _get_contract_object(self, contract_file):
         with open(cur_dir.joinpath("resources", "contracts", "abi", contract_file)) as f:
@@ -265,12 +252,40 @@ class Snet:
                 service_endpoint = endpoint["endpoint"]
                 break
 
-        if _channel_id is not None:
-            channel_state_service_proto_path = str(cur_dir.joinpath("resources", "proto"))
-            sys.path.insert(0, channel_state_service_proto_path)
-            _state_service_pb2 = importlib.import_module("state_service_pb2")
-            _state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
-            sys.path.remove(channel_state_service_proto_path)
+
+        # Functions to get a funded channel with a combination of calls to the blockchain and to the daemon 
+        grpc_channel = grpc.insecure_channel(service_endpoint[7:])
+
+        channel_state_service_proto_path = str(cur_dir.joinpath("resources", "proto"))
+        sys.path.insert(0, channel_state_service_proto_path)
+        _state_service_pb2 = importlib.import_module("state_service_pb2")
+        _state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
+        sys.path.remove(channel_state_service_proto_path)
+
+
+        def _get_channel_state(channel_id):
+            stub = _state_service_pb2_grpc.PaymentChannelStateServiceStub(grpc_channel)
+            message = web3.Web3.soliditySha3(["uint256"], [channel_id])
+            signature = self.web3.eth.account.signHash(defunct_hash_message(message), self.private_key).signature
+            request = _state_service_pb2.ChannelStateRequest(channel_id=web3.Web3.toBytes(channel_id), signature=bytes(signature))
+            response = stub.GetChannelState(request)
+            return {
+                "current_nonce": int.from_bytes(response.current_nonce, byteorder="big"),
+                "current_signed_amount": int.from_bytes(response.current_signed_amount, byteorder="big")
+            }
+
+
+        def _get_channel_states():
+            return [dict(_get_channel_state(channel.channelId), **{"channel_id": channel.channelId, "initial_amount": channel.amount}) for channel in self._get_channels(client.default_payment_address)]
+
+
+        def _get_funded_channel():
+            channel_states = _get_channel_states()
+            return next(iter(channel_states), lambda state: state.initial_amount - state.current_signed_amount >= int(client.metadata.pricing["price_in_cogs"]))["channel_id"]
+
+
+        if _channel_id is None:
+            _channel_id = _get_funded_channel() 
 
 
         # Import modules and add them to client grpc object
@@ -297,15 +312,8 @@ class Snet:
 
         sys.path.remove(client_library_path)
 
-        client.grpc = imported_modules
 
-
-        # Export grpc_channel
-        grpc_channel = grpc.insecure_channel(service_endpoint[7:])
-        client.grpc_channel = grpc_channel
-
-
-        # Export service channel utility methods
+        # Service channel utility methods
         def _client_open_channel(value, expiration):
             mpe_balance = self.mpe_contract.functions.balances(self.address).call()
             group_id = base64.b64decode(default_group.group_id)
@@ -315,30 +323,30 @@ class Snet:
                 return(self.mpe_open_channel(default_group.payment_address, group_id, value, expiration))
 
 
-        def _get_channel_state(channel_id):
-            stub = _state_service_pb2_grpc.PaymentChannelStateServiceStub(grpc_channel)
-            message = web3.Web3.soliditySha3(["uint256"], [channel_id])
-            signature = self.web3.eth.account.signHash(defunct_hash_message(message), self.private_key).signature
-            request = _state_service_pb2.ChannelStateRequest(channel_id=web3.Web3.toBytes(channel_id), signature=bytes(signature))
-            response = stub.GetChannelState(request)
-            return {
-                "current_nonce": int.from_bytes(response.current_nonce, byteorder="big"),
-                "current_signed_amount": int.from_bytes(response.current_signed_amount, byteorder="big")
-            }
-
-        def _get_channel_signature_bin(channel_id):
+        def _get_service_call_metadata(channel_id):
             state = _get_channel_state(channel_id)
+            amount = state["current_signed_amount"] + int(client.metadata.pricing["price_in_cogs"])
             message = web3.Web3.soliditySha3(
-                ["address",                 "uint256",  "uint256",              "uint256"],
-                [self.mpe_contract.address, channel_id, state["current_nonce"], state["current_signed_amount"] + int(client.metadata.pricing["price_in_cogs"])]
+                ["address", "uint256", "uint256", "uint256"],
+                [self.mpe_contract.address, channel_id, state["current_nonce"], amount]
             )
-            return bytes(self.web3.eth.account.signHash(defunct_hash_message(message), self.private_key))
+            signature = bytes(self.web3.eth.account.signHash(defunct_hash_message(message), self.private_key).signature)
+            metadata = [
+                ("snet-payment-type", "escrow"),
+                ("snet-payment-channel-id", str(channel_id)),
+                ("snet-payment-channel-nonce", str(state["current_nonce"])),
+                ("snet-payment-channel-amount", str(amount)),
+                ("snet-payment-channel-signature-bin", signature)
+            ]
+
+            return metadata
 
 
+        # Client exports
         client.open_channel = lambda value=default_channel_value, expiration=default_channel_expiration: _client_open_channel(value, expiration)
-        client.get_channel_state = lambda: _get_channel_state(_channel_id)
-        client.get_grpc_metadata = lambda: _get_channel_signature_bin(_channel_id)
-        client.get_channels = lambda: self._get_channels(client.default_payment_address)
+        client.get_service_call_metadata = lambda: _get_service_call_metadata(_channel_id)
+        client.grpc_channel = grpc_channel
+        client.grpc = imported_modules
 
 
         return client 
