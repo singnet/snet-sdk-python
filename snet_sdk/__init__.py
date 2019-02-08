@@ -102,6 +102,12 @@ class Snet:
 
 
     # Generic Eth transaction functions 
+    def _get_contract_deployment_block(self, contract_file):
+        with open(cur_dir.joinpath("resources", "contracts", "networks", contract_file)) as f:
+            networks = json.load(f)
+            txn_hash = networks[self.web3.version.network]["transactionHash"]
+        return self.web3.eth.getTransactionReceipt(txn_hash).blockNumber
+
     def _get_nonce(self):
         nonce = self.web3.eth.getTransactionCount(self.address)
         if self.nonce >= nonce:
@@ -141,6 +147,16 @@ class Snet:
             raise TransactionError("Transaction failed", receipt)
         else:
             return json.dumps(dict(event().processReceipt(receipt)[0]["args"]), cls=encoder)
+
+    def _get_channels(self, recipient_address=None):
+        topics = [self.web3.sha3(text="ChannelOpen(uint256,uint256,address,address,address,bytes32,uint256,uint256)").hex()]
+        logs = self.web3.eth.getLogs({"fromBlock" : self._get_contract_deployment_block("MultiPartyEscrow.json"), "address": self.mpe_contract.address, "topics": topics})
+        event_abi = {'anonymous': False, 'inputs': [{'indexed': False, 'name': 'channelId', 'type': 'uint256'}, {'indexed': False, 'name': 'nonce', 'type': 'uint256'}, {'indexed': True, 'name': 'sender', 'type': 'address'}, {'indexed': False, 'name': 'signer', 'type': 'address'}, {'indexed': True, 'name': 'recipient', 'type': 'address'}, {'indexed': True, 'name': 'groupId', 'type': 'bytes32'}, {'indexed': False, 'name': 'amount', 'type': 'uint256'}, {'indexed': False, 'name': 'expiration', 'type': 'uint256'}], 'name': 'ChannelOpen', 'type': 'event'}
+        if recipient_address is None:
+            channels = list(filter(lambda channel: channel.sender == self.address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in logs]))
+        else:
+            channels = list(filter(lambda channel: channel.sender == self.address and channel.recipient == recipient_address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in logs]))
+        return channels
 
 
     # Contract functions 
@@ -240,6 +256,7 @@ class Snet:
         (found, registration_id, metadata_uri, tags) = self.registry_contract.functions.getServiceRegistrationById(bytes(_org_id, "utf-8"), bytes(_service_id, "utf-8")).call()
         client.metadata = web3.utils.datastructures.AttributeDict(json.loads(self.ipfs_client.cat(metadata_uri.rstrip(b"\0").decode('ascii')[7:])))
         default_group = web3.utils.datastructures.AttributeDict(client.metadata.groups[0])
+        client.default_payment_address = default_group["payment_address"]
         default_channel_value = client.metadata.pricing["price_in_cogs"]*100
         default_channel_expiration = self.web3.eth.getBlock('latest').number + client.metadata.payment_expiration_threshold+1
         service_endpoint = None
@@ -321,6 +338,7 @@ class Snet:
         client.open_channel = lambda value=default_channel_value, expiration=default_channel_expiration: _client_open_channel(value, expiration)
         client.get_channel_state = lambda: _get_channel_state(_channel_id)
         client.get_grpc_metadata = lambda: _get_channel_signature_bin(_channel_id)
+        client.get_channels = lambda: self._get_channels(client.default_payment_address)
 
 
         return client 
