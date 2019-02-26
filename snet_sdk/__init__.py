@@ -232,6 +232,21 @@ class Snet:
         return self.web3.eth.contract(abi=abi, address=address)
 
 
+    def _get_base_grpc_channel(self, endpoint):
+        endpoint_object = urlparse(endpoint)
+        if endpoint_object.port is not None:
+            channel_endpoint = endpoint_object.hostname + ":" + str(endpoint_object.port)
+        else: 
+            channel_endpoint = endpoint_object.hostname
+
+        if endpoint_object.scheme == "http":
+            return grpc.insecure_channel(channel_endpoint)
+        elif endpoint_object.scheme == "https":
+            return grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials())
+        else:
+            raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
+
+
     # Service client
     def client(self, *args, org_id=None, service_id=None, channel_id=None):
         client = web3.utils.datastructures.MutableAttributeDict({})
@@ -273,7 +288,7 @@ class Snet:
 
 
         # Functions to get a funded channel with a combination of calls to the blockchain and to the daemon 
-        grpc_channel = grpc.insecure_channel(service_endpoint[7:])
+        grpc_channel = self._get_base_grpc_channel(service_endpoint)
 
         channel_state_service_proto_path = str(cur_dir.joinpath("resources", "proto"))
         sys.path.insert(0, channel_state_service_proto_path)
@@ -300,7 +315,10 @@ class Snet:
 
         def _get_funded_channel():
             channel_states = _get_channel_states()
-            return next(iter(channel_states), lambda state: state.initial_amount - state.current_signed_amount >= int(client.metadata.pricing["price_in_cogs"]))["channel_id"]
+            if len(channel_states) != 0:
+                return next(iter(channel_states), lambda state: state.initial_amount - state.current_signed_amount >= int(client.metadata.pricing["price_in_cogs"]))["channel_id"]
+            else:
+                raise RuntimeError("No usable state channel found. Please open a new channel or fund/extend an existing one")
 
 
         if _channel_id is None:
