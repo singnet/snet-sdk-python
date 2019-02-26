@@ -57,10 +57,12 @@ snet_sdk_defaults = {
     "eth_rpc_endpoint": "https://kovan.infura.io",
     "ipfs_rpc_endpoint": "http://ipfs.singularitynet.io:80",
     "private_key": None,
+    "signer_private_key": None,
     "account_index": 0,
     "default_gas": 1000000,
     "mpe_address": None,
-    "token_address": None
+    "token_address": None,
+    "allow_transactions": False
 }
 
 
@@ -73,10 +75,12 @@ class Snet:
         eth_rpc_endpoint=snet_sdk_defaults["eth_rpc_endpoint"],
         ipfs_rpc_endpoint=snet_sdk_defaults["ipfs_rpc_endpoint"],
         private_key=snet_sdk_defaults["private_key"],
+        signer_private_key=snet_sdk_defaults["signer_private_key"],
         account_index=snet_sdk_defaults["account_index"],
         default_gas=snet_sdk_defaults["default_gas"],
         mpe_address=snet_sdk_defaults["mpe_address"],
-        token_address=snet_sdk_defaults["token_address"]
+        token_address=snet_sdk_defaults["token_address"],
+        allow_transactions=snet_sdk_defaults["allow_transactions"]
     ):
         self.libraries_base_path = libraries_base_path
         self.default_gas = default_gas
@@ -95,6 +99,19 @@ class Snet:
             self.address = web3.Web3.toChecksumAddress("0x" + web3.Web3.sha3(hexstr=public_key.to_string().hex())[12:].hex())
         else: # Working with an unlocked account, for example
             self.address = web3.Web3.toChecksumAddress(web3.eth.accounts[account_index])
+
+
+        if self.private_key is not None and signer_private_key is None:
+            self.signer_private_key = self.private_key
+        else:
+            self.signer_private_key = signer_private_key
+
+        signer_public_key = ecdsa.SigningKey.from_string(string=self.private_key,
+                                                  curve=ecdsa.SECP256k1,
+                                                  hashfunc=hashlib.sha256).get_verifying_key()
+
+        self.signer_address = web3.Web3.toChecksumAddress("0x" + web3.Web3.sha3(hexstr=signer_public_key.to_string().hex())[12:].hex())
+
 
         # Instantiate Ethereum client
         provider = web3.HTTPProvider(eth_rpc_endpoint)
@@ -172,9 +189,9 @@ class Snet:
             self.logs = self.web3.eth.getLogs({"fromBlock" : self._get_contract_deployment_block("MultiPartyEscrow.json"), "address": self.mpe_contract.address, "topics": topics})
         event_abi = {'anonymous': False, 'inputs': [{'indexed': False, 'name': 'channelId', 'type': 'uint256'}, {'indexed': False, 'name': 'nonce', 'type': 'uint256'}, {'indexed': True, 'name': 'sender', 'type': 'address'}, {'indexed': False, 'name': 'signer', 'type': 'address'}, {'indexed': True, 'name': 'recipient', 'type': 'address'}, {'indexed': True, 'name': 'groupId', 'type': 'bytes32'}, {'indexed': False, 'name': 'amount', 'type': 'uint256'}, {'indexed': False, 'name': 'expiration', 'type': 'uint256'}], 'name': 'ChannelOpen', 'type': 'event'}
         if recipient_address is None:
-            channels = list(filter(lambda channel: channel.sender == self.address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in self.logs]))
+            channels = list(filter(lambda channel: channel.sender == self.address and channel.signer == self.signer_address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in self.logs]))
         else:
-            channels = list(filter(lambda channel: channel.sender == self.address and channel.recipient == recipient_address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in self.logs]))
+            channels = list(filter(lambda channel: channel.sender == self.address and channel.signer == self.signer_address and channel.recipient == recipient_address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in self.logs]))
         return channels
 
 
@@ -197,13 +214,13 @@ class Snet:
 
 
     def mpe_open_channel(self, recipient_address, group_id, value, expiration):
-        receipt = self._send_transaction(self.mpe_contract.functions.openChannel, self.address, recipient_address, group_id, value, expiration)
+        receipt = self._send_transaction(self.mpe_contract.functions.openChannel, self.signer_address, recipient_address, group_id, value, expiration)
         return self._parse_receipt(receipt, self.mpe_contract.events.ChannelOpen, encoder=ChannelOpenEncoder)
 
 
     def mpe_deposit_and_open_channel(self, recipient_address, group_id, value, expiration):
         self._token_approve_transfer(value)
-        receipt = self._send_transaction(self.mpe_contract.functions.depositAndOpenChannel, self.address, recipient_address, group_id, value, expiration)
+        receipt = self._send_transaction(self.mpe_contract.functions.depositAndOpenChannel, self.signer_address, recipient_address, group_id, value, expiration)
         return self._parse_receipt(receipt, self.mpe_contract.events.ChannelOpen, encoder=ChannelOpenEncoder)
 
 
@@ -279,7 +296,7 @@ class Snet:
         default_group = web3.utils.datastructures.AttributeDict(client.metadata.groups[0])
         client.default_payment_address = default_group["payment_address"]
         default_channel_value = client.metadata.pricing["price_in_cogs"]*100
-        default_channel_expiration = self.web3.eth.getBlock("latest").number + client.metadata.payment_expiration_threshold + (3600*24*7/self.average_block_time)
+        default_channel_expiration = int(self.web3.eth.getBlock("latest").number + client.metadata.payment_expiration_threshold + (3600*24*7/self.average_block_time))
         service_endpoint = None
         for endpoint in client.metadata["endpoints"]:
             if (endpoint["group_name"] == default_group["group_name"]):
@@ -300,7 +317,7 @@ class Snet:
         def _get_channel_state(channel_id):
             stub = _state_service_pb2_grpc.PaymentChannelStateServiceStub(grpc_channel)
             message = web3.Web3.soliditySha3(["uint256"], [channel_id])
-            signature = self.web3.eth.account.signHash(defunct_hash_message(message), self.private_key).signature
+            signature = self.web3.eth.account.signHash(defunct_hash_message(message), self.signer_private_key).signature
             request = _state_service_pb2.ChannelStateRequest(channel_id=web3.Web3.toBytes(channel_id), signature=bytes(signature))
             response = stub.GetChannelState(request)
             return {
@@ -315,10 +332,16 @@ class Snet:
 
         def _get_funded_channel():
             channel_states = _get_channel_states()
-            if len(channel_states) != 0:
-                return next(iter(channel_states), lambda state: state.initial_amount - state.current_signed_amount >= int(client.metadata.pricing["price_in_cogs"]))["channel_id"]
-            else:
-                raise RuntimeError("No usable state channel found. Please open a new channel or fund/extend an existing one")
+
+            if len(channel_states) == 0:
+                if allow_transactions is False:
+                    raise RuntimeError('No state channel found. Please open a new channel or set configuration parameter "allow_transactions=True" when creating Snet class instance')
+                else:
+                    _client_open_channel(default_channel_value, default_channel_expiration)
+                    channel_states = _get_channel_states()
+
+            chosen_channel = next(filter(lambda state: state["initial_amount"] - state["current_signed_amount"] >= int(client.metadata.pricing["price_in_cogs"]), iter(channel_states)), None)
+            return chosen_channel["channel_id"]
 
 
         if _channel_id is None:
@@ -367,7 +390,7 @@ class Snet:
                 ["address", "uint256", "uint256", "uint256"],
                 [self.mpe_contract.address, channel_id, state["current_nonce"], amount]
             )
-            signature = bytes(self.web3.eth.account.signHash(defunct_hash_message(message), self.private_key).signature)
+            signature = bytes(self.web3.eth.account.signHash(defunct_hash_message(message), self.signer_private_key).signature)
             metadata = [
                 ("snet-payment-type", "escrow"),
                 ("snet-payment-channel-id", str(channel_id)),
