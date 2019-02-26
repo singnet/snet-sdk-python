@@ -1,3 +1,5 @@
+import operator
+from functools import reduce
 import sys
 import os 
 import importlib
@@ -79,6 +81,7 @@ class Snet:
         self.libraries_base_path = libraries_base_path
         self.default_gas = default_gas
         self.nonce = 0
+        self.logs = None
 
         if private_key is not None:
             if private_key.startswith("0x"):
@@ -97,6 +100,12 @@ class Snet:
         provider = web3.HTTPProvider(eth_rpc_endpoint)
         self.web3 = web3.Web3(provider)
         self.web3.eth.setGasPriceStrategy(rpc_gas_price_strategy)
+
+        # Get average block time for current network
+        latest = self.web3.eth.getBlock("latest")
+        times = [block.timestamp for block in list(map(lambda n: self.web3.eth.getBlock(n), range(latest.number, latest.number-20, -1)))]
+        diffs = list(map(operator.sub, times[1:], times[:-1]))
+        self.average_block_time = abs(reduce(lambda a, b: a+b, diffs) / len(diffs))
 
         # Instantiate IPFS client
         ipfs_rpc_endpoint = urlparse(ipfs_rpc_endpoint)
@@ -159,12 +168,13 @@ class Snet:
 
     def _get_channels(self, recipient_address=None):
         topics = [self.web3.sha3(text="ChannelOpen(uint256,uint256,address,address,address,bytes32,uint256,uint256)").hex()]
-        logs = self.web3.eth.getLogs({"fromBlock" : self._get_contract_deployment_block("MultiPartyEscrow.json"), "address": self.mpe_contract.address, "topics": topics})
+        if self.logs is None:
+            self.logs = self.web3.eth.getLogs({"fromBlock" : self._get_contract_deployment_block("MultiPartyEscrow.json"), "address": self.mpe_contract.address, "topics": topics})
         event_abi = {'anonymous': False, 'inputs': [{'indexed': False, 'name': 'channelId', 'type': 'uint256'}, {'indexed': False, 'name': 'nonce', 'type': 'uint256'}, {'indexed': True, 'name': 'sender', 'type': 'address'}, {'indexed': False, 'name': 'signer', 'type': 'address'}, {'indexed': True, 'name': 'recipient', 'type': 'address'}, {'indexed': True, 'name': 'groupId', 'type': 'bytes32'}, {'indexed': False, 'name': 'amount', 'type': 'uint256'}, {'indexed': False, 'name': 'expiration', 'type': 'uint256'}], 'name': 'ChannelOpen', 'type': 'event'}
         if recipient_address is None:
-            channels = list(filter(lambda channel: channel.sender == self.address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in logs]))
+            channels = list(filter(lambda channel: channel.sender == self.address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in self.logs]))
         else:
-            channels = list(filter(lambda channel: channel.sender == self.address and channel.recipient == recipient_address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in logs]))
+            channels = list(filter(lambda channel: channel.sender == self.address and channel.recipient == recipient_address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in self.logs]))
         return channels
 
 
@@ -254,7 +264,7 @@ class Snet:
         default_group = web3.utils.datastructures.AttributeDict(client.metadata.groups[0])
         client.default_payment_address = default_group["payment_address"]
         default_channel_value = client.metadata.pricing["price_in_cogs"]*100
-        default_channel_expiration = self.web3.eth.getBlock('latest').number + client.metadata.payment_expiration_threshold+1
+        default_channel_expiration = self.web3.eth.getBlock("latest").number + client.metadata.payment_expiration_threshold + (3600*24*7/self.average_block_time)
         service_endpoint = None
         for endpoint in client.metadata["endpoints"]:
             if (endpoint["group_name"] == default_group["group_name"]):
