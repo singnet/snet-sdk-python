@@ -85,6 +85,7 @@ class Snet:
     ):
         self.libraries_base_path = libraries_base_path
         self.default_gas = default_gas
+        self.allow_transactions = allow_transactions
         self.nonce = 0
         self.logs = None
 
@@ -248,7 +249,7 @@ class Snet:
     
     def mpe_channel_extend_and_add_funds(self, channel_id, new_expiration, amount):
         receipt = self._send_transaction(self.mpe_contract.functions.channelExtendAndAddFunds, channel_id, new_expiration, amount)
-        return self._parse_receipt(receipt, mpe_contract.events.ChannelAddFunds)
+        return self._parse_receipt(receipt, self.mpe_contract.events.ChannelAddFunds)
 
 
     # Generic utility functions
@@ -342,34 +343,64 @@ class Snet:
             return [dict(_get_channel_state(channel.channelId), **{"channel_id": channel.channelId, "initial_amount": channel.amount, "expiration": channel.expiration}) for channel in self._get_channels(client.default_payment_address)]
 
 
+        def _client_open_channel(value, expiration):
+            mpe_balance = self.mpe_contract.functions.balances(self.address).call()
+            group_id = base64.b64decode(default_group.group_id)
+            if value > mpe_balance:
+                return(self.mpe_deposit_and_open_channel(default_group.payment_address, group_id, value - mpe_balance, expiration))
+            else:
+                return(self.mpe_open_channel(default_group.payment_address, group_id, value, expiration))
+
+
+        def _client_add_funds(channel_id, amount):
+            mpe_balance = self.mpe_contract.functions.balances(self.address).call()
+            if value > mpe_balance:
+                self.mpe_deposit(amount - mpe_balance)
+            return(self.mpe_channel_add_funds(channel_id, amount))
+
+
+        def _client_extend_and_add_funds(channel_id, new_expiration, amount):
+            mpe_balance = self.mpe_contract.functions.balances(self.address).call()
+            if amount > mpe_balance:
+                self.mpe_deposit(amount - mpe_balance)
+            return(self.mpe_channel_extend_and_add_funds(channel_id, new_expiration, amount))
+
+
         def _get_funded_channel():
             channel_states = _get_channel_states()
 
             if len(channel_states) == 0:
-                if allow_transactions is False:
+                if self.allow_transactions is False:
                     raise RuntimeError('No state channel found. Please open a new channel or set configuration parameter "allow_transactions=True" when creating Snet class instance')
                 else:
                     _client_open_channel(default_channel_value, default_channel_expiration)
                     channel_states = _get_channel_states()
 
-            funded_channels = filter(lambda state: state["initial_amount"] - state["current_signed_amount"] >= int(client.metadata.pricing["price_in_cogs"]), iter(channel_states))
-            if len(list(funded_channels)) == 0 and allow_transactions is True:
-                non_expired_unfunded_channels = filter(lambda state: state["expiration"] + client.metadata.payment_expiration_threshold > self.web3.eth.getBlock("latest").number, iter(channel_states))
-                if len(list(non_expired_unfunded_channels)) == 0:
-                    #TODO: fund and extend any next channel, assign channel_id
-                    channel_id = None
+            funded_channels = list(filter(lambda state: state["initial_amount"] - state["current_signed_amount"] >= int(client.metadata.pricing["price_in_cogs"]), iter(channel_states)))
+            if len(funded_channels) == 0:
+                if self.allow_transactions is True:
+                    non_expired_unfunded_channels = list(filter(lambda state: state["expiration"] + client.metadata.payment_expiration_threshold > self.web3.eth.getBlock("latest").number, iter(channel_states)))
+                    if len(non_expired_unfunded_channels) == 0:
+                        channel_id = next(iter(channel_states))["channel_id"]
+                        _client_extend_and_add_funds(channel_id, default_channel_expiration, default_channel_value)
+                        return channel_id
+                    else:
+                        channel_id = next(iter(non_expired_unfunded_channels))["channel_id"]
+                        _client_add_funds(channel_id, default_channel_value)
+                        return channel_id
                 else:
-                    #TODO: fund any next non_expired_unfunded_channel, assign channel_id
-                    channel_id = None
-            else:
-                raise RuntimeError('No funded channel found. Please open a new channel or fund an open one, or set configuration parameter "allow_transactions=True" when creating Snet class instance')
+                    raise RuntimeError('No funded channel found. Please open a new channel or fund an open one, or set configuration parameter "allow_transactions=True" when creating Snet class instance')
 
-            valid_channels = filter(lambda state: state["expiration"] + client.metadata.payment_expiration_threshold > self.web3.eth.getBlock("latest").number, iter(funded_channels))
-            if len(list(valid_channels)) == 0 and allow_transactions is True:
-                #TODO: extend channel, assign channel_id
-                channel_id = None
+            valid_channels = list(filter(lambda state: state["expiration"] + client.metadata.payment_expiration_threshold > self.web3.eth.getBlock("latest").number, iter(funded_channels)))
+            if len(valid_channels) == 0:
+                if self.allow_transactions is True:
+                    channel_id = next(iter(funded_channels))["channel_id"]
+                    self.mpe_channel_extend(channel_id, default_channel_expiration)
+                    return channel_id
+                else:
+                    raise RuntimeError('No non-expired channel found. Please open a new channel or extend an open and funded one, or set configuration parameter "allow_transactions=True" when creating Snet class instance')
             else:
-                raise RuntimeError('No non-expired channel found. Please open a new channel or extend an open and funded one, or set configuration parameter "allow_transactions=True" when creating Snet class instance')
+                channel_id = next(iter(valid_channels))["channel_id"]
 
             return channel_id
 
@@ -404,15 +435,6 @@ class Snet:
 
 
         # Service channel utility methods
-        def _client_open_channel(value, expiration):
-            mpe_balance = self.mpe_contract.functions.balances(self.address).call()
-            group_id = base64.b64decode(default_group.group_id)
-            if value > mpe_balance:
-                return(self.mpe_deposit_and_open_channel(default_group.payment_address, group_id, value - mpe_balance, expiration))
-            else:
-                return(self.mpe_open_channel(default_group.payment_address, group_id, value, expiration))
-
-
         def _get_service_call_metadata(channel_id):
             state = _get_channel_state(channel_id)
             amount = state["current_signed_amount"] + int(client.metadata.pricing["price_in_cogs"])
