@@ -17,6 +17,7 @@ from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from eth_account.messages import defunct_hash_message
 from rfc3986 import urlparse
 import ipfsapi
+from web3.utils.datastructures import AttributeDict, MutableAttributeDict
 
 import snet_sdk.generic_client_interceptor as generic_client_interceptor
 
@@ -183,6 +184,16 @@ class Snet:
         else:
             return json.dumps(dict(event().processReceipt(receipt)[0]["args"]), cls=encoder)
 
+
+    def _update_channel_data_from_blockchain(self, channel):
+        channel_blockchain_data = self.mpe_contract.functions.channels(channel["channelId"]).call()
+        channel = dict(channel)
+        channel["nonce"] = channel_blockchain_data[0]
+        channel["amount"] = channel_blockchain_data[5]
+        channel["expiration"] = channel_blockchain_data[6]
+        return AttributeDict(channel)
+
+
     def _get_channels(self, recipient_address=None):
         topics = [self.web3.sha3(text="ChannelOpen(uint256,uint256,address,address,address,bytes32,uint256,uint256)").hex()]
         if self.logs is None:
@@ -192,7 +203,8 @@ class Snet:
             channels = list(filter(lambda channel: channel.sender == self.address and channel.signer == self.signer_address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in self.logs]))
         else:
             channels = list(filter(lambda channel: channel.sender == self.address and channel.signer == self.signer_address and channel.recipient == recipient_address, [web3.utils.events.get_event_data(event_abi, l)["args"] for l in self.logs]))
-        return channels
+
+        return list(map(lambda c: self._update_channel_data_from_blockchain(c), channels))
 
 
     # Contract functions 
@@ -266,7 +278,7 @@ class Snet:
 
     # Service client
     def client(self, *args, org_id=None, service_id=None, channel_id=None):
-        client = web3.utils.datastructures.MutableAttributeDict({})
+        client = MutableAttributeDict({})
 
         # Determine org_id, service_id and channel_id for client
         _org_id = org_id
@@ -292,8 +304,8 @@ class Snet:
 
         # Get client metadata for service
         (found, registration_id, metadata_uri, tags) = self.registry_contract.functions.getServiceRegistrationById(bytes(_org_id, "utf-8"), bytes(_service_id, "utf-8")).call()
-        client.metadata = web3.utils.datastructures.AttributeDict(json.loads(self.ipfs_client.cat(metadata_uri.rstrip(b"\0").decode('ascii')[7:])))
-        default_group = web3.utils.datastructures.AttributeDict(client.metadata.groups[0])
+        client.metadata = AttributeDict(json.loads(self.ipfs_client.cat(metadata_uri.rstrip(b"\0").decode('ascii')[7:])))
+        default_group = AttributeDict(client.metadata.groups[0])
         client.default_payment_address = default_group["payment_address"]
         default_channel_value = client.metadata.pricing["price_in_cogs"]*100
         default_channel_expiration = int(self.web3.eth.getBlock("latest").number + client.metadata.payment_expiration_threshold + (3600*24*7/self.average_block_time))
@@ -327,7 +339,7 @@ class Snet:
 
 
         def _get_channel_states():
-            return [dict(_get_channel_state(channel.channelId), **{"channel_id": channel.channelId, "initial_amount": channel.amount}) for channel in self._get_channels(client.default_payment_address)]
+            return [dict(_get_channel_state(channel.channelId), **{"channel_id": channel.channelId, "initial_amount": channel.amount, "expiration": channel.expiration}) for channel in self._get_channels(client.default_payment_address)]
 
 
         def _get_funded_channel():
@@ -340,8 +352,26 @@ class Snet:
                     _client_open_channel(default_channel_value, default_channel_expiration)
                     channel_states = _get_channel_states()
 
-            chosen_channel = next(filter(lambda state: state["initial_amount"] - state["current_signed_amount"] >= int(client.metadata.pricing["price_in_cogs"]), iter(channel_states)), None)
-            return chosen_channel["channel_id"]
+            funded_channels = filter(lambda state: state["initial_amount"] - state["current_signed_amount"] >= int(client.metadata.pricing["price_in_cogs"]), iter(channel_states))
+            if len(list(funded_channels)) == 0 and allow_transactions is True:
+                non_expired_unfunded_channels = filter(lambda state: state["expiration"] + client.metadata.payment_expiration_threshold > self.web3.eth.getBlock("latest").number, iter(channel_states))
+                if len(list(non_expired_unfunded_channels)) == 0:
+                    #TODO: fund and extend any next channel, assign channel_id
+                    channel_id = None
+                else:
+                    #TODO: fund any next non_expired_unfunded_channel, assign channel_id
+                    channel_id = None
+            else:
+                raise RuntimeError('No funded channel found. Please open a new channel or fund an open one, or set configuration parameter "allow_transactions=True" when creating Snet class instance')
+
+            valid_channels = filter(lambda state: state["expiration"] + client.metadata.payment_expiration_threshold > self.web3.eth.getBlock("latest").number, iter(funded_channels))
+            if len(list(valid_channels)) == 0 and allow_transactions is True:
+                #TODO: extend channel, assign channel_id
+                channel_id = None
+            else:
+                raise RuntimeError('No non-expired channel found. Please open a new channel or extend an open and funded one, or set configuration parameter "allow_transactions=True" when creating Snet class instance')
+
+            return channel_id
 
 
         if _channel_id is None:
@@ -365,7 +395,7 @@ class Snet:
             grpc_modules
         ))
 
-        imported_modules = web3.utils.datastructures.MutableAttributeDict({})
+        imported_modules = MutableAttributeDict({})
         for grpc_module in grpc_modules:
             imported_module = importlib.import_module(grpc_module)
             imported_modules[grpc_module] = imported_module
