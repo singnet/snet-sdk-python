@@ -10,7 +10,6 @@ from urllib.parse import urljoin
 
 import ecdsa
 import hashlib
-import grpc
 import collections
 import web3
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
@@ -20,6 +19,7 @@ import ipfsapi
 from web3.utils.datastructures import AttributeDict, MutableAttributeDict
 
 import snet_sdk.generic_client_interceptor as generic_client_interceptor
+from snet_sdk.client import Client
 
 __version__ = "0.0.1"
 
@@ -47,14 +47,6 @@ class ChannelOpenEncoder(json.JSONEncoder):
             return base64.b64encode(obj).decode("ascii")
         else:
             super().default(self, obj)
-
-
-class _ClientCallDetails(
-        collections.namedtuple(
-            '_ClientCallDetails',
-            ('method', 'timeout', 'metadata', 'credentials')),
-        grpc.ClientCallDetails):
-    pass
 
 
 snet_sdk_defaults = {
@@ -266,25 +258,8 @@ class Snet:
         return self.web3.eth.contract(abi=abi, address=address)
 
 
-    def _get_base_grpc_channel(self, endpoint):
-        endpoint_object = urlparse(endpoint)
-        if endpoint_object.port is not None:
-            channel_endpoint = endpoint_object.hostname + ":" + str(endpoint_object.port)
-        else: 
-            channel_endpoint = endpoint_object.hostname
-
-        if endpoint_object.scheme == "http":
-            return grpc.insecure_channel(channel_endpoint)
-        elif endpoint_object.scheme == "https":
-            return grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials())
-        else:
-            raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
-
-
     # Service client
     def client(self, *args, org_id=None, service_id=None, channel_id=None):
-        client = MutableAttributeDict({})
-
         # Determine org_id, service_id and channel_id for client
         _org_id = org_id
         _service_id = service_id
@@ -306,175 +281,5 @@ class Snet:
             raise ValueError("""Could not instantiate client.
             Please provide at least an org_id and a service_id either as positional or keyword arguments""")
 
-
-        # Get client metadata for service
-        (found, registration_id, metadata_uri, tags) = self.registry_contract.functions.getServiceRegistrationById(bytes(_org_id, "utf-8"), bytes(_service_id, "utf-8")).call()
-        client.metadata = AttributeDict(json.loads(self.ipfs_client.cat(metadata_uri.rstrip(b"\0").decode('ascii')[7:])))
-        default_group = AttributeDict(client.metadata.groups[0])
-        client.default_payment_address = default_group["payment_address"]
-        default_channel_value = client.metadata.pricing["price_in_cogs"]*100
-        default_channel_expiration = int(self.web3.eth.getBlock("latest").number + client.metadata.payment_expiration_threshold + (3600*24*7/self.average_block_time))
-        service_endpoint = None
-        for endpoint in client.metadata["endpoints"]:
-            if (endpoint["group_name"] == default_group["group_name"]):
-                service_endpoint = endpoint["endpoint"]
-                break
-
-
-        # Functions to get a funded channel with a combination of calls to the blockchain and to the daemon 
-        grpc_channel = self._get_base_grpc_channel(service_endpoint)
-
-        channel_state_service_proto_path = str(cur_dir.joinpath("resources", "proto"))
-        sys.path.insert(0, channel_state_service_proto_path)
-        _state_service_pb2 = importlib.import_module("state_service_pb2")
-        _state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
-        sys.path.remove(channel_state_service_proto_path)
-
-
-        def _get_channel_state(channel_id):
-            stub = _state_service_pb2_grpc.PaymentChannelStateServiceStub(grpc_channel)
-            message = web3.Web3.soliditySha3(["uint256"], [channel_id])
-            signature = self.web3.eth.account.signHash(defunct_hash_message(message), self.signer_private_key).signature
-            request = _state_service_pb2.ChannelStateRequest(channel_id=web3.Web3.toBytes(channel_id), signature=bytes(signature))
-            response = stub.GetChannelState(request)
-            return {
-                "current_nonce": int.from_bytes(response.current_nonce, byteorder="big"),
-                "current_signed_amount": int.from_bytes(response.current_signed_amount, byteorder="big")
-            }
-
-
-        def _get_channel_states():
-            return [dict(_get_channel_state(channel.channelId), **{"channel_id": channel.channelId, "initial_amount": channel.amount, "expiration": channel.expiration}) for channel in self._get_channels(client.default_payment_address)]
-
-
-        def _client_open_channel(value, expiration):
-            mpe_balance = self.mpe_contract.functions.balances(self.address).call()
-            group_id = base64.b64decode(default_group.group_id)
-            if value > mpe_balance:
-                return(self.mpe_deposit_and_open_channel(default_group.payment_address, group_id, value - mpe_balance, expiration))
-            else:
-                return(self.mpe_open_channel(default_group.payment_address, group_id, value, expiration))
-
-
-        def _client_add_funds(channel_id, amount):
-            mpe_balance = self.mpe_contract.functions.balances(self.address).call()
-            if value > mpe_balance:
-                self.mpe_deposit(amount - mpe_balance)
-            return(self.mpe_channel_add_funds(channel_id, amount))
-
-
-        def _client_extend_and_add_funds(channel_id, new_expiration, amount):
-            mpe_balance = self.mpe_contract.functions.balances(self.address).call()
-            if amount > mpe_balance:
-                self.mpe_deposit(amount - mpe_balance)
-            return(self.mpe_channel_extend_and_add_funds(channel_id, new_expiration, amount))
-
-
-        def _get_funded_channel():
-            channel_states = _get_channel_states()
-
-            if len(channel_states) == 0:
-                if self.allow_transactions is False:
-                    raise RuntimeError('No state channel found. Please open a new channel or set configuration parameter "allow_transactions=True" when creating Snet class instance')
-                else:
-                    _client_open_channel(default_channel_value, default_channel_expiration)
-                    channel_states = _get_channel_states()
-
-            funded_channels = list(filter(lambda state: state["initial_amount"] - state["current_signed_amount"] >= int(client.metadata.pricing["price_in_cogs"]), iter(channel_states)))
-            if len(funded_channels) == 0:
-                if self.allow_transactions is True:
-                    non_expired_unfunded_channels = list(filter(lambda state: state["expiration"] + client.metadata.payment_expiration_threshold > self.web3.eth.getBlock("latest").number, iter(channel_states)))
-                    if len(non_expired_unfunded_channels) == 0:
-                        channel_id = next(iter(channel_states))["channel_id"]
-                        _client_extend_and_add_funds(channel_id, default_channel_expiration, default_channel_value)
-                        return channel_id
-                    else:
-                        channel_id = next(iter(non_expired_unfunded_channels))["channel_id"]
-                        _client_add_funds(channel_id, default_channel_value)
-                        return channel_id
-                else:
-                    raise RuntimeError('No funded channel found. Please open a new channel or fund an open one, or set configuration parameter "allow_transactions=True" when creating Snet class instance')
-
-            valid_channels = list(filter(lambda state: state["expiration"] + client.metadata.payment_expiration_threshold > self.web3.eth.getBlock("latest").number, iter(funded_channels)))
-            if len(valid_channels) == 0:
-                if self.allow_transactions is True:
-                    channel_id = next(iter(funded_channels))["channel_id"]
-                    self.mpe_channel_extend(channel_id, default_channel_expiration)
-                    return channel_id
-                else:
-                    raise RuntimeError('No non-expired channel found. Please open a new channel or extend an open and funded one, or set configuration parameter "allow_transactions=True" when creating Snet class instance')
-            else:
-                channel_id = next(iter(valid_channels))["channel_id"]
-
-            return channel_id
-
-
-        if _channel_id is None:
-            _channel_id = _get_funded_channel() 
-
-
-        # Import modules and add them to client grpc object
-        libraries_base_path = self.libraries_base_path
-
-        client_library_path = str(main_dir_path.joinpath(self.libraries_base_path, _org_id, _service_id))
-        sys.path.insert(0, client_library_path)
-
-        grpc_modules = []
-        for module_path in Path(client_library_path).glob("**/*_pb2.py"):
-            grpc_modules.append(module_path)
-        for module_path in Path(client_library_path).glob("**/*_pb2_grpc.py"):
-            grpc_modules.append(module_path)
-
-        grpc_modules = list(map(
-            lambda x: str(PurePath(Path(x).relative_to(client_library_path).parent.joinpath(PurePath(x).stem))),
-            grpc_modules
-        ))
-
-        imported_modules = MutableAttributeDict({})
-        for grpc_module in grpc_modules:
-            imported_module = importlib.import_module(grpc_module)
-            imported_modules[grpc_module] = imported_module
-
-        sys.path.remove(client_library_path)
-
-
-        # Service channel utility methods
-        def _get_service_call_metadata(channel_id):
-            state = _get_channel_state(channel_id)
-            amount = state["current_signed_amount"] + int(client.metadata.pricing["price_in_cogs"])
-            message = web3.Web3.soliditySha3(
-                ["address", "uint256", "uint256", "uint256"],
-                [self.mpe_contract.address, channel_id, state["current_nonce"], amount]
-            )
-            signature = bytes(self.web3.eth.account.signHash(defunct_hash_message(message), self.signer_private_key).signature)
-            metadata = [
-                ("snet-payment-type", "escrow"),
-                ("snet-payment-channel-id", str(channel_id)),
-                ("snet-payment-channel-nonce", str(state["current_nonce"])),
-                ("snet-payment-channel-amount", str(amount)),
-                ("snet-payment-channel-signature-bin", signature)
-            ]
-
-            return metadata
-
-
-        # Client exports
-        client.open_channel = lambda value=default_channel_value, expiration=default_channel_expiration: _client_open_channel(value, expiration)
-        client.get_service_call_metadata = lambda: _get_service_call_metadata(_channel_id)
-        client.grpc = imported_modules
-
-        def intercept_call(client_call_details, request_iterator, request_streaming,
-                           response_streaming):
-            metadata = []
-            if client_call_details.metadata is not None:
-                metadata = list(client_call_details.metadata)
-            metadata.extend(client.get_service_call_metadata())
-            client_call_details = _ClientCallDetails(
-                client_call_details.method, client_call_details.timeout, metadata,
-                client_call_details.credentials)
-            return client_call_details, request_iterator, None
-
-        client.grpc_channel = grpc.intercept_channel(grpc_channel, generic_client_interceptor.create(intercept_call))
-
-
-        return client 
+        client = Client(self, _org_id, _service_id, _channel_id)
+        return client
