@@ -23,7 +23,11 @@ import snet_sdk.generic_client_interceptor as generic_client_interceptor
 
 __version__ = "0.0.1"
 
-main_dir_path = PurePath(os.path.abspath(sys.modules['__main__'].__file__)).parent
+try:
+    main_dir_path = PurePath(os.path.abspath(sys.modules['__main__'].__file__)).parent
+except AttributeError:
+    main_dir_path = PurePath(os.getcwd())
+
 cur_dir = PurePath(os.path.realpath(__file__)).parent
 
 
