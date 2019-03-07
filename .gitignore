@@ -1,4 +1,6 @@
 venv/
+build/
+dist/
 .idea
 snet_sdk.egg-info/
 blockchain/node_modules/
