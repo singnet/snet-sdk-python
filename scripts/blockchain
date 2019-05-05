@@ -23,6 +23,9 @@ def main():
     if not npm_location:
         raise Exception("This script requires 'npm' to be installed and in your PATH")
 
+    if not os.path.isdir(contract_json_dest_dir):
+        os.mkdir(contract_json_dest_dir)
+
     if target == "install":
         shutil.rmtree(contract_json_dest_dir)
 
@@ -49,6 +52,8 @@ def main():
             shutil.rmtree(contract_json_dest_dir.joinpath("networks"))
         except FileNotFoundError:
             pass
+    else:
+        print("Target not supported.")
 
 
 if __name__ == "__main__":
