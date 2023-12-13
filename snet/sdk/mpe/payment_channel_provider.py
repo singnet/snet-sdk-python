@@ -35,8 +35,7 @@ class PaymentChannelProvider(object):
                                                  "topics": self.event_topics})
             from_block = to_block + 1
 
-        event_abi = self.mpe_contract.contract._find_matching_event_abi(
-            event_name="ChannelOpen")
+        event_abi = self.mpe_contract.contract._find_matching_event_abi(event_name="ChannelOpen")
 
         channels_opened = list(filter(
             lambda

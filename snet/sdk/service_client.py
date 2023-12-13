@@ -1,14 +1,14 @@
-import base64
-import collections
-import importlib
-
 import grpc
+import base64
+import importlib
+import collections
 import snet.sdk.generic_client_interceptor as generic_client_interceptor
-from eth_account.messages import defunct_hash_message
+
 from rfc3986 import urlparse
-from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
-from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
+from eth_account.messages import defunct_hash_message
 from snet.sdk.root_certificate import root_certificate
+from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
+from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
 
 class _ClientCallDetails(
     collections.namedtuple(
