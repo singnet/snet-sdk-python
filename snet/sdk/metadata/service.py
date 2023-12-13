@@ -43,7 +43,7 @@ import base64
 from collections import defaultdict
 from enum import Enum
 
-from snet.snet_cli.utils.utils import is_valid_endpoint
+from snet.sdk.utils.utils import is_valid_endpoint
 
 
 # Supported Asset types

@@ -8,6 +8,10 @@ import base58
 import multihash
 
 
+def get_ipfs_client(self):
+    ipfs_endpoint = self.config.get_ipfs_endpoint()
+    return ipfshttpclient.connect(ipfs_endpoint)
+
 def publish_file_in_ipfs(ipfs_client, filepath, wrap_with_directory=True):
     """
         push a file to ipfs given its path
