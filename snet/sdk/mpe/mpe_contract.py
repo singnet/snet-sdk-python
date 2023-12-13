@@ -1,6 +1,7 @@
 from snet.sdk.utils.utils import get_contract_deployment_block, get_contract_object
 
 
+
 class MPEContract:
     def __init__(self, w3, address=None):
         self.web3 = w3
