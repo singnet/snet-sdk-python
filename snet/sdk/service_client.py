@@ -12,6 +12,7 @@ from snet.sdk.resources import root_certificate
 from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
 
+
 class _ClientCallDetails(
     collections.namedtuple(
         '_ClientCallDetails',
