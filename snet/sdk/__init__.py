@@ -21,10 +21,10 @@ from snet.sdk.service_client import ServiceClient
 from snet.sdk.account import Account
 from snet.sdk.mpe.mpe_contract import MPEContract
 
-from snet.snet_cli.utils.utils import get_contract_object
+from snet.sdk.utils.utils import get_contract_object
 
-from snet.snet_cli.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
-from snet.snet_cli.metadata.service import mpe_service_metadata_from_json
+from snet.sdk.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
+from snet.sdk.metadata.service import mpe_service_metadata_from_json
 
 class SnetSDK:
     """Base Snet SDK"""
@@ -109,7 +109,7 @@ class SnetSDK:
 
     def _get_service_group_details(self, service_metadata, group_name):
         if len(service_metadata['groups']) == 0:
-            raise Exception("No Groups found for geivne service,Please add group to the service")
+            raise Exception("No Groups found for given service, Please add group to the service")
 
         if group_name is None:
             return self._get_first_group(service_metadata)

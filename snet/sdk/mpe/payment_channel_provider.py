@@ -5,7 +5,7 @@ from eth_abi.codec import ABICodec
 from snet.sdk.mpe.mpe_contract import MPEContract
 
 from snet.sdk.mpe.payment_channel import PaymentChannel
-from snet.snet_cli.utils.utils import get_contract_deployment_block
+from snet.sdk.utils.utils import get_contract_deployment_block
 
 
 BLOCKS_PER_BATCH = 5000
@@ -40,8 +40,7 @@ class PaymentChannelProvider(object):
                                                  "topics": self.event_topics})
             from_block = to_block + 1
 
-        event_abi = self.mpe_contract.contract._find_matching_event_abi(
-            event_name="ChannelOpen")
+        event_abi = self.mpe_contract.contract._find_matching_event_abi(event_name="ChannelOpen")
         channels_opened = list(filter(
             lambda
                 channel: (channel.sender == account.address or channel.signer == account.signer_address) and channel.recipient ==
