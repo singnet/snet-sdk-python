@@ -1,3 +1,6 @@
+.env
+.venv
+env/
 venv/
 .idea
 snet_sdk.egg-info/
@@ -5,3 +8,4 @@ blockchain/node_modules/
 __pycache__
 snet_sdk/resources/contracts/abi
 snet_sdk/resources/contracts/networks
+.pyi

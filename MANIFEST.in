@@ -1,3 +1,11 @@
 include snet_sdk/resources/proto/*
 include snet_sdk/resources/contracts/abi/*
 include snet_sdk/resources/contracts/networks/*
+
+include snet_sdk/contracts/abi/*
+include snet_sdk/contracts/networks/*
+
+recursive-exclude * .git
+recursive-exclude * node_modules
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

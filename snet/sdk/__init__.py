@@ -38,7 +38,10 @@ class SnetSDK:
 
         # Instantiate Ethereum client
         eth_rpc_endpoint = self._config.get("eth_rpc_endpoint", "https://mainnet.infura.io/v3/e7732e1f679e461b9bb4da5653ac3fc2")
-        provider = web3.HTTPProvider(eth_rpc_endpoint)
+        eth_rpc_request_kwargs = self._config.get("eth_rpc_request_kwargs")
+
+        provider = web3.HTTPProvider(endpoint_uri=eth_rpc_endpoint, request_kwargs=eth_rpc_request_kwargs)
+
         self.web3 = web3.Web3(provider)
 
         # Get MPE contract address from config if specified; mostly for local testing
@@ -49,8 +52,8 @@ class SnetSDK:
             self.mpe_contract = MPEContract(self.web3, _mpe_contract_address)
 
         # Instantiate IPFS client
-        ipfs_rpc_endpoint = self._config.get("ipfs_rpc_endpoint", "/dns/ipfs.singularitynet.io/tcp/80/")
-        self.ipfs_client = ipfshttpclient.connect(ipfs_rpc_endpoint)
+        ipfs_endpoint = self._config.get("default_ipfs_endpoint", "/dns/ipfs.singularitynet.io/tcp/80/")
+        self.ipfs_client = ipfshttpclient.connect(ipfs_endpoint)
 
         # Get Registry contract address from config if specified; mostly for local testing
         _registry_contract_address = self._config.get("registry_contract_address", None)
@@ -74,7 +77,7 @@ class SnetSDK:
         options['concurrency'] = self._config.get("concurrency", True)
 
         if self._metadata_provider is None:
-            self._metadata_provider = IPFSMetadataProvider( self.ipfs_client ,self.registry_contract,)
+            self._metadata_provider = IPFSMetadataProvider(self.ipfs_client, self.registry_contract)
 
         service_metadata = self._metadata_provider.enhance_service_metadata(org_id, service_id)
         group = self._get_service_group_details(service_metadata, group_name)
