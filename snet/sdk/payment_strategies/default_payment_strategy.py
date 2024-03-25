@@ -39,4 +39,3 @@ class DefaultPaymentStrategy(PaymentStrategy):
     def get_concurrency_token_and_channel(self, service_client):
         payment_strategy = PrePaidPaymentStrategy(self.concurrencyManager)
         return payment_strategy.get_concurrency_token_and_channel(service_client)
-
