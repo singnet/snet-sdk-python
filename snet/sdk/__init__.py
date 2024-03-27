@@ -1,3 +1,5 @@
+import subprocess
+
 import google.protobuf.internal.api_implementation
 from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
 from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
@@ -63,6 +65,18 @@ class SnetSDK:
             self.registry_contract = get_contract_object(self.web3, "Registry.json", _registry_contract_address)
 
         self.account = Account(self.web3, config, self.mpe_contract)
+        
+        command = f"snet identity create --private-key {config['private_key']} {config['identity_name']} {config['identity_type']} --network mainnet"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Exception(result.stderr)
+        print(result.stdout)
+        
+        command = f"snet sdk generate-client-library python {config['org_id']} {config['service_id']} ~/.snet"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Exception(result.stdout)
+        print(result.stdout)
 
     def create_service_client(self, org_id, service_id, service_stub, group_name=None,
                               payment_channel_management_strategy=None, options=None, concurrent_calls=1):
