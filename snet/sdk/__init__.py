@@ -1,6 +1,9 @@
+from pathlib import Path
 import google.protobuf.internal.api_implementation
 from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
 from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
+from snet_cli.commands.sdk_command import SDKCommand
+from snet_cli.config import Config
 
 google.protobuf.internal.api_implementation.Type = lambda: 'python'
 
@@ -25,6 +28,15 @@ from snet.sdk.utils.utils import get_contract_object
 
 from snet.sdk.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
 from snet.sdk.metadata.service import mpe_service_metadata_from_json
+
+
+class Arguments:
+    def __init__(self, org_id, service_id):
+        self.org_id = org_id
+        self.service_id = service_id
+        self.language = "python"
+        self.protodir = Path("~").expanduser().joinpath(".snet")
+
 
 class SnetSDK:
     """Base Snet SDK"""
@@ -63,6 +75,9 @@ class SnetSDK:
             self.registry_contract = get_contract_object(self.web3, "Registry.json", _registry_contract_address)
 
         self.account = Account(self.web3, config, self.mpe_contract)
+        
+        sdk = SDKCommand(Config(), args=Arguments(config['org_id'], config['service_id']))
+        sdk.generate_client_library()
 
     def create_service_client(self, org_id, service_id, service_stub, group_name=None,
                               payment_channel_management_strategy=None, options=None, concurrent_calls=1):
