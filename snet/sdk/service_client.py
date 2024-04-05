@@ -23,7 +23,7 @@ class _ClientCallDetails(
 
 class ServiceClient:
     def __init__(self, org_id, service_id, service_metadata, group, service_stub, payment_strategy,
-                 options, mpe_contract, account, sdk_web3):
+                 options, mpe_contract, account, sdk_web3, pb2_module):
         self.org_id = org_id
         self.service_id = service_id
         self.options = options
@@ -39,11 +39,17 @@ class ServiceClient:
                                                                self._generate_payment_channel_state_service_client(),
                                                                mpe_contract)
         self.service = self._generate_grpc_stub(service_stub)
+        self.pb2_module = importlib.import_module(pb2_module) if isinstance(pb2_module, str) else pb2_module
         self.payment_channels = []
         self.last_read_block = 0
         self.account = account
         self.sdk_web3 = sdk_web3
         self.mpe_address = mpe_contract.contract.address
+
+    def call_rpc(self, rpc_name: str, message_class: str, **kwargs):
+        rpc_method = getattr(self.service, rpc_name)
+        request = getattr(self.pb2_module, message_class)(**kwargs)
+        return rpc_method(request)
 
     def _get_payment_expiration_threshold_for_group(self):
         pass
