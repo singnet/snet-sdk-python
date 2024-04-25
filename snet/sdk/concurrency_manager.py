@@ -2,7 +2,8 @@ import importlib
 
 import grpc
 import web3
-from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
+
+from snet.cli.utils.utils import RESOURCES_PATH, add_to_path
 
 
 class ConcurrencyManager:

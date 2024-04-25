@@ -5,8 +5,8 @@ from urllib.parse import urlparse
 import grpc
 import web3
 
-from snet.sdk.root_certificate import root_certificate
-from snet.snet_cli.utils.utils import RESOURCES_PATH, add_to_path
+from snet.cli.resources.root_certificate import certificate
+from snet.cli.utils.utils import add_to_path, RESOURCES_PATH
 
 
 # for local debug
@@ -46,7 +46,7 @@ class TrainingModel:
             channel = grpc.insecure_channel(channel_endpoint)
         elif endpoint_object.scheme == "https":
             channel = grpc.secure_channel(channel_endpoint,
-                                          grpc.ssl_channel_credentials(root_certificates=root_certificate))
+                                          grpc.ssl_channel_credentials(root_certificates=certificate))
         else:
             raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
 

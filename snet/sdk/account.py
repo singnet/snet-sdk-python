@@ -1,6 +1,7 @@
 import json
 
-from snet.sdk.utils.utils import get_address_from_private, get_contract_object, normalize_private_key
+from snet.cli.utils.utils import get_address_from_private, normalize_private_key
+from snet.contracts import get_contract_object
 
 DEFAULT_GAS = 300000
 TRANSACTION_TIMEOUT = 500
@@ -26,10 +27,10 @@ class Account:
         _token_contract_address = self.config.get("token_contract_address", None)
         if _token_contract_address is None:
             self.token_contract = get_contract_object(
-                self.web3, "SingularityNetToken.json")
+                self.web3, "SingularityNetToken")
         else:
             self.token_contract = get_contract_object(
-                self.web3, "SingularityNetToken.json", _token_contract_address)
+                self.web3, "SingularityNetToken", _token_contract_address)
 
         private_key = config.get("private_key", None)
         signer_private_key = config.get("signer_private_key", None)

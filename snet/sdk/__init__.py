@@ -7,8 +7,8 @@ from typing import Any, NewType
 import google.protobuf.internal.api_implementation
 from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
 from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
-from snet_cli.commands.sdk_command import SDKCommand
-from snet_cli.config import Config
+from snet.cli.commands.sdk_command import SDKCommand
+from snet.cli.config import Config
 
 google.protobuf.internal.api_implementation.Type = lambda: 'python'
 
@@ -29,10 +29,11 @@ from snet.sdk.service_client import ServiceClient
 from snet.sdk.account import Account
 from snet.sdk.mpe.mpe_contract import MPEContract
 
-from snet.sdk.utils.utils import find_file_by_keyword, get_contract_object
+from snet.contracts import get_contract_object
 
-from snet.sdk.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
-from snet.sdk.metadata.service import mpe_service_metadata_from_json
+from snet.cli.metadata.service import mpe_service_metadata_from_json
+from snet.cli.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
+from snet.cli.utils.utils import find_file_by_keyword
 
 ModuleName = NewType('ModuleName', str)
 ServiceStub = NewType('ServiceStub', Any)
@@ -49,10 +50,7 @@ class Arguments:
 class SnetSDK:
     """Base Snet SDK"""
 
-    def __init__(
-        self,
-        config, metadata_provider=None
-    ):
+    def __init__(self, config, metadata_provider=None):
         self._config = config
         self._metadata_provider = metadata_provider
 
@@ -78,16 +76,16 @@ class SnetSDK:
         # Get Registry contract address from config if specified; mostly for local testing
         _registry_contract_address = self._config.get("registry_contract_address", None)
         if _registry_contract_address is None:
-            self.registry_contract = get_contract_object(self.web3, "Registry.json")
+            self.registry_contract = get_contract_object(self.web3, "Registry")
         else:
-            self.registry_contract = get_contract_object(self.web3, "Registry.json", _registry_contract_address)
+            self.registry_contract = get_contract_object(self.web3, "Registry", _registry_contract_address)
 
         self.account = Account(self.web3, config, self.mpe_contract)
         
         sdk = SDKCommand(Config(), args=Arguments(config['org_id'], config['service_id']))
         sdk.generate_client_library()
 
-    def create_service_client(self, org_id, service_id, service_stub, group_name=None,
+    def create_service_client(self, org_id, service_id, group_name=None,
                               payment_channel_management_strategy=None, options=None, concurrent_calls=1):
         if payment_channel_management_strategy is None:
             payment_channel_management_strategy = DefaultPaymentStrategy(concurrent_calls)
@@ -140,7 +138,10 @@ class SnetSDK:
         return ModuleName(module_name)
 
     def get_service_metadata(self, org_id, service_id):
-        (found, registration_id, metadata_uri) = self.registry_contract.functions.getServiceRegistrationById(bytes(org_id, "utf-8"), bytes(service_id, "utf-8")).call()
+        (found, registration_id, metadata_uri) = self.registry_contract.functions.getServiceRegistrationById(
+            bytes(org_id, "utf-8"),
+            bytes(service_id, "utf-8")
+        ).call()
 
         if found is not True:
             raise Exception('No service "{}" found in organization "{}"'.format(service_id, org_id))
