@@ -31,6 +31,8 @@ See [test_sdk_client.py.sample](https://github.com/singnet/snet-cli/blob/master/
 
 After executing this code, you should have client libraries created for this service. They are located in the following path: ~/.snet/org_id/service_id/python/
 
+Note: Currently you can only save files to ~/.snet/
+
 ##### Free call configuration
 
 If you want to use free call you need to add below mwntioned attributes in config file.
