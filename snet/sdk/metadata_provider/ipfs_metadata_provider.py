@@ -1,8 +1,8 @@
-from snet.sdk.metadata.service import mpe_service_metadata_from_json
-
-from snet.snet_cli.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
-import web3
 import json
+import web3
+
+from snet.cli.metadata.service import mpe_service_metadata_from_json
+from snet.cli.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
 
 
 class IPFSMetadataProvider(object):
