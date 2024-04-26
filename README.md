@@ -1,7 +1,15 @@
 # snet-sdk-python
   
 SingularityNET SDK for Python
-  
+
+## Package
+
+The package was published in PyPI at the following link:
+
+|Package                                       |Description                                                          |
+|----------------------------------------------|---------------------------------------------------------------------|
+|[snet-sdk](https://pypi.org/project/snet.sdk/)|Integrate SingularityNET services seamlessly into Python applications|
+
 ## Getting Started  
   
 These instructions are for the development and use of the SingularityNET SDK for Python.
