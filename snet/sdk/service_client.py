@@ -1,15 +1,15 @@
-import grpc
 import base64
-import importlib
 import collections
-import snet.sdk.generic_client_interceptor as generic_client_interceptor
+import importlib
 
-from rfc3986 import urlparse
-
+import grpc
+import web3
 from eth_account.messages import defunct_hash_message
+from rfc3986 import urlparse
+from snet.cli.resources.root_certificate import certificate
+from snet.cli.utils.utils import RESOURCES_PATH, add_to_path
 
-from snet.sdk.resources import root_certificate
-from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
+import snet.sdk.generic_client_interceptor as generic_client_interceptor
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
 
 
@@ -23,7 +23,7 @@ class _ClientCallDetails(
 
 class ServiceClient:
     def __init__(self, org_id, service_id, service_metadata, group, service_stub, payment_strategy,
-                 options, mpe_contract, account, sdk_web3):
+                 options, mpe_contract, account, sdk_web3, pb2_module):
         self.org_id = org_id
         self.service_id = service_id
         self.options = options
@@ -39,11 +39,17 @@ class ServiceClient:
                                                                self._generate_payment_channel_state_service_client(),
                                                                mpe_contract)
         self.service = self._generate_grpc_stub(service_stub)
+        self.pb2_module = importlib.import_module(pb2_module) if isinstance(pb2_module, str) else pb2_module
         self.payment_channels = []
         self.last_read_block = 0
         self.account = account
         self.sdk_web3 = sdk_web3
         self.mpe_address = mpe_contract.contract.address
+
+    def call_rpc(self, rpc_name: str, message_class: str, **kwargs):
+        rpc_method = getattr(self.service, rpc_name)
+        request = getattr(self.pb2_module, message_class)(**kwargs)
+        return rpc_method(request)
 
     def _get_payment_expiration_threshold_for_group(self):
         pass
@@ -72,7 +78,8 @@ class ServiceClient:
         if endpoint_object.scheme == "http":
             return grpc.insecure_channel(channel_endpoint)
         elif endpoint_object.scheme == "https":
-            return grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials(root_certificates=root_certificate))
+            return grpc.secure_channel(channel_endpoint,
+                                       grpc.ssl_channel_credentials(root_certificates=certificate))
         else:
             raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
 
@@ -108,10 +115,10 @@ class ServiceClient:
         return new_channels_to_be_added
 
     def load_open_channels(self):
-        current_block_number = self.sdk_web3.eth.getBlock("latest").number
-        payment_addrss = self.group["payment"]["payment_address"]
+        current_block_number = self.sdk_web3.eth.block_number
+        payment_address = self.group["payment"]["payment_address"]
         group_id = base64.b64decode(str(self.group["group_id"]))
-        new_payment_channels = self.payment_channel_provider.get_past_open_channels(self.account, payment_addrss,
+        new_payment_channels = self.payment_channel_provider.get_past_open_channels(self.account, payment_address,
                                                                                     group_id, self.last_read_block)
         self.payment_channels = self.payment_channels + self._filter_existing_channels_from_new_payment_channels(
             new_payment_channels)
@@ -119,7 +126,7 @@ class ServiceClient:
         return self.payment_channels
 
     def get_current_block_number(self):
-        return self.sdk_web3.eth.getBlock("latest").number
+        return self.sdk_web3.eth.block_number
 
     def update_channel_states(self):
         for channel in self.payment_channels:
@@ -127,7 +134,7 @@ class ServiceClient:
         return self.payment_channels
 
     def default_channel_expiration(self):
-        current_block_number = self.sdk_web3.eth.getBlock("latest").number
+        current_block_number = self.sdk_web3.eth.get_block("latest").number
         return current_block_number + self.expiry_threshold
 
     def _generate_payment_channel_state_service_client(self):
@@ -157,13 +164,21 @@ class ServiceClient:
 
         return signature
 
+    def generate_training_signature(self, text: str, address, block_number):
+        message = web3.Web3.solidity_keccak(
+            ["string", "address", "uint256"],
+            [text, address, block_number]
+        )
+        return self.sdk_web3.eth.account.signHash(defunct_hash_message(message),
+                                                  self.account.signer_private_key).signature
+
     def get_free_call_config(self):
         return self.options['email'], self.options['free_call_auth_token-bin'], self.options[
             'free-call-token-expiry-block']
 
     def get_service_details(self):
         return self.org_id, self.service_id, self.group["group_id"], \
-               self.service_metadata.get_all_endpoints_for_group(self.group["group_name"])[0]
+            self.service_metadata.get_all_endpoints_for_group(self.group["group_name"])[0]
 
     def get_concurrency_flag(self):
         return self.options.get('concurrency', True)

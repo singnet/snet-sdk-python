@@ -3,9 +3,11 @@ from urllib.parse import urlparse
 
 import grpc
 import web3
+from snet.cli.resources.root_certificate import certificate
+from snet.cli.utils.utils import RESOURCES_PATH, add_to_path
+
 from snet.sdk.payment_strategies.payment_staregy import PaymentStrategy
-from snet.snet_cli.utils.utils import RESOURCES_PATH, add_to_path
-from snet.sdk.root_certificate import root_certificate
+
 
 class FreeCallPaymentStrategy(PaymentStrategy):
 
@@ -40,7 +42,7 @@ class FreeCallPaymentStrategy(PaymentStrategy):
             if endpoint_object.scheme == "http":
                 channel = grpc.insecure_channel(channel_endpoint)
             elif endpoint_object.scheme == "https":
-                channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials(root_certificates=root_certificate))
+                channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials(root_certificates=certificate))
             else:
                 raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
 
@@ -78,7 +80,7 @@ class FreeCallPaymentStrategy(PaymentStrategy):
 
         current_block_number = service_client.get_current_block_number()
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "string", "string", "string", "string", "uint256", "bytes32"],
             ["__prefix_free_trial", email, org_id, service_id, group_id, current_block_number,
              token_for_free_call]

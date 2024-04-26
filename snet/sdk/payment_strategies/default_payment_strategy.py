@@ -1,8 +1,8 @@
 from snet.sdk.concurrency_manager import ConcurrencyManager
-from snet.sdk.payment_strategies.paidcall_payment_strategy import PaidCallPaymentStrategy
 from snet.sdk.payment_strategies.freecall_payment_strategy import FreeCallPaymentStrategy
-from snet.sdk.payment_strategies.payment_staregy import PaymentStrategy
+from snet.sdk.payment_strategies.paidcall_payment_strategy import PaidCallPaymentStrategy
 from snet.sdk.payment_strategies.prepaid_payment_strategy import PrePaidPaymentStrategy
+from snet.sdk.payment_strategies.payment_staregy import PaymentStrategy
 
 
 class DefaultPaymentStrategy(PaymentStrategy):
@@ -39,4 +39,3 @@ class DefaultPaymentStrategy(PaymentStrategy):
     def get_concurrency_token_and_channel(self, service_client):
         payment_strategy = PrePaidPaymentStrategy(self.concurrencyManager)
         return payment_strategy.get_concurrency_token_and_channel(service_client)
-

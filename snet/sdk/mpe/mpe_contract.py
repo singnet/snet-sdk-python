@@ -1,19 +1,16 @@
-from snet.sdk.utils.utils import get_contract_deployment_block, get_contract_object
-
+from snet.contracts import get_contract_deployment_block, get_contract_object
 
 
 class MPEContract:
     def __init__(self, w3, address=None):
         self.web3 = w3
         if address is None:
-            self.contract = get_contract_object(self.web3, "MultiPartyEscrow.json")
+            self.contract = get_contract_object(self.web3, "MultiPartyEscrow")
         else:
-            self.contract = get_contract_object(self.web3, "MultiPartyEscrow.json", address)
-        self.event_topics = [self.web3.sha3(
+            self.contract = get_contract_object(self.web3, "MultiPartyEscrow", address)
+        self.event_topics = [self.web3.keccak(
             text="ChannelOpen(uint256,uint256,address,address,address,bytes32,uint256,uint256)").hex()]
-        self.deployment_block = get_contract_deployment_block(
-            self.web3, "MultiPartyEscrow.json")
-
+        self.deployment_block = get_contract_deployment_block(self.web3, "MultiPartyEscrow")
 
     def balance(self, address):
         return self.contract.functions.balances(address).call()
