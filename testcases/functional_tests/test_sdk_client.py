@@ -90,16 +90,14 @@ def test_sdk():
     group_name="default_group"
 
     config = {
-        "private_key": "51ec611f164a078a13dba33e5afefcd62c8460545b2d48177a27443971482b4a",
+        "private_key": "0xc71478a6d0fe44e763649de0a0deb5a080b788eefbbcf9c6f7aef0dd5dbd67e0",
         "eth_rpc_endpoint": "https://sepolia.infura.io/v3/09027f4a13e841d48dbfefc67e7685d5",
         "email":"test@test.com",
-        # "free_call_auth_token-bin":"f5533eb0f01f0d45239c11b411bdfd4221fd3b125e4250db1f7bc044466108bc10ce95ab62ae224b6578b68d0ce337b4ec36e4b9dfbe6653e04973107813cbc01c",
-        # "free-call-token-expiry-block":19690819,
+        "free_call_auth_token-bin":"f5533eb0f01f0d45239c11b411bdfd4221fd3b125e4250db1f7bc044466108bc10ce95ab62ae224b6578b68d0ce337b4ec36e4b9dfbe6653e04973107813cbc01c",
+        "free-call-token-expiry-block":19690819,
         "concurrency": False,
         "org_id": org_id,
-        "service_id": service_id,
-        "identity_name": "test",
-        "identity_type": "key",
+        "service_id": service_id
     }
 
     snet_sdk = sdk.SnetSDK(config)
