@@ -35,9 +35,6 @@ jobs:
       - name: install pip packages
         run: |
           pip3 install -r requirements.txt --break-system-packages
-      #     pip3 install nose --break-system-packages
-      #     pip3 uninstall pyreadline --break-system-packages
-      #     pip3 install pyreadline3 --break-system-packages
           
       - name: install snet-sdk
         run: pip3 install -e . --break-system-packages
@@ -57,16 +54,18 @@ jobs:
           cd example-service
           pip3 install -r requirements.txt --break-system-packages
           sh buildproto.sh
+          nohup python3 run_example_service.py --no-daemon &
           
       - name: Set up for snet daemon
         run: |
-            cd ..
-            mkdir snet-daemon
-            cd snet-daemon
-            wget https://github.com/singnet/snet-daemon/releases/download/v5.0.1/snet-daemon-v5.0.1-linux-amd64.tar.gz
-            tar -xvf snet-daemon-v5.0.1-linux-amd64.tar.gz
-            cd snet-daemon-v5.0.1-linux-amd64
-            cp ../../snet-sdk-python/testcases/functional_tests/snetd.config.json .
+          cd ..
+          mkdir snet-daemon
+          cd snet-daemon
+          wget https://github.com/singnet/snet-daemon/releases/download/v5.0.1/snet-daemon-v5.0.1-linux-amd64.tar.gz
+          tar -xvf snet-daemon-v5.0.1-linux-amd64.tar.gz
+          cd snet-daemon-v5.0.1-linux-amd64
+          cp ../../snet-sdk-python/testcases/functional_tests/snetd.config.json .
+          nohup ./snetd &
           
 
       - name: functional tests for cli
