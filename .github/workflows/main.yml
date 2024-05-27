@@ -70,4 +70,7 @@ jobs:
           
 
       - name: functional tests for cli
-        run: sh -ex ./testcases/utils/run_all_functional.sh
+        run: |
+          ls
+          pwd
+          sh -ex ./testcases/utils/run_all_functional.sh
