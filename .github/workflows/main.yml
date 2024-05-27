@@ -19,15 +19,15 @@ jobs:
           apt install -y python3-pip python3.11-venv
           echo master
 
-      # - name: install ipfs
-      #   run: |
-      #     wget https://dist.ipfs.io/go-ipfs/v0.9.0/go-ipfs_v0.9.0_linux-amd64.tar.gz
-      #     tar -xvzf go-ipfs_v0.9.0_linux-amd64.tar.gz
-      #     bash go-ipfs/install.sh
-      #     ipfs --version
-      #     node --version
-      #     pwd
-      #     ls
+      - name: install ipfs
+        run: |
+          wget https://dist.ipfs.io/go-ipfs/v0.9.0/go-ipfs_v0.9.0_linux-amd64.tar.gz
+          tar -xvzf go-ipfs_v0.9.0_linux-amd64.tar.gz
+          bash go-ipfs/install.sh
+          ipfs --version
+          node --version
+          pwd
+          ls
 
       - name: clone repo
         uses: actions/checkout@v3
@@ -42,21 +42,31 @@ jobs:
       - name: install snet-sdk
         run: pip3 install -e . --break-system-packages
           
-      # - name: install platform-contracts
-      #   run: |
-      #     cd ..
-      #     git clone https://github.com/singnet/platform-contracts.git
-      #     cd platform-contracts
-      #     npm install
-      #     npm install ganache-cli
-      #     npm run-script compile
+      - name: install platform-contracts
+        run: |
+          cd ..
+          git clone https://github.com/singnet/platform-contracts.git
+          cd platform-contracts
+          npm install
+          npm install ganache-cli
+          npm run-script compile
 
-      # - name: build example service
-      #   run: |
-      #     git clone https://github.com/singnet/example-service.git
-      #     cd example-service
-      #     pip3 install -r requirements.txt --break-system-packages
-      #     sh buildproto.sh
+      - name: build example service
+        run: |
+          git clone https://github.com/singnet/example-service.git
+          cd example-service
+          pip3 install -r requirements.txt --break-system-packages
+          sh buildproto.sh
+          
+      - name: Set up for snet daemon
+        run: |
+            cd ..
+            mkdir snet-daemon
+            cd snet-daemon
+            wget https://github.com/singnet/snet-daemon/releases/download/v5.0.1/snet-daemon-v5.0.1-linux-amd64.tar.gz
+            tar -xvf snet-daemon-v5.0.1-linux-amd64.tar.gz
+            cd snet-daemon-v5.0.1-linux-amd64
+            cp ./testcases/functional_tests/snetd.config.json ./snet-daemon/snet-daemon-v5.0.1-linux-amd64
           
       # - name: unit tests
       #   run: |
