@@ -59,7 +59,7 @@ snet account balance
 
 # service provider has --wallet-index==9 (0x52653A9091b5d5021bed06c5118D24b23620c529)
 # make two endpoints (both are actually valid)
-cd ../snet-cli/packages/sdk/testcases/
+cd ../snet-sdk-python/testcases
 
 
 snet organization metadata-init test_org test_org organization
@@ -77,14 +77,14 @@ snet service publish test_org test_service -y -q
 snet organization print-metadata test_org test_org
 snet service print-metadata test_org test_service
 
-
-cd ~/singnet/example-service
+pwd
+cd ../example-service
 pip3 install -r requirements.txt
 sh buildproto.sh
 nohup python3 run_example_service.py --no-daemon &
 
 
-cd ~/singnet/snet-daemon/snet-daemon-v5.0.1-linux-amd64
+cd ../../snet-daemon/snet-daemon-v5.0.1-linux-amd64
 nohup ./snetd &
 
 #wait for daemon to come up
