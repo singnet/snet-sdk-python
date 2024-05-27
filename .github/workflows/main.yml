@@ -54,7 +54,6 @@ jobs:
           cd example-service
           pip3 install -r requirements.txt --break-system-packages
           sh buildproto.sh
-          nohup python3 run_example_service.py --no-daemon &
           
       - name: Set up for snet daemon
         run: |
@@ -65,7 +64,6 @@ jobs:
           tar -xvf snet-daemon-v5.0.1-linux-amd64.tar.gz
           cd snet-daemon-v5.0.1-linux-amd64
           cp ../../snet-sdk-python/testcases/functional_tests/snetd.config.json .
-          nohup ./snetd &
           
 
       - name: functional tests for cli
