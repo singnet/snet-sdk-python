@@ -66,14 +66,8 @@ jobs:
             wget https://github.com/singnet/snet-daemon/releases/download/v5.0.1/snet-daemon-v5.0.1-linux-amd64.tar.gz
             tar -xvf snet-daemon-v5.0.1-linux-amd64.tar.gz
             cd snet-daemon-v5.0.1-linux-amd64
-            ls
             cp ../../snet-sdk-python/testcases/functional_tests/snetd.config.json .
           
-      # - name: unit tests
-      #   run: |
-      #     cd ./snet/cli/test
-      #     nosetests -v --with-doctest
 
-      # - name: functional tests for cli
-      #   run: |
-      #     sh -ex ./snet/cli/test/utils/run_all_functional.sh
+      - name: functional tests for cli
+        run: sh -ex ./testcases/utils/run_all_functional.sh
