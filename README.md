@@ -42,8 +42,8 @@ group_name="default_group"
 snet_sdk = sdk.SnetSDK(config)
 ```
 
-The `config` parameter must be a Python dictionary.  
-See [test_sdk_client.py.sample](https://github.com/singnet/snet-cli/blob/master/packages/sdk/testcases/functional_tests/test_sdk_client.py) for a sample configuration file.
+The `config` parameter must be a Python dictionary.
+See [test_sdk_client.py.sample](https://github.com/singnet/snet-sdk-python/blob/master/testcases/functional_tests/test_sdk_client.py) for a sample configuration file.
 
 Note that `org_id` and `service_id` must be passed to `config`.
 
@@ -59,10 +59,10 @@ If you want to use free call you need to add below mwntioned attributes in confi
 "free-call-token-expiry-block":172800,
 "email":"test@test.com"  
 ```
-You can download this config for a given service from [Dapp]([https://beta.singularitynet.io/)
+You can download this config for a given service from [Dapp](https://beta.singularitynet.io/)
 
 Now, the instance of the sdk can be used to create service client instances.
-Continuing from the previous code this is an example using `Exampleservicee` from the `26072b8b6a0e448180f8c0e702ab6d2f` organization:
+Continuing from the previous code this is an example using `Exampleservice` from the `26072b8b6a0e448180f8c0e702ab6d2f` organization:
 
 ```python
 service_client = snet_sdk.create_service_client(org_id, service_id, group_name)
