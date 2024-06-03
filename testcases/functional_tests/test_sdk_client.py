@@ -98,7 +98,7 @@ def get_service_client():
          "identity_type": "key",
     }
 
-    #snet_sdk = sdk.SnetSDK(config)
+    snet_sdk = sdk.SnetSDK(config)
     service_client = snet_sdk.create_service_client(org_id, service_id, group_name)
     return service_client
 
