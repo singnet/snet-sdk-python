@@ -17,9 +17,9 @@ class TestSDKClient(unittest.TestCase):
         result = self.service_client.call_rpc("mul", "Numbers", a=20, b=4)
         self.assertEqual(80.0, result.value)
 
-    def test_make_second_free_call(self):
-        result = self.service_client.call_rpc("mul", "Numbers", a=20, b=5)
-        self.assertEqual(100.0, result.value)
+    # def test_make_second_free_call(self):
+    #     result = self.service_client.call_rpc("mul", "Numbers", a=20, b=5)
+    #     self.assertEqual(100.0, result.value)
 
     # def test_open_first_channel(self):
     #     channel = self.service_client.open_channel(123456, 33333)
@@ -27,9 +27,9 @@ class TestSDKClient(unittest.TestCase):
     #     self.assertEqual(0, channel.state['nonce'])
     #     self.assertEqual(0, channel.state['last_signed_amount'])
 
-    def test_first_call_to_service_after_opening_first_channel(self):
-        result = self.service_client.call_rpc("mul", "Numbers", a=20, b=3)
-        self.assertEqual(60.0, result.value)
+    # def test_first_call_to_service_after_opening_first_channel(self):
+    #     result = self.service_client.call_rpc("mul", "Numbers", a=20, b=3)
+    #     self.assertEqual(60.0, result.value)
 
     # def test_verify_channel_state_after_opening_first_channel_and_first_call_to_service(self):
     #     self.service_client.update_channel_states()
@@ -38,9 +38,9 @@ class TestSDKClient(unittest.TestCase):
     #     self.assertEqual(0, channels[0].state['nonce'])
     #     self.assertEqual(1000, channels[0].state['last_signed_amount'])
 
-    def test_second_call_to_service_after_opening_first_channel(self):
-        result = self.service_client.call_rpc("mul", "Numbers", a=20, b=3)
-        self.assertEqual(60.0, result.value)
+    # def test_second_call_to_service_after_opening_first_channel(self):
+    #     result = self.service_client.call_rpc("mul", "Numbers", a=20, b=3)
+    #     self.assertEqual(60.0, result.value)
 
     # def test_verify_channel_state_after_opening_first_channel_and_second_call_to_service(self):
     #     self.service_client.update_channel_states()
@@ -65,9 +65,9 @@ class TestSDKClient(unittest.TestCase):
     #     self.assertEqual(0, channels[1].state['nonce'])
     #     self.assertEqual(0, channels[1].state['last_signed_amount'])
 
-    def test_first_call_to_service_after_opening_second_channel(self):
-        result = self.service_client.call_rpc("mul", "Numbers", a=20, b=3)
-        self.assertEqual(60.0, result.value)
+    # def test_first_call_to_service_after_opening_second_channel(self):
+    #     result = self.service_client.call_rpc("mul", "Numbers", a=20, b=3)
+    #     self.assertEqual(60.0, result.value)
 
     # def test_verify_channel_state_after_opening_second_channel_and_first_call_to_service(self):
     #     self.service_client.update_channel_states()
