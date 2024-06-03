@@ -31,13 +31,6 @@ jobs:
 
       - name: clone repo
         uses: actions/checkout@v3
-
-      - name: install pip packages
-        run: |
-          pip3 install -r requirements.txt --break-system-packages
-          
-      - name: install snet-sdk
-        run: pip3 install -e . --break-system-packages
           
       - name: install platform-contracts
         run: |
@@ -48,23 +41,29 @@ jobs:
           npm install ganache-cli
           npm run-script compile
 
-      # - name: build example service
-      #   run: |
-      #     git clone https://github.com/singnet/example-service.git
-      #     cd example-service
-      #     pip3 install -r requirements.txt --break-system-packages
-      #     sh buildproto.sh
+      - name: build example service
+        run: |
+          git clone https://github.com/singnet/example-service.git
+          cd example-service
+          pip3 install -r requirements.txt --break-system-packages
+          sh buildproto.sh
           
-      # - name: Set up for snet daemon
-      #   run: |
-      #     cd ..
-      #     mkdir snet-daemon
-      #     cd snet-daemon
-      #     wget https://github.com/singnet/snet-daemon/releases/download/v5.0.1/snet-daemon-v5.0.1-linux-amd64.tar.gz
-      #     tar -xvf snet-daemon-v5.0.1-linux-amd64.tar.gz
-      #     cd snet-daemon-v5.0.1-linux-amd64
-      #     cp ../../snet-sdk-python/testcases/functional_tests/snetd.config.json .
+      - name: Set up for snet daemon
+        run: |
+          cd ..
+          mkdir snet-daemon
+          cd snet-daemon
+          wget https://github.com/singnet/snet-daemon/releases/download/v5.0.1/snet-daemon-v5.0.1-linux-amd64.tar.gz
+          tar -xvf snet-daemon-v5.0.1-linux-amd64.tar.gz
+          cd snet-daemon-v5.0.1-linux-amd64
+          cp ../../snet-sdk-python/testcases/functional_tests/snetd.config.json .
           
+      - name: install pip packages
+        run: |
+          pip3 install -r requirements.txt --break-system-packages
+          
+      - name: install snet-sdk
+        run: pip3 install -e . --break-system-packages
 
       - name: functional tests for cli
         run: |
