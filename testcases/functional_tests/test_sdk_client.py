@@ -13,7 +13,7 @@ class TestSDKClient(unittest.TestCase):
     #     channels = self.service_client.load_open_channels()
     #     self.assertEqual(0, len(channels))
    def test_make_first_free_call(self):
-      result = self.service_client.call_rpc("mul", "Numbers", a=20, b=4)
+      #result = self.service_client.call_rpc("mul", "Numbers", a=20, b=4)
       self.assertEqual(80.0, result.value)
 
     # def test_make_second_free_call(self):
