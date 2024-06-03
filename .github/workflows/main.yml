@@ -61,10 +61,11 @@ jobs:
       - name: install pip packages
         run: |
           pip3 install -r requirements.txt --break-system-packages
+          cp ./testcases/utils/config ~/.snet
           
       - name: install snet-sdk
         run: pip3 install -e . --break-system-packages
-
+        
       - name: functional tests for cli
         run: |
           ls
