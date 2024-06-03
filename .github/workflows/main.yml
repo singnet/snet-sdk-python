@@ -61,7 +61,7 @@ jobs:
       - name: install pip packages
         run: |
           pip3 install -r requirements.txt --break-system-packages
-          cp ./testcases/utils/config ~/.snet
+          cat ~/.snet/config
           
       - name: install snet-sdk
         run: pip3 install -e . --break-system-packages
