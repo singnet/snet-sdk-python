@@ -87,7 +87,6 @@ def get_service_client():
 
     # TODO remove test keys from repo
     config = {
-         #"private_key": "51ec611f164a078a13dba33e5afefcd62c8460545b2d48177a27443971482b4a",
          "private_key": "59a9eddfd4d043890ed79a8475a9b7ebda8a76857d88363e01b1b9c5f2ea68c5",
          "eth_rpc_endpoint": "https://sepolia.infura.io/v3/09027f4a13e841d48dbfefc67e7685d5",
          "email": "test@test.com",
