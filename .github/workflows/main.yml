@@ -39,14 +39,14 @@ jobs:
       - name: install snet-sdk
         run: pip3 install -e . --break-system-packages
           
-      # - name: install platform-contracts
-      #   run: |
-      #     cd ..
-      #     git clone https://github.com/singnet/platform-contracts.git
-      #     cd platform-contracts
-      #     npm install
-      #     npm install ganache-cli
-      #     npm run-script compile
+      - name: install platform-contracts
+        run: |
+          cd ..
+          git clone https://github.com/singnet/platform-contracts.git
+          cd platform-contracts
+          npm install
+          npm install ganache-cli
+          npm run-script compile
 
       # - name: build example service
       #   run: |
