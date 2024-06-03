@@ -79,28 +79,28 @@ class TestSDKClient(unittest.TestCase):
     #     self.assertEqual(0, channels[1].state['last_signed_amount'])
 
 
-def get_service_client():
-    org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
-    service_id = "Exampleservice"
-    group_name = "default_group"
+# def get_service_client():
+#     org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
+#     service_id = "Exampleservice"
+#     group_name = "default_group"
 
-    # TODO remove test keys from repo
-    config = {
-         "private_key": "59a9eddfd4d043890ed79a8475a9b7ebda8a76857d88363e01b1b9c5f2ea68c5",
-         "eth_rpc_endpoint": "https://sepolia.infura.io/v3/09027f4a13e841d48dbfefc67e7685d5",
-         "email": "test@test.com",
-         # "free_call_auth_token-bin":"f5533eb0f01f0d45239c11b411bdfd4221fd3b125e4250db1f7bc044466108bc10ce95ab62ae224b6578b68d0ce337b4ec36e4b9dfbe6653e04973107813cbc01c",
-         # "free-call-token-expiry-block":19690819,
-         "concurrency": False,
-         "org_id": org_id,
-         "service_id": service_id,
-         "identity_name": "test",
-         "identity_type": "key",
-    }
+#     # TODO remove test keys from repo
+#     config = {
+#          "private_key": "59a9eddfd4d043890ed79a8475a9b7ebda8a76857d88363e01b1b9c5f2ea68c5",
+#          "eth_rpc_endpoint": "https://sepolia.infura.io/v3/09027f4a13e841d48dbfefc67e7685d5",
+#          "email": "test@test.com",
+#          # "free_call_auth_token-bin":"f5533eb0f01f0d45239c11b411bdfd4221fd3b125e4250db1f7bc044466108bc10ce95ab62ae224b6578b68d0ce337b4ec36e4b9dfbe6653e04973107813cbc01c",
+#          # "free-call-token-expiry-block":19690819,
+#          "concurrency": False,
+#          "org_id": org_id,
+#          "service_id": service_id,
+#          "identity_name": "test",
+#          "identity_type": "key",
+#     }
 
-    snet_sdk = sdk.SnetSDK(config)
-    service_client = snet_sdk.create_service_client(org_id, service_id, group_name)
-    return service_client
+#     snet_sdk = sdk.SnetSDK(config)
+#     service_client = snet_sdk.create_service_client(org_id, service_id, group_name)
+#     return service_client
 
 
 if __name__ == '__main__':
