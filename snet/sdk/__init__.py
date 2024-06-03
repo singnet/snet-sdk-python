@@ -83,7 +83,17 @@ class SnetSDK:
         self.account = Account(self.web3, config, self.mpe_contract)
         
         sdk = SDKCommand(Config(), args=Arguments(config['org_id'], config['service_id']))
-        sdk.generate_client_library()
+
+        force_update = config.get('force_update', False)
+
+        if force_update:
+            sdk.generate_client_library()
+        else:
+            path_to_pb_files = self.get_path_to_pb_files(config['org_id'], config['service_id'])
+            pb_2_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2.py")
+            pb_2_grpc_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2_grpc.py")
+            if not pb_2_file_name or not pb_2_grpc_file_name:
+                sdk.generate_client_library()
 
     def create_service_client(self, org_id, service_id, group_name=None,
                               payment_channel_management_strategy=None, options=None, concurrent_calls=1):
