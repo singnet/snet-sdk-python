@@ -33,7 +33,7 @@ def test_sdk():
 
     config = {
         "private_key": "0xc71478a6d0fe44e763649de0a0deb5a080b788eefbbcf9c6f7aef0dd5dbd67e0",
-        "eth_rpc_endpoint": "http://localhost:8545",
+        "eth_rpc_endpoint": "https://sepolia.infura.io/v3/09027f4a13e841d48dbfefc67e7685d5",
         "mpe_contract_address": "0x5c7a4290f6f8ff64c69eeffdfafc8644a4ec3a4e",
         "registry_contract_address": "0x4e74fefa82e83e0964f0d9f53c68e03f7298a8b2",
         "token_contract_address": "0x6e5f20669177f5bdf3703ec5ea9c4d4fe3aabd14",
