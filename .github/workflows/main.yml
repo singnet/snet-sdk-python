@@ -70,6 +70,6 @@ jobs:
           ls
           pwd
           echo ~
-          ls ~
+          ls -ls ~
           export PIP_BREAK_SYSTEM_PACKAGES=1
           sh -ex ./testcases/utils/run_all_functional.sh
