@@ -52,9 +52,9 @@ nohup ./node_modules/.bin/ganache-cli --mnemonic 'gauge enact biology destroy no
 # # Create First identity (snet-user = first ganache).
 # # (snet will automatically swith to this new identity)
 # snet identity create snet-user rpc --network local
-# export PYTHONPATH=$cwd
-# python $cwd"/packages/snet_cli/test/functional_tests/mint/mint.py"
-# snet account deposit 10000000 -y -q
+export PYTHONPATH=$cwd
+python $cwd"/packages/snet_cli/test/functional_tests/mint/mint.py"
+snet account deposit 10000000 -y -q
 # snet account balance
 ############
 # service provider has --wallet-index==9 (0x52653A9091b5d5021bed06c5118D24b23620c529)
