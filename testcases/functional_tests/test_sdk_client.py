@@ -4,8 +4,8 @@ from snet import sdk
 
 
 class TestSDKClient(unittest.TestCase):
-    def setUp(self):
-        self.service_client = get_service_client()
+#    def setUp(self):
+#        self.service_client = get_service_client()
 
     # TODO update/replace/remove tests that are commented out
 
