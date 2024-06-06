@@ -37,11 +37,11 @@ def test_sdk():
         "mpe_contract_address": "0x5c7a4290f6f8ff64c69eeffdfafc8644a4ec3a4e",
         "registry_contract_address": "0x4e74fefa82e83e0964f0d9f53c68e03f7298a8b2",
         "token_contract_address": "0x6e5f20669177f5bdf3703ec5ea9c4d4fe3aabd14",
-        "ipfs_rpc_endpoint": "http://localhost:5002",
+        "ipfs_rpc_endpoint": "/dns/ipfs.singularitynet.io/tcp/80/",
         "org_id": org_id,
         "service_id": service_id,
-        "free_call_auth_token-bin": "f2548d27ffd319b9c05918eeac15ebab934e5cfcd68e1ec3db2b927653892959012b48da17a7973d57f72fac3c1eccd97862a4fa953c3726da65dec42f5989ee1b",
-        "free-call-token-expiry-block": 172800,
+        # "free_call_auth_token-bin": "f2548d27ffd319b9c05918eeac15ebab934e5cfcd68e1ec3db2b927653892959012b48da17a7973d57f72fac3c1eccd97862a4fa953c3726da65dec42f5989ee1b",
+        # "free-call-token-expiry-block": 172800,
         "email": "test@test.com"
     }
 
