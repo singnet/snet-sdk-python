@@ -27,8 +27,8 @@ def check_channel_status(service_client, last_signed_amount):
 
 
 def test_sdk():
-    org_id = "test_org"
-    service_id = "test_service"
+    org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
+    service_id = "Exampleservice"
     group_name = "default_group"
 
     config = {
