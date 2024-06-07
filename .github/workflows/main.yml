@@ -26,8 +26,6 @@ jobs:
           bash go-ipfs/install.sh
           ipfs --version
           node --version
-          pwd
-          ls
 
       - name: clone repo
         uses: actions/checkout@v3
@@ -61,18 +59,14 @@ jobs:
       - name: install pip packages
         run: |
           pip3 install -r requirements.txt --break-system-packages
-          mkdir ~/.snet
-          cp ./testcases/utils/config ~/.snet/
+          # mkdir ~/.snet
+          # cp ./testcases/utils/config ~/.snet/
           
       - name: install snet-sdk
         run: pip3 install -e . --break-system-packages
         
       - name: functional tests for cli
         run: |
-          ls
-          pwd
-          echo ~
-          ls -la ~
           export PIP_BREAK_SYSTEM_PACKAGES=1
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
           sh -ex ./testcases/utils/run_all_functional.sh
