@@ -53,7 +53,7 @@ nohup ./node_modules/.bin/ganache-cli --mnemonic 'gauge enact biology destroy no
 # # (snet will automatically swith to this new identity)
 # snet identity create snet-user rpc --network local
 export PYTHONPATH=$cwd
-python $cwd"/packages/snet_cli/test/functional_tests/mint/mint.py"
+python3 $cwd"/packages/snet_cli/test/functional_tests/mint/mint.py"
 snet account deposit 10000000 -y -q
 # snet account balance
 ############
