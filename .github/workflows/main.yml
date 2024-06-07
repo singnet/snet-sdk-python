@@ -65,7 +65,7 @@ jobs:
       - name: install snet-sdk
         run: pip3 install -e . --break-system-packages
         
-      - name: functional tests for cli
+      - name: functional tests for sdk
         run: |
           export PIP_BREAK_SYSTEM_PACKAGES=1
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
