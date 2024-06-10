@@ -1,11 +1,12 @@
 import unittest
+import shutil
 
 from snet import sdk
 
 
 class TestSDKClient(unittest.TestCase):
     def setUp(self):
-        self.service_client = get_service_client()
+        self.service_client, self.path_to_pb_files = get_test_service_data()
 
     # TODO update/replace/remove tests that are commented out
 
@@ -13,23 +14,23 @@ class TestSDKClient(unittest.TestCase):
     #     channels = self.service_client.load_open_channels()
     #     self.assertEqual(0, len(channels))
 
-    def test_make_first_free_call(self):
-        result = self.service_client.call_rpc("mul", "Numbers", a=20, b=4)
-        self.assertEqual(80.0, result.value)
+    # def test_make_first_free_call(self):
+    #     result = self.service_client.call_rpc("mul", "Numbers", a=20, b=4)
+    #     self.assertEqual(80.0, result.value)
 
     # def test_make_second_free_call(self):
     #     result = self.service_client.call_rpc("mul", "Numbers", a=20, b=5)
     #     self.assertEqual(100.0, result.value)
 
-    # def test_open_first_channel(self):
-    #     channel = self.service_client.open_channel(123456, 33333)
+    def test_open_first_channel(self):
+        channel = self.service_client.open_channel(123456, 33333)
     #     self.assertEqual(0, channel.channel_id)
     #     self.assertEqual(0, channel.state['nonce'])
     #     self.assertEqual(0, channel.state['last_signed_amount'])
 
-    # def test_first_call_to_service_after_opening_first_channel(self):
-    #     result = self.service_client.call_rpc("mul", "Numbers", a=20, b=3)
-    #     self.assertEqual(60.0, result.value)
+    def test_first_call_to_service_after_opening_first_channel(self):
+        result = self.service_client.call_rpc("mul", "Numbers", a=20, b=3)
+        self.assertEqual(60.0, result.value)
 
     # def test_verify_channel_state_after_opening_first_channel_and_first_call_to_service(self):
     #     self.service_client.update_channel_states()
@@ -79,8 +80,15 @@ class TestSDKClient(unittest.TestCase):
     #     self.assertEqual(0, channels[1].state['nonce'])
     #     self.assertEqual(0, channels[1].state['last_signed_amount'])
 
+    def tearDown(self):
+        try:
+            shutil.rmtree(self.path_to_pb_files)
+            print(f"Directory '{self.path_to_pb_files}' has been removed successfully after testing.")
+        except OSError as e:
+            print(f"Error: {self.path_to_pb_files} : {e.strerror}")
 
-def get_service_client():
+
+def get_test_service_data():
     org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
     service_id = "Exampleservice"
     group_name = "default_group"
@@ -101,7 +109,8 @@ def get_service_client():
 
     snet_sdk = sdk.SnetSDK(config)
     service_client = snet_sdk.create_service_client(org_id, service_id, group_name)
-    return service_client
+    path_to_pb_files = snet_sdk.get_path_to_pb_files(org_id, service_id)
+    return service_client, path_to_pb_files
 
 
 if __name__ == '__main__':
