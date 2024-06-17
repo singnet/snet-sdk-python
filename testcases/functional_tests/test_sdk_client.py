@@ -1,5 +1,6 @@
 import unittest
 import shutil
+import os
 
 from snet import sdk
 
@@ -93,10 +94,9 @@ def get_test_service_data():
     service_id = "Exampleservice"
     group_name = "default_group"
 
-    # TODO remove test keys from repo
     config = {
-        "private_key": "51ec611f164a078a13dba33e5afefcd62c8460545b2d48177a27443971482b4a",
-        "eth_rpc_endpoint": "https://sepolia.infura.io/v3/09027f4a13e841d48dbfefc67e7685d5",
+        "private_key": os.environ['SNET_TEST_WALLET_PRIVATE_KEY'],
+        "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/{os.environ['SNET_TEST_INFURA_KEY']}",
         "email": "test@test.com",
         # "free_call_auth_token-bin":"f5533eb0f01f0d45239c11b411bdfd4221fd3b125e4250db1f7bc044466108bc10ce95ab62ae224b6578b68d0ce337b4ec36e4b9dfbe6653e04973107813cbc01c",
         # "free-call-token-expiry-block":19690819,
