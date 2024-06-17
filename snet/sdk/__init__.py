@@ -81,10 +81,20 @@ class SnetSDK:
             self.registry_contract = get_contract_object(self.web3, "Registry", _registry_contract_address)
 
         self.account = Account(self.web3, config, self.mpe_contract)
+
         global_config = Config(sdk_config=config)
         self.setup_config(global_config)
         sdk = SDKCommand(global_config, args=Arguments(config['org_id'], config['service_id']))
-        sdk.generate_client_library()
+        force_update = config.get('force_update', False)
+
+        if force_update:
+            sdk.generate_client_library()
+        else:
+            path_to_pb_files = self.get_path_to_pb_files(config['org_id'], config['service_id'])
+            pb_2_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2.py")
+            pb_2_grpc_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2_grpc.py")
+            if not pb_2_file_name or not pb_2_grpc_file_name:
+                sdk.generate_client_library()
 
     def setup_config(self, config: Config) -> None:
         out_f = sys.stdout
