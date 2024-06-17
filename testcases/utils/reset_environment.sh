@@ -52,7 +52,7 @@ nohup ./node_modules/.bin/ganache-cli --mnemonic 'gauge enact biology destroy no
 # # Create First identity (snet-user = first ganache).
 # # (snet will automatically swith to this new identity)
 # snet identity create snet-user rpc --network local
-snet identity create --private-key "$KEY" test key --network sepolia
+snet identity create --private-key "$SNET_TEST_WALLET_PRIVATE_KEY" test key --network sepolia
 export PYTHONPATH=$cwd
 python3 $cwd"/packages/snet_cli/test/functional_tests/mint/mint.py"
 snet account deposit 10000000 -y -q
