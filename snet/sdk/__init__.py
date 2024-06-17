@@ -81,9 +81,31 @@ class SnetSDK:
             self.registry_contract = get_contract_object(self.web3, "Registry", _registry_contract_address)
 
         self.account = Account(self.web3, config, self.mpe_contract)
-        
-        sdk = SDKCommand(Config(), args=Arguments(config['org_id'], config['service_id']))
+        global_config = Config(sdk_config=config)
+        self.setup_config(global_config)
+        sdk = SDKCommand(global_config, args=Arguments(config['org_id'], config['service_id']))
         sdk.generate_client_library()
+
+    def setup_config(self, config: Config) -> None:
+        out_f = sys.stdout
+        network = self._config.get("network", None)
+        identity_name = self._config.get("identity_name", None)
+        # Checking for an empty network
+        if network and config["session"]["network"] != network:
+            config.set_session_network(network, out_f)
+        if identity_name:
+            self.set_session_identity(identity_name, config, out_f)
+        elif len(config.get_all_identities_names()) > 0:
+            if "identity" not in config["session"] or config["session"]["identity"] == "":
+                raise Exception("identity_name is not passed or selected")
+
+    def set_session_identity(self, identity_name: str, config: Config, out_f):
+        if identity_name not in config.get_all_identities_names():
+            identity = config.setup_identity()
+            config.add_identity(identity_name, identity, out_f)
+            config.set_session_identity(identity_name, out_f)
+        elif config["session"]["identity"] != identity_name:
+            config.set_session_identity(identity_name, out_f)
 
     def create_service_client(self, org_id, service_id, group_name=None,
                               payment_channel_management_strategy=None, options=None, concurrent_calls=1):
