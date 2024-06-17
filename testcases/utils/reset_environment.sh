@@ -54,6 +54,7 @@ nohup ./node_modules/.bin/ganache-cli --mnemonic 'gauge enact biology destroy no
 # snet identity create snet-user rpc --network local
 snet identity create --private-key "$SNET_TEST_WALLET_PRIVATE_KEY" test key --network sepolia
 sed -i "s/09027f4a13e841d48dbfefc67e7685d5/$SNET_TEST_INFURA_KEY/g" ~/.snet/config
+cat ~/.snet/config
 export PYTHONPATH=$cwd
 python3 $cwd"/packages/snet_cli/test/functional_tests/mint/mint.py"
 snet account deposit 10000000 -y -q
