@@ -29,8 +29,8 @@ cd ../platform-contracts
 nohup ./node_modules/.bin/ganache-cli --mnemonic 'gauge enact biology destroy normal tunnel slight slide wide sauce ladder produce' --networkId 829257324 >/dev/null &
 ./node_modules/.bin/truffle migrate --network local
 ######################
-# # III. remove old snet-cli configuration
-# rm -rf ~/.snet
+# III. remove old snet-cli configuration
+rm -rf ~/.snet
 
 # # IV. Configure SNET-CLI.
 
