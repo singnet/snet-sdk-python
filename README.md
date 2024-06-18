@@ -8,7 +8,7 @@ The package is published in PyPI at the following link:
 
 |Package                                       |Description                                                          |
 |----------------------------------------------|---------------------------------------------------------------------|
-|[snet-sdk](https://pypi.org/project/snet.sdk/)|Integrate SingularityNET services seamlessly into Python applications|
+|[snet.sdk](https://pypi.org/project/snet.sdk/)|Integrate SingularityNET services seamlessly into Python applications|
 
 ## Getting Started  
   
@@ -24,52 +24,57 @@ The SingularityNET SDK abstracts and manages state channels with service provide
 ### Usage
 
 To call a SingularityNET service, the user must be able to deposit funds (AGI tokens) to the [Multi-Party Escrow](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/) Smart Contract.
-To deposit these tokens or do any other transaction on the Ethereum blockchain, the user must possess an Ethereum identity with available Ether.
+To deposit these tokens or do any other transaction on the Ethereum blockchain, the user must possess an Ethereum identity with available Ether. To make a deposit you should use the snet-cli package.
 
-Once you have installed the snet-sdk in your current environment and it's in your PYTHONPATH, you should import it and create an instance of the base sdk class:
+Once you have installed snet-sdk and snet-cli in your current environment, and it's in your PYTHONPATH, you should create an identity:
 
+```bash
+snet identity create --private-key "YOUR_PRIVATE_KEY" --network "ethereum_network_name" YOUR_LOCAL_IDENTITY_NAME key
+```
+And deposit AGIX into the MPE contract:
+```bash
+ snet account deposit 100
+ ```
+
+Now you can import snet-sdk into your Python script and create an instance of the base sdk class:
 ```python
 from snet import sdk
-from config import config
-snet_sdk = sdk.SnetSDK(config)
-```
-
-The `config` parameter must be a Python dictionary.  
-See [test_sdk_client.py.sample](https://github.com/singnet/snet-cli/blob/master/packages/sdk/testcases/functional_tests/test_sdk_client.py) for a sample configuration file.
-
-After executing this code, you should have client libraries created for this service. They are located in the following path: ~/.snet/org_id/service_id/python/
-
-Note: Currently you can only save files to ~/.snet/
-
-##### Free call configuration
-
-If you want to use free call you need to add below mwntioned attributes in config file.
-```         
-"free_call_auth_token-bin":"f2548d27ffd319b9c05918eeac15ebab934e5cfcd68e1ec3db2b92765",
-"free-call-token-expiry-block":172800,
-"email":"test@test.com"  
-```
-You can download this config for a given service from [Dapp]([https://beta.singularitynet.io/)
-
-Now, the instance of the sdk can be used to create service client instances.
-Continuing from the previous code this is an example using `Exampleservicee` from the `26072b8b6a0e448180f8c0e702ab6d2f` organization:
-
-```python
-import example_service_pb2_grpc
 
 org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
 service_id = "Exampleservice"
 group_name="default_group"
 
-service_client = snet_sdk.create_service_client(org_id, service_id, group_name)
+snet_sdk = sdk.SnetSDK(config)
 ```
+
+The `config` parameter must be a Python dictionary.
+See [test_sdk_client.py](https://github.com/singnet/snet-sdk-python/blob/master/testcases/functional_tests/test_sdk_client.py) for a sample configuration file.
 
 Note that `org_id` and `service_id` must be passed to `config`.
 
-The generated service_client instance can be used to call methods provided by the service.
-To call these methods, you need to use the call_rpc method, passing into it the names of the method and data object, as well as the data itself (What specific data needs to be passed can be seen in the .proto file).
-Continuing from the previous code, this is an example using example-service from the snet organization:
+After executing this code, you should have client libraries created for this service. They are located at the following path: ~/.snet/org_id/service_id/python/
 
+Note: Currently you can only save files to ~/.snet/. We will fix this in the future.
+
+##### Free call configuration
+
+If you want to use a free call you need to add these attributes to the config dictionary:
+```         
+"free_call_auth_token-bin":"f2548d27ffd319b9c05918eeac15ebab934e5cfcd68e1ec3db2b92765",
+"free-call-token-expiry-block":172800,
+"email":"test@test.com"  
+```
+You can receive these for a given service from the [Dapp](https://beta.singularitynet.io/)
+
+Now, the instance of the sdk can be used to create the service client instances.  
+Continuing from the previous code this is an example using `Exampleservice` from the `26072b8b6a0e448180f8c0e702ab6d2f` organization:
+
+```python
+service_client = snet_sdk.create_service_client(org_id, service_id, group_name)
+```
+The instance of service_client that has been generated can be utilized to invoke the methods that the service offers. 
+To do this, use the the call_rpc method. This method needs the names of the method and data object, along with the data itself, to be passed into it. 
+The specific data that needs to be passed can be found in the .proto file. Building upon the previously written code, here’s an example that uses the Exampleservice from the 26072b8b6a0e448180f8c0e702ab6d2f organization:
 ```python
 result = service_client.call_rpc("mul", "Numbers", a=20, b=3)
 print(f"Performing 20 * 3: {result}") # Performing 20 * 3: value: 60.0
