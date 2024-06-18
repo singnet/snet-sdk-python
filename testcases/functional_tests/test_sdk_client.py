@@ -105,6 +105,8 @@ def get_test_service_data():
         "service_id": service_id,
         "identity_name": "test",
         "identity_type": "key",
+        "network": "sepolia",
+        "force_update": False
     }
 
     snet_sdk = sdk.SnetSDK(config)
