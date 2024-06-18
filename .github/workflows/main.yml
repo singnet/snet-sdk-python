@@ -72,4 +72,4 @@ jobs:
           export FORMER_SNET_TEST_INFURA_KEY=${{ secrets.FORM_INF_KEY }}
           export PIP_BREAK_SYSTEM_PACKAGES=1
           export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-          sh -ex ./testcases/utils/run_all_functional.sh 2>/dev/null
+          sh -ex ./testcases/utils/run_all_functional.sh
