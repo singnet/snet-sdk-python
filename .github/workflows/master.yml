@@ -45,6 +45,7 @@ jobs:
       #     cd example-service
       #     pip3 install -r requirements.txt --break-system-packages
       #     sh buildproto.sh
+
           
       - name: Set up for snet daemon
         run: |
