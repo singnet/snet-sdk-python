@@ -2,7 +2,7 @@ name: tests2
 on:
   # push:
   #   branches: [ "master" ]
-  pull_request:
+  push:
     branches: [ "development" ]
   workflow_dispatch:
 
@@ -17,6 +17,7 @@ jobs:
           apt update
           apt install -y libudev-dev libusb-1.0-0-dev curl jq
           apt install -y python3-pip python3.11-venv
+          echo DEV
 
       - name: install ipfs
         run: |
