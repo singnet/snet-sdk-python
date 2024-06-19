@@ -91,6 +91,6 @@ nohup ./snetd &
 
 #wait for daemon to come up
 sleep 20
-
+cat ~/.snet/config
 #cd ~/singnet/snet-cli
  
