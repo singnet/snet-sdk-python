@@ -1,13 +1,13 @@
-name: tests2
+name: tests_development
 on:
   # push:
-  #   branches: [ "master" ]
+  #   branches: [ "development" ]
   pull_request:
     branches: [ "development" ]
   workflow_dispatch:
 
 jobs:
-    run_tests2:
+    run_tests_development:
       runs-on: ubuntu-latest
       container: node:20-bookworm
       steps:
