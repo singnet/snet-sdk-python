@@ -117,8 +117,12 @@ class SnetSDK:
         elif config["session"]["identity"] != identity_name:
             config.set_session_identity(identity_name, out_f)
 
-    def create_service_client(self, org_id, service_id, group_name=None,
-                              payment_channel_management_strategy=None, options=None, concurrent_calls=1):
+    def create_service_client(self, payment_channel_management_strategy=None, 
+                              options=None, concurrent_calls=1):
+        org_id = self._config.get("org_id")
+        service_id = self._config.get("service_id")
+        group_name = self._config.get("group_name", "default_group")
+        
         if payment_channel_management_strategy is None:
             payment_channel_management_strategy = DefaultPaymentStrategy(concurrent_calls)
         if options is None:
