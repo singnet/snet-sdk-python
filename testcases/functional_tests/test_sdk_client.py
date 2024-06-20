@@ -8,7 +8,7 @@ from snet import sdk
 class TestSDKClient(unittest.TestCase):
     def setUp(self):
         self.service_client, self.path_to_pb_files = get_test_service_data()
-        channel = self.service_client.open_channel(123456, 33333)
+        channel = self.service_client.deposit_and_open_channel(123456, 33333)
 
     def test__call_to_service(self):
         result = self.service_client.call_rpc("mul", "Numbers", a=20, b=3)
@@ -30,7 +30,9 @@ def get_test_service_data():
     config = {
         "private_key": os.environ['SNET_TEST_WALLET_PRIVATE_KEY'],
         "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/{os.environ['SNET_TEST_INFURA_KEY']}",
-        "email": "test@test.com",
+        # "email": "test@test.com",
+        # "free_call_auth_token-bin":"f5533eb0f01f0d45239c11b411bdfd4221fd3b125e4250db1f7bc044466108bc10ce95ab62ae224b6578b68d0ce337b4ec36e4b9dfbe6653e04973107813cbc01c",
+        # "free-call-token-expiry-block":19690819,
         "concurrency": False,
         "org_id": org_id,
         "service_id": service_id,
