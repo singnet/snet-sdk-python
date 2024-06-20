@@ -94,5 +94,3 @@ sleep 20
 
 #cd ~/singnet/snet-cli
  
-
-

@@ -81,12 +81,48 @@ class SnetSDK:
             self.registry_contract = get_contract_object(self.web3, "Registry", _registry_contract_address)
 
         self.account = Account(self.web3, config, self.mpe_contract)
-        
-        sdk = SDKCommand(Config(), args=Arguments(config['org_id'], config['service_id']))
-        sdk.generate_client_library()
 
-    def create_service_client(self, org_id, service_id, group_name=None,
-                              payment_channel_management_strategy=None, options=None, concurrent_calls=1):
+        global_config = Config(sdk_config=config)
+        self.setup_config(global_config)
+        sdk = SDKCommand(global_config, args=Arguments(config['org_id'], config['service_id']))
+        force_update = config.get('force_update', False)
+
+        if force_update:
+            sdk.generate_client_library()
+        else:
+            path_to_pb_files = self.get_path_to_pb_files(config['org_id'], config['service_id'])
+            pb_2_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2.py")
+            pb_2_grpc_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2_grpc.py")
+            if not pb_2_file_name or not pb_2_grpc_file_name:
+                sdk.generate_client_library()
+
+    def setup_config(self, config: Config) -> None:
+        out_f = sys.stdout
+        network = self._config.get("network", None)
+        identity_name = self._config.get("identity_name", None)
+        # Checking for an empty network
+        if network and config["session"]["network"] != network:
+            config.set_session_network(network, out_f)
+        if identity_name:
+            self.set_session_identity(identity_name, config, out_f)
+        elif len(config.get_all_identities_names()) > 0:
+            if "identity" not in config["session"] or config["session"]["identity"] == "":
+                raise Exception("identity_name is not passed or selected")
+
+    def set_session_identity(self, identity_name: str, config: Config, out_f):
+        if identity_name not in config.get_all_identities_names():
+            identity = config.setup_identity()
+            config.add_identity(identity_name, identity, out_f)
+            config.set_session_identity(identity_name, out_f)
+        elif config["session"]["identity"] != identity_name:
+            config.set_session_identity(identity_name, out_f)
+
+    def create_service_client(self, payment_channel_management_strategy=None, 
+                              options=None, concurrent_calls=1):
+        org_id = self._config.get("org_id")
+        service_id = self._config.get("service_id")
+        group_name = self._config.get("group_name", "default_group")
+        
         if payment_channel_management_strategy is None:
             payment_channel_management_strategy = DefaultPaymentStrategy(concurrent_calls)
         if options is None:
