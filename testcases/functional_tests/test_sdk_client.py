@@ -93,7 +93,6 @@ def get_test_service_data():
     org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
     service_id = "Exampleservice"
     group_name = "default_group"
-
     config = {
         "private_key": os.environ['SNET_TEST_WALLET_PRIVATE_KEY'],
         "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/{os.environ['SNET_TEST_INFURA_KEY']}",
@@ -105,6 +104,8 @@ def get_test_service_data():
         "service_id": service_id,
         "identity_name": "test",
         "identity_type": "key",
+        "network": "sepolia",
+        "force_update": False
     }
 
     snet_sdk = sdk.SnetSDK(config)
