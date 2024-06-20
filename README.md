@@ -23,7 +23,7 @@ The SingularityNET SDK abstracts and manages state channels with service provide
 
 ### Usage
 
-To call a SingularityNET service, the user must be able to deposit funds (AGI tokens) to the [Multi-Party Escrow](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/) Smart Contract.
+To call a SingularityNET service, the user must be able to deposit funds (AGIX tokens) to the [Multi-Party Escrow](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/) Smart Contract.
 To deposit these tokens or do any other transaction on the Ethereum blockchain, the user must possess an Ethereum identity with available Ether.
 
 Once you have installed snet-sdk in your current environment, you can import it into your Python script and create an instance of the base sdk class:
@@ -87,7 +87,7 @@ group_name = "default_group"
 service_client = snet_sdk.create_service_client(org_id, service_id, group_name)
 service_client.deposit_and_open_channel(123456, 33333)
 ```
-`deposit_and_open_channel()` function deposits cogs into an MPE smart contract and opens a payment channel.   
+`deposit_and_open_channel()` function deposits the specified amount of AGIX tokens in cogs into an MPE smart contract and opens a payment channel.   
 The instance of service_client that has been generated can be utilized to invoke the methods that the service offers. 
 To do this, use the the call_rpc method. This method needs the names of the method and data object, along with the data itself, to be passed into it. 
 The specific data that needs to be passed can be found in the .proto file. Building upon the previously written code, here’s an example that uses the *Exampleservice* from the *26072b8b6a0e448180f8c0e702ab6d2f* organization:
