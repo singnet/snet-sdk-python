@@ -45,7 +45,7 @@ def test_sdk():
 
     snet_sdk = sdk.SnetSDK(config)
     service_client = snet_sdk.create_service_client(org_id, service_id, examples_service_pb2_grpc.CalculatorStub,
-                                                    group_name=group_name, concurrent_calls=3)
+                                                    group_name, concurrent_calls=3)
     check_channel_status(service_client, 3000)
     make_cuncurrent_calls(service_client)
     check_channel_status(service_client, 6000)

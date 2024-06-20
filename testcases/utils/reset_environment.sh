@@ -25,42 +25,43 @@ nohup ipfs daemon >ipfs.log 2>&1 &
 
 # II. restart ganache and remigrate platform-contracts
 killall node || echo "supress an error"
-
 cd ../platform-contracts
 nohup ./node_modules/.bin/ganache-cli --mnemonic 'gauge enact biology destroy normal tunnel slight slide wide sauce ladder produce' --networkId 829257324 >/dev/null &
 ./node_modules/.bin/truffle migrate --network local
-
+######################
 # III. remove old snet-cli configuration
 rm -rf ~/.snet
 
-# IV. Configure SNET-CLI.
+# # IV. Configure SNET-CLI.
 
-# set correct ipfs endpoint
-# (the new new configuration file with default values will be created automatically)
-snet set default_ipfs_endpoint http://localhost:5002
+# # set correct ipfs endpoint
+# # (the new new configuration file with default values will be created automatically)
+# snet set default_ipfs_endpoint http://localhost:5002
 
-# Add local network and switch to it
-snet network create local http://localhost:8545
+# # Add local network and switch to it
+# snet network create local http://localhost:8545
 
-# swith to local network
-snet network local
+# # swith to local network
+# snet network local
 
-# Configure contract addresses for local network (it will not be necessary for goerli or mainnet! )
-snet set current_singularitynettoken_at 0x6e5f20669177f5bdf3703ec5ea9c4d4fe3aabd14
-snet set current_registry_at 0x4e74fefa82e83e0964f0d9f53c68e03f7298a8b2
-snet set current_multipartyescrow_at 0x5c7a4290f6f8ff64c69eeffdfafc8644a4ec3a4e
+# # Configure contract addresses for local network (it will not be necessary for goerli or mainnet! )
+# snet set current_singularitynettoken_at 0x6e5f20669177f5bdf3703ec5ea9c4d4fe3aabd14
+# snet set current_registry_at 0x4e74fefa82e83e0964f0d9f53c68e03f7298a8b2
+# snet set current_multipartyescrow_at 0x5c7a4290f6f8ff64c69eeffdfafc8644a4ec3a4e
 
-# Create First identity (snet-user = first ganache).
-# (snet will automatically swith to this new identity)
-snet identity create snet-user rpc --network local
+# # Create First identity (snet-user = first ganache).
+# # (snet will automatically swith to this new identity)
+# snet identity create snet-user rpc --network local
+snet identity create --private-key "$SNET_TEST_WALLET_PRIVATE_KEY" test key --network sepolia
+sed -i "s/$FORMER_SNET_TEST_INFURA_KEY/$SNET_TEST_INFURA_KEY/g" ~/.snet/config
 export PYTHONPATH=$cwd
-python $cwd"/packages/snet_cli/test/functional_tests/mint/mint.py"
+python3 $cwd"/packages/snet_cli/test/functional_tests/mint/mint.py"
 snet account deposit 10000000 -y -q
-snet account balance
-
+# snet account balance
+############
 # service provider has --wallet-index==9 (0x52653A9091b5d5021bed06c5118D24b23620c529)
 # make two endpoints (both are actually valid)
-cd ../snet-cli/packages/sdk/testcases/
+cd ../snet-sdk-python/testcases
 
 
 snet organization metadata-init test_org test_org organization
@@ -78,20 +79,20 @@ snet service publish test_org test_service -y -q
 snet organization print-metadata test_org test_org
 snet service print-metadata test_org test_service
 
-
-cd ~/singnet/example-service
+pwd
+cd ../example-service
 pip3 install -r requirements.txt
 sh buildproto.sh
 nohup python3 run_example_service.py --no-daemon &
 
 
-cd ~/singnet/snet-daemon/snet-daemon-v5.0.1-linux-amd64
+cd ../../snet-daemon/snet-daemon-v5.0.1-linux-amd64
 nohup ./snetd &
 
 #wait for daemon to come up
 sleep 20
 
-cd ~/singnet/snet-cli
+#cd ~/singnet/snet-cli
  
 
 
