@@ -38,6 +38,7 @@ config = {
         "concurrency": False,
         "org_id": "organization_id",
         "service_id": "id_of_the_service",
+        "group_name": "default_group",
         "identity_name": "local_name_for_that_identity",
         "identity_type": "key",
         "network": "sepolia",
@@ -78,13 +79,10 @@ If you want to use a free call you need to add these attributes to the config di
 You can receive these for a given service from the [Dapp](https://beta.singularitynet.io/)
 #### Calling the service
 Now, the instance of the sdk can be used to create the service client instances.  
-Continuing from the previous code this is an example using `Exampleservice` from the `26072b8b6a0e448180f8c0e702ab6d2f` organization with "default_group" group_name:
+Continuing from the previous code this is an example using `Exampleservice` from the `26072b8b6a0e448180f8c0e702ab6d2f` organization:
 
 ```python
-org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
-service_id = "Exampleservice"
-group_name = "default_group"
-service_client = snet_sdk.create_service_client(org_id, service_id, group_name)
+service_client = snet_sdk.create_service_client()
 service_client.deposit_and_open_channel(123456, 33333)
 ```
 `deposit_and_open_channel()` function deposits the specified amount of AGIX tokens in cogs into an MPE smart contract and opens a payment channel.   
