@@ -24,7 +24,7 @@ The SingularityNET SDK abstracts and manages state channels with service provide
 ### Usage
 
 To call a SingularityNET service, the user must be able to deposit funds (AGI tokens) to the [Multi-Party Escrow](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/) Smart Contract.
-To deposit these tokens or do any other transaction on the Ethereum blockchain, the user must possess an Ethereum identity with available Ether. To make a deposit you should use the snet-cli package.
+To deposit these tokens or do any other transaction on the Ethereum blockchain, the user must possess an Ethereum identity with available Ether.
 
 Once you have installed snet-sdk in your current environment, you can import it into your Python script and create an instance of the base sdk class:
 ```python
