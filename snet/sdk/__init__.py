@@ -206,7 +206,8 @@ class SnetSDK:
 
         return self._get_group_by_group_name(service_metadata, group_name)
 
-    def get_service_and_messages_info(self):
+    def get_services_and_messages_info(self):
+        # Get proto file filepath and open it
         path_to_pb_files = self.get_path_to_pb_files(self._config['org_id'], self._config['service_id'])
         proto_file_name = find_file_by_keyword(path_to_pb_files, keyword=".proto")
         proto_filepath = os.path.join(path_to_pb_files, proto_file_name)
@@ -257,8 +258,8 @@ class SnetSDK:
 
         return services, messages
 
-    def print_service_info(self):
-        services, messages = self.get_service_and_messages_info()
+    def print_services_info(self):
+        services, messages = self.get_services_and_messages_info()
 
         # Print the parsed services and their methods
         for service, methods in services.items():
