@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import sys
 from typing import Any, NewType
+import re
 
 import google.protobuf.internal.api_implementation
 from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
@@ -204,3 +205,69 @@ class SnetSDK:
             return self._get_first_group(service_metadata)
 
         return self._get_group_by_group_name(service_metadata, group_name)
+
+    def get_service_and_messages_info(self):
+        path_to_pb_files = self.get_path_to_pb_files(self._config['org_id'], self._config['service_id'])
+        proto_file_name = find_file_by_keyword(path_to_pb_files, keyword=".proto")
+        proto_filepath = os.path.join(path_to_pb_files, proto_file_name)
+        with open(proto_filepath, 'r') as file:
+            proto_content = file.read()
+        # Regular expression patterns to match services, methods, messages, and fields
+        service_pattern = re.compile(r'service\s+(\w+)\s*{')
+        rpc_pattern = re.compile(r'rpc\s+(\w+)\s*\((\w+)\)\s+returns\s+\((\w+)\)')
+        message_pattern = re.compile(r'message\s+(\w+)\s*{')
+        field_pattern = re.compile(r'\s*(\w+)\s+(\w+)\s*=\s*\d+\s*;')
+
+        services = {}
+        messages = {}
+        current_service = None
+        current_message = None
+
+        for line in proto_content.splitlines():
+            # Match a service definition
+            service_match = service_pattern.search(line)
+            if service_match:
+                current_service = service_match.group(1)
+                services[current_service] = []
+                continue
+
+            # Match an RPC method inside a service
+            if current_service:
+                rpc_match = rpc_pattern.search(line)
+                if rpc_match:
+                    method_name = rpc_match.group(1)
+                    input_type = rpc_match.group(2)
+                    output_type = rpc_match.group(3)
+                    services[current_service].append((method_name, input_type, output_type))
+
+            # Match a message definition
+            message_match = message_pattern.search(line)
+            if message_match:
+                current_message = message_match.group(1)
+                messages[current_message] = []
+                continue
+
+            # Match a field inside a message
+            if current_message:
+                field_match = field_pattern.search(line)
+                if field_match:
+                    field_type = field_match.group(1)
+                    field_name = field_match.group(2)
+                    messages[current_message].append((field_type, field_name))
+
+        return services, messages
+
+    def print_service_info(self):
+        services, messages = self.get_service_and_messages_info()
+
+        # Print the parsed services and their methods
+        for service, methods in services.items():
+            print(f"Service: {service}")
+            for method_name, input_type, output_type in methods:
+                print(f"  Method: {method_name}, Input: {input_type}, Output: {output_type}")
+
+        # Print the parsed messages and their fields
+        for message, fields in messages.items():
+            print(f"Message: {message}")
+            for field_type, field_name in fields:
+                print(f"  Field: {field_type} {field_name}")
