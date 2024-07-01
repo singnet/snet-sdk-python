@@ -10,7 +10,7 @@ class TestSDKClient(unittest.TestCase):
         self.service_client, self.path_to_pb_files = get_test_service_data()
         channel = self.service_client.deposit_and_open_channel(123456, 33333)
 
-    def test__call_to_service(self):
+    def test_call_to_service(self):
         result = self.service_client.call_rpc("mul", "Numbers", a=20, b=3)
         self.assertEqual(60.0, result.value)
 
@@ -27,9 +27,6 @@ def get_test_service_data():
         "private_key": os.environ['SNET_TEST_WALLET_PRIVATE_KEY'],
         "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/{os.environ['SNET_TEST_INFURA_KEY']}",
         "concurrency": False,
-        "org_id": "26072b8b6a0e448180f8c0e702ab6d2f",
-        "service_id": "Exampleservice",
-        "group_name": "default_group",
         "identity_name": "test",
         "identity_type": "key",
         "network": "sepolia",
@@ -37,8 +34,10 @@ def get_test_service_data():
     }
 
     snet_sdk = sdk.SnetSDK(config)
-    service_client = snet_sdk.create_service_client()
-    path_to_pb_files = snet_sdk.get_path_to_pb_files(config['org_id'], config['service_id'])
+    service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f",
+                                                    service_id="Exampleservice", group_name="default_group")
+    path_to_pb_files = snet_sdk.get_path_to_pb_files(org_id="26072b8b6a0e448180f8c0e702ab6d2f",
+                                                     service_id="Exampleservice")
     return service_client, path_to_pb_files
 
 
