@@ -253,14 +253,16 @@ class ServiceClient:
     def get_services_and_messages_info_as_pretty_string(self):
         services, messages = self.get_services_and_messages_info()
 
-        # Print the parsed services and their methods
+        string_output = ""
+        # Prettify the parsed services and their methods
         for service, methods in services.items():
-            print(f"Service: {service}")
+            string_output += f"Service: {service}\n"
             for method_name, input_type, output_type in methods:
-                print(f"  Method: {method_name}, Input: {input_type}, Output: {output_type}")
+                string_output += f"  Method: {method_name}, Input: {input_type}, Output: {output_type}\n"
 
-        # Print the parsed messages and their fields
+        # Prettify the messages and their fields
         for message, fields in messages.items():
-            print(f"Message: {message}")
+            string_output += f"Message: {message}\n"
             for field_type, field_name in fields:
-                print(f"  Field: {field_type} {field_name}")
+                string_output += f"  Field: {field_type} {field_name}\n"
+        return string_output
