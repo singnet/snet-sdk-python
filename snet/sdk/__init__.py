@@ -110,22 +110,16 @@ class SnetSDK:
         elif config["session"]["identity"] != identity_name:
             config.set_session_identity(identity_name, out_f)
 
-    def create_service_client(self, service_options: dict, payment_channel_management_strategy=None,
+    def create_service_client(self, org_id: str, service_id: str, group_name=None,
+                              payment_channel_management_strategy=None,
+                              free_call_auth_token_bin=None,
+                              free_call_token_expiry_block=None,
+                              options=None,
                               concurrent_calls=1):
 
-        org_id = service_options['org_id']
-        service_id = service_options['service_id']
-        group_name = service_options.get('group_name', None)
-
-        # Create a service`s config dictionary that is base sdk_config + service_config passed as an argument.
-        # service_options can override the base service settings
-        merged_options = copy.deepcopy(self._sdk_config)
-        merged_options.update(service_options)
-        service_options = merged_options
-
         # Create and instance of the Config object, so we can create an instance of SDKCommand
-        service_instance_config_object = Config(sdk_config=service_options)
-        sdk = SDKCommand(service_instance_config_object, args=Arguments(org_id, service_id))
+        sdk_config_object = Config(sdk_config=self._sdk_config)
+        sdk = SDKCommand(sdk_config_object, args=Arguments(org_id, service_id))
 
         # Download the proto file and generate stubs if needed
         force_update = self._sdk_config.get('force_update', False)
@@ -141,10 +135,14 @@ class SnetSDK:
         if payment_channel_management_strategy is None:
             payment_channel_management_strategy = DefaultPaymentStrategy(concurrent_calls)
 
-        service_options['free_call_auth_token-bin'] = bytes.fromhex(service_options.get("free_call_auth_token-bin", ""))
-        service_options['free-call-token-expiry-block'] = service_options.get("free-call-token-expiry-block", 0)
-        service_options['email'] = self._sdk_config.get("email", "")
-        service_options['concurrency'] = self._sdk_config.get("concurrency", True)
+        if options is None:
+            options = dict()
+        options['free_call_auth_token-bin'] = bytes.fromhex(free_call_auth_token_bin) if\
+            free_call_token_expiry_block else ""
+        options['free-call-token-expiry-block'] = free_call_token_expiry_block if\
+            free_call_token_expiry_block else 0
+        options['email'] = self._sdk_config.get("email", "")
+        options['concurrency'] = self._sdk_config.get("concurrency", True)
 
         if self._metadata_provider is None:
             self._metadata_provider = IPFSMetadataProvider(self.ipfs_client, self.registry_contract)
@@ -158,7 +156,7 @@ class SnetSDK:
         pb2_module = self.get_module_by_keyword(org_id, service_id, keyword="pb2.py")
         
         service_client = ServiceClient(org_id, service_id, service_metadata, group, service_stub, strategy,
-                                       service_options, self.mpe_contract, self.account, self.web3, pb2_module)
+                                       options, self.mpe_contract, self.account, self.web3, pb2_module)
         return service_client
 
     def get_service_stub(self, org_id: str, service_id: str) -> ServiceStub:
