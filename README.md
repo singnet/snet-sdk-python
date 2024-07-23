@@ -109,8 +109,6 @@ result = service_client.call_rpc("mul", "Numbers", a=20, b=3)
 print(f"Calculating 20 * 3: {result}") #  Calculating 20 * 3: 60.0
 ```
 
-You can get this code example at [https://github.com/singnet/snet-code-examples/tree/python_client/python/client](https://github.com/singnet/snet-code-examples/tree/python_client/python/client)
-
 For more information about gRPC and how to use it with Python, please see:
 - [gRPC Basics - Python](https://grpc.io/docs/tutorials/basic/python.html)
 - [gRPC Python’s documentation](https://grpc.io/grpc/python/)
