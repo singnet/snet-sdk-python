@@ -3,9 +3,16 @@ import os
 from pathlib import Path
 import sys
 from typing import Any, NewType
+import warnings
 import copy
 
 import google.protobuf.internal.api_implementation
+
+with warnings.catch_warnings():
+    # Suppress the eth-typing package`s warnings related to some new networks
+    warnings.filterwarnings("ignore", "Network .* does not have a valid ChainId. eth-typing should be "
+                                      "updated with the latest networks.", UserWarning)
+
 from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
 from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
 from snet.cli.commands.sdk_command import SDKCommand
