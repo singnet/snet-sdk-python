@@ -56,8 +56,8 @@ def get_from_ipfs_and_checkhash(ipfs_client, ipfs_hash_base58, validate=True):
     We must check the hash becasue we cannot believe that ipfs_client wasn't been compromise
     """
     if validate:
-        from snet.cli.resources.proto.unixfs_pb2 import Data
-        from snet.cli.resources.proto.merckledag_pb2 import MerkleNode
+        from snet.sdk.resources.proto.unixfs_pb2 import Data
+        from snet.sdk.resources.proto.merckledag_pb2 import MerkleNode
 
         # No nice Python library to parse ipfs blocks, so do it ourselves.
         block_data = ipfs_client.block.get(ipfs_hash_base58)
