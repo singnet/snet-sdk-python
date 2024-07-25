@@ -4,7 +4,6 @@ from pathlib import Path
 import sys
 from typing import Any, NewType
 import warnings
-import copy
 
 import google.protobuf.internal.api_implementation
 
@@ -15,10 +14,10 @@ with warnings.catch_warnings():
 
 from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
 from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
-from snet.cli.commands.sdk_command import SDKCommand
-from snet.cli.commands.commands import BlockchainCommand
-from snet.cli.config import Config
-from snet.cli.utils.utils import bytes32_to_str, type_converter
+from snet.sdk.commands.sdk_command import SDKCommand
+from snet.sdk.commands.commands import BlockchainCommand
+from snet.sdk.config import Config
+from snet.sdk.utils.utils import bytes32_to_str, type_converter
 
 google.protobuf.internal.api_implementation.Type = lambda: 'python'
 
@@ -27,12 +26,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 _sym_db.RegisterMessage = lambda x: None
 
-
-from urllib.parse import urljoin
-
-
 import web3
-from rfc3986 import urlparse
 import ipfshttpclient
 
 from snet.sdk.service_client import ServiceClient
@@ -41,9 +35,9 @@ from snet.sdk.mpe.mpe_contract import MPEContract
 
 from snet.contracts import get_contract_object
 
-from snet.cli.metadata.service import mpe_service_metadata_from_json
-from snet.cli.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
-from snet.cli.utils.utils import find_file_by_keyword
+from snet.sdk.metadata.service import mpe_service_metadata_from_json
+from snet.sdk.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
+from snet.sdk.utils.utils import find_file_by_keyword
 
 ModuleName = NewType('ModuleName', str)
 ServiceStub = NewType('ServiceStub', Any)
