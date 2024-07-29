@@ -67,6 +67,7 @@ print(snet_sdk.get_services_list("26072b8b6a0e448180f8c0e702ab6d2f"))
 ##### Free call configuration
 
 If you want to use the free calls you will need to pass these arguments to the create_service_client() method:
+
 ```         
 "free_call_auth_token-bin":"f2548d27ffd319b9c05918eeac15ebab934e5cfcd68e1ec3db2b92765",
 "free-call-token-expiry-block":172800,
@@ -104,6 +105,7 @@ print(service_client.get_services_and_messages_info_as_pretty_string())
 
 To invoke the service`s methods, you can use the the call_rpc() method. This method requires the names of the method and data object, along with the data itself, to be passed into it. 
 To continue with our example, here’s a call to the *mul* method of the *Exampleservice* from the *26072b8b6a0e448180f8c0e702ab6d2f* organization:
+
 ```python
 result = service_client.call_rpc("mul", "Numbers", a=20, b=3)
 print(f"Calculating 20 * 3: {result}") #  Calculating 20 * 3: 60.0
