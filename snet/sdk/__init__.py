@@ -3,12 +3,22 @@ import os
 from pathlib import Path
 import sys
 from typing import Any, NewType
+import warnings
+import copy
 
 import google.protobuf.internal.api_implementation
+
+with warnings.catch_warnings():
+    # Suppress the eth-typing package`s warnings related to some new networks
+    warnings.filterwarnings("ignore", "Network .* does not have a valid ChainId. eth-typing should be "
+                                      "updated with the latest networks.", UserWarning)
+
 from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
 from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
 from snet.cli.commands.sdk_command import SDKCommand
+from snet.cli.commands.commands import BlockchainCommand
 from snet.cli.config import Config
+from snet.cli.utils.utils import bytes32_to_str, type_converter
 
 google.protobuf.internal.api_implementation.Type = lambda: 'python'
 
@@ -40,7 +50,7 @@ ServiceStub = NewType('ServiceStub', Any)
 
 
 class Arguments:
-    def __init__(self, org_id, service_id):
+    def __init__(self, org_id=None, service_id=None):
         self.org_id = org_id
         self.service_id = service_id
         self.language = "python"
@@ -50,56 +60,46 @@ class Arguments:
 class SnetSDK:
     """Base Snet SDK"""
 
-    def __init__(self, config, metadata_provider=None):
-        self._config = config
+    def __init__(self, sdk_config, metadata_provider=None):
+        self._sdk_config = sdk_config
         self._metadata_provider = metadata_provider
 
         # Instantiate Ethereum client
-        eth_rpc_endpoint = self._config.get("eth_rpc_endpoint", "https://mainnet.infura.io/v3/e7732e1f679e461b9bb4da5653ac3fc2")
-        eth_rpc_request_kwargs = self._config.get("eth_rpc_request_kwargs")
+        eth_rpc_endpoint = self._sdk_config.get("eth_rpc_endpoint",
+                                                "https://mainnet.infura.io/v3/e7732e1f679e461b9bb4da5653ac3fc2")
+        eth_rpc_request_kwargs = self._sdk_config.get("eth_rpc_request_kwargs")
 
         provider = web3.HTTPProvider(endpoint_uri=eth_rpc_endpoint, request_kwargs=eth_rpc_request_kwargs)
 
         self.web3 = web3.Web3(provider)
 
         # Get MPE contract address from config if specified; mostly for local testing
-        _mpe_contract_address = self._config.get("mpe_contract_address", None)
+        _mpe_contract_address = self._sdk_config.get("mpe_contract_address", None)
         if _mpe_contract_address is None:
             self.mpe_contract = MPEContract(self.web3)
         else:
             self.mpe_contract = MPEContract(self.web3, _mpe_contract_address)
 
         # Instantiate IPFS client
-        ipfs_endpoint = self._config.get("default_ipfs_endpoint", "/dns/ipfs.singularitynet.io/tcp/80/")
+        ipfs_endpoint = self._sdk_config.get("default_ipfs_endpoint", "/dns/ipfs.singularitynet.io/tcp/80/")
         self.ipfs_client = ipfshttpclient.connect(ipfs_endpoint)
 
         # Get Registry contract address from config if specified; mostly for local testing
-        _registry_contract_address = self._config.get("registry_contract_address", None)
+        _registry_contract_address = self._sdk_config.get("registry_contract_address", None)
         if _registry_contract_address is None:
             self.registry_contract = get_contract_object(self.web3, "Registry")
         else:
             self.registry_contract = get_contract_object(self.web3, "Registry", _registry_contract_address)
 
-        self.account = Account(self.web3, config, self.mpe_contract)
+        self.account = Account(self.web3, sdk_config, self.mpe_contract)
 
-        global_config = Config(sdk_config=config)
+        global_config = Config(sdk_config=sdk_config)
         self.setup_config(global_config)
-        sdk = SDKCommand(global_config, args=Arguments(config['org_id'], config['service_id']))
-        force_update = config.get('force_update', False)
-
-        if force_update:
-            sdk.generate_client_library()
-        else:
-            path_to_pb_files = self.get_path_to_pb_files(config['org_id'], config['service_id'])
-            pb_2_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2.py")
-            pb_2_grpc_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2_grpc.py")
-            if not pb_2_file_name or not pb_2_grpc_file_name:
-                sdk.generate_client_library()
 
     def setup_config(self, config: Config) -> None:
         out_f = sys.stdout
-        network = self._config.get("network", None)
-        identity_name = self._config.get("identity_name", None)
+        network = self._sdk_config.get("network", None)
+        identity_name = self._sdk_config.get("identity_name", None)
         # Checking for an empty network
         if network and config["session"]["network"] != network:
             config.set_session_network(network, out_f)
@@ -117,21 +117,39 @@ class SnetSDK:
         elif config["session"]["identity"] != identity_name:
             config.set_session_identity(identity_name, out_f)
 
-    def create_service_client(self, payment_channel_management_strategy=None, 
-                              options=None, concurrent_calls=1):
-        org_id = self._config.get("org_id")
-        service_id = self._config.get("service_id")
-        group_name = self._config.get("group_name", "default_group")
+    def create_service_client(self, org_id: str, service_id: str, group_name=None,
+                              payment_channel_management_strategy=None,
+                              free_call_auth_token_bin=None,
+                              free_call_token_expiry_block=None,
+                              options=None,
+                              concurrent_calls=1):
+
+        # Create and instance of the Config object, so we can create an instance of SDKCommand
+        sdk_config_object = Config(sdk_config=self._sdk_config)
+        sdk = SDKCommand(sdk_config_object, args=Arguments(org_id, service_id))
+
+        # Download the proto file and generate stubs if needed
+        force_update = self._sdk_config.get('force_update', False)
+        if force_update:
+            sdk.generate_client_library()
+        else:
+            path_to_pb_files = self.get_path_to_pb_files(org_id, service_id)
+            pb_2_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2.py")
+            pb_2_grpc_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2_grpc.py")
+            if not pb_2_file_name or not pb_2_grpc_file_name:
+                sdk.generate_client_library()
         
         if payment_channel_management_strategy is None:
             payment_channel_management_strategy = DefaultPaymentStrategy(concurrent_calls)
+
         if options is None:
             options = dict()
-
-        options['free_call_auth_token-bin'] = bytes.fromhex(self._config.get("free_call_auth_token-bin", ""))
-        options['free-call-token-expiry-block'] = self._config.get("free-call-token-expiry-block", 0)
-        options['email'] = self._config.get("email", "")
-        options['concurrency'] = self._config.get("concurrency", True)
+        options['free_call_auth_token-bin'] = bytes.fromhex(free_call_auth_token_bin) if\
+            free_call_token_expiry_block else ""
+        options['free-call-token-expiry-block'] = free_call_token_expiry_block if\
+            free_call_token_expiry_block else 0
+        options['email'] = self._sdk_config.get("email", "")
+        options['concurrency'] = self._sdk_config.get("concurrency", True)
 
         if self._metadata_provider is None:
             self._metadata_provider = IPFSMetadataProvider(self.ipfs_client, self.registry_contract)
@@ -144,8 +162,8 @@ class SnetSDK:
         
         pb2_module = self.get_module_by_keyword(org_id, service_id, keyword="pb2.py")
         
-        service_client = ServiceClient(org_id, service_id, service_metadata, group, service_stub, strategy, options,
-                                       self.mpe_contract, self.account, self.web3, pb2_module)
+        service_client = ServiceClient(org_id, service_id, service_metadata, group, service_stub, strategy,
+                                       options, self.mpe_contract, self.account, self.web3, pb2_module)
         return service_client
 
     def get_service_stub(self, org_id: str, service_id: str) -> ServiceStub:
@@ -204,3 +222,25 @@ class SnetSDK:
             return self._get_first_group(service_metadata)
 
         return self._get_group_by_group_name(service_metadata, group_name)
+
+    def get_organization_list(self) -> list:
+        global_config = Config(sdk_config=self._sdk_config)
+        blockchain_command = BlockchainCommand(config=global_config, args=Arguments())
+        org_list = blockchain_command.call_contract_command(
+            "Registry", "listOrganizations", [])
+        organization_list = []
+        for idx, org_id in enumerate(org_list):
+            organization_list.append(bytes32_to_str(org_id))
+        return organization_list
+
+    def get_services_list(self, org_id: str) -> list:
+        global_config = Config(sdk_config=self._sdk_config)
+        blockchain_command = BlockchainCommand(config=global_config, args=Arguments())
+        (found, org_service_list) = blockchain_command.call_contract_command("Registry",
+                                                                             "listServicesForOrganization",
+                                                               [type_converter("bytes32")(org_id)])
+        if not found:
+            raise Exception(f"Organization with id={org_id} doesn't exist!")
+        org_service_list = list(map(bytes32_to_str, org_service_list))
+        return org_service_list
+
