@@ -13,7 +13,7 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", "Network .* does not have a valid ChainId. eth-typing should be "
                                       "updated with the latest networks.", UserWarning)
 
-from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
+    from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
 from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
 from snet.cli.commands.sdk_command import SDKCommand
 from snet.cli.commands.commands import BlockchainCommand
