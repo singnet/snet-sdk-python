@@ -123,8 +123,8 @@ class ServiceClient:
         group_id = base64.b64decode(str(self.group["group_id"]))
         new_payment_channels = self.payment_channel_provider.get_past_open_channels(self.account, payment_address,
                                                                                     group_id, self.last_read_block)
-        self.payment_channels = self.payment_channels + self._filter_existing_channels_from_new_payment_channels(
-            new_payment_channels)
+        self.payment_channels = self.payment_channels + \
+                                self._filter_existing_channels_from_new_payment_channels(new_payment_channels)
         self.last_read_block = current_block_number
         return self.payment_channels
 
