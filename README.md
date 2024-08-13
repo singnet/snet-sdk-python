@@ -1,22 +1,14 @@
 
 <!--
-TODO: Functions that need to be added to the readme:
-1. sdk
-1.1. get_service_metadata (+)
-1.2. setup_config (?)
-1.3. set_session_identity (?)
-2. service_client
-2.1. load_open_channels (?)
-2.2. get_current_block_number
-2.3. update_channel_states (?)
-2.4. open_channel (+)
-2.5. get_price
-2.6. get_services_and_messages_info (+)
-2.7. get_concurrency_flag (?)
+TODO: Functions that may need to be added to the readme:
+1. service_client
+1.1. load_open_channels (?)
+1.2. update_channel_states (?)
+1.3. get_concurrency_flag (?)
 -->
 
 # snet-sdk-python
-  
+
 SingularityNET SDK for Python
 
 ## Package
@@ -72,12 +64,6 @@ See [test_sdk_client.py](https://github.com/singnet/snet-sdk-python/blob/master/
 - identity_type: Type of your wallet authentication. Note that snet-sdk currently supports only "key" identity_type;   
 - network: You can set the Ethereum network that will be used to make a call;   
 - force_update: If set to False, will reuse the existing gRPC stubs (if any) instead of downloading proto and regenerating them every time.   
-
-<!-- ##### Setup config
-
-Not sure, that these methods are needed.
-
-##### Setup identity -->
 
 ##### List organizations and their services
 
@@ -178,12 +164,6 @@ For more information about gRPC and how to use it with Python, please see:
 
 ##### Other useful features
 
-<!-- 
-1. get_current_block_number
-2. get_price
-3. get_concurrency_flag
--->
-
 Service client also provides several useful functions. If you need to find out the number of 
 the current block in the blockchain, there is a `get_current_block_number()` method for this:
 
@@ -192,7 +172,7 @@ block_number = service_client.get_current_block_number()
 print(f"Current block is {block_number}")
 ```
 
-To find out the price of calling a service function, you need to use the "get_price()" method:
+To find out the price of calling a service function, you need to use the `get_price()` method:
 
 ```python
 price = service_client.get_price()
