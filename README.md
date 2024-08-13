@@ -9,10 +9,10 @@ TODO: Functions that need to be added to the readme:
 2.1. load_open_channels (?)
 2.2. get_current_block_number
 2.3. update_channel_states (?)
-2.4. open_channel
+2.4. open_channel (+)
 2.5. get_price
-2.6. get_services_and_messages_info
-2.7. get_concurrency_flag
+2.6. get_services_and_messages_info (+)
+2.7. get_concurrency_flag (?)
 -->
 
 # snet-sdk-python
@@ -65,21 +65,19 @@ See [test_sdk_client.py](https://github.com/singnet/snet-sdk-python/blob/master/
 
 ##### Config options description
 
-private_key: Your wallet's private key that will be used to pay for calls. Is **required** to make a call;   
-eth_rpc_endpoint: RPC endpoint that is used to access the Ethereum network. Is **required** to make a call;   
-email: Your email;  
-identity_name: Name that will be used locally to save your wallet settings. You can check your identities in the `~/.snet/config` file;   
-identity_type: Type of your wallet authentication. Note that snet-sdk currently supports only "key" identity_type;   
-network: You can set the Ethereum network that will be used to make a call;   
-force_update: If set to False, will reuse the existing gRPC stubs (if any) instead of downloading proto and regenerating them every time.   
+- private_key: Your wallet's private key that will be used to pay for calls. Is **required** to make a call;   
+- eth_rpc_endpoint: RPC endpoint that is used to access the Ethereum network. Is **required** to make a call;   
+- email: Your email;  
+- identity_name: Name that will be used locally to save your wallet settings. You can check your identities in the `~/.snet/config` file;   
+- identity_type: Type of your wallet authentication. Note that snet-sdk currently supports only "key" identity_type;   
+- network: You can set the Ethereum network that will be used to make a call;   
+- force_update: If set to False, will reuse the existing gRPC stubs (if any) instead of downloading proto and regenerating them every time.   
 
 <!-- ##### Setup config
 
 Not sure, that these methods are needed.
 
 ##### Setup identity -->
-
-
 
 ##### List organizations and their services
 
@@ -102,6 +100,7 @@ print(service_metadata.get_payment_address(group_name="default_group"))
 ```
 
 ### Calling the service
+
 Now, the instance of the sdk can be used to create the service client instances, using `create_service_client()` method.  
 Continuing from the previous code here is an example using `Exampleservice` from the `26072b8b6a0e448180f8c0e702ab6d2f` organization:
 
@@ -134,6 +133,8 @@ After executing this code, you should have client libraries created for this ser
 
 Note: Currently you can only save files to `~/.snet/`. We will fix this in the future.  
 
+##### Open channel and list services
+
 ```python
 service_client.open_channel(amount=123456, expiration=33333)
 ```
@@ -161,6 +162,8 @@ print(*services.items(), sep="\n")
 print(*messages.items(), sep="\n")
 ```
 
+##### Call
+
 To invoke the service's methods, you can use the `call_rpc()` method. This method requires the names of the method and data object, along with the data itself, to be passed into it. 
 To continue with our example, here’s a call to the *mul* method of the *Exampleservice* from the *26072b8b6a0e448180f8c0e702ab6d2f* organization:
 
@@ -172,6 +175,29 @@ print(f"Calculating 20 * 3: {result}") #  Calculating 20 * 3: 60.0
 For more information about gRPC and how to use it with Python, please see:
 - [gRPC Basics - Python](https://grpc.io/docs/tutorials/basic/python.html)
 - [gRPC Python’s documentation](https://grpc.io/grpc/python/)
+
+##### Other useful features
+
+<!-- 
+1. get_current_block_number
+2. get_price
+3. get_concurrency_flag
+-->
+
+Service client also provides several useful functions. If you need to find out the number of 
+the current block in the blockchain, there is a `get_current_block_number()` method for this:
+
+```python
+block_number = service_client.get_current_block_number()
+print(f"Current block is {block_number}")
+```
+
+To find out the price of calling a service function, you need to use the "get_price()" method:
+
+```python
+price = service_client.get_price()
+print(f"The price in cogs for calling the service {service_client.service_id} is {price}")
+```
 
 ---
 
