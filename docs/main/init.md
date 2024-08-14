@@ -1,4 +1,4 @@
-# module: sdk.\_\_init\_\_.py
+## module: sdk.\_\_init\_\_.py
 
 Entities:
 1. [Arguments](#class-arguments)
@@ -18,26 +18,26 @@ Entities:
    - [get_organization_list](#getorganizationlist)
    - [get_services_list](#getserviceslist)
 
-## class `Arguments`
+### class `Arguments`
 
 extends: -
 
 is extended by: -
 
-### description
+#### description
 
 Represents the arguments for the `BlockchainCommand` from `snet.cli`.
 
-### attributes
+#### attributes
 
 - `org_id` (str): The organization id.
 - `service_id` (str): The service id.
 - `language` (str): The language used. Defaults to "python".
 - `protodir` (Path): The path to the directory with protobuf files. Defaults to "~/USER_NAME/.snet".
 
-### methods
+#### methods
 
-### `__init__`
+#### `__init__`
 
 Initializes a new instance of the class.
 
@@ -50,18 +50,18 @@ Initializes a new instance of the class.
 
 - _None_
 
-## class `SnetSDK`
+### class `SnetSDK`
 
 extends: -
 
 is extended by: -
 
-### description
+#### description
 
 The SnetSDK class is the main entry point for interacting with the SingularityNET platform.
 It provides methods for creating service clients, managing identities, and configuring the SDK.
 
-### attributes
+#### attributes
 
 - `_sdk_config` (dict): The SDK configuration.
 - `_metadata_provider` (MetadataProvider): An instance of the `MetadataProvider` class. Note: There is currently only 
@@ -74,9 +74,9 @@ InterPlanetary File System.
 - `registry_contract` (Contract): An instance of the `Contract` class for interacting with the Registry contract.
 - `account` (Account): An instance of the `Account` class for managing the SDK's Ethereum account.
 
-### methods
+#### methods
 
-### `__init__`
+#### `__init__`
 
 Initializes a new instance of the `SnetSDK` class. Initializes `web3` with the specified Ethereum RPC endpoint.
 Instantiates the MPE contract with the specified contract address if provided, otherwise uses the default MPE contract.
@@ -95,7 +95,7 @@ instance as an argument.
 
 - _None_
 
-### `setup_config`
+#### `setup_config`
 
 Sets up the configuration for the SnetSDK instance. This function checks the network and identity_name in 
 the configuration and sets up the configuration accordingly. If the network is specified, and it is different from 
@@ -114,7 +114,7 @@ If there are no identities in the configuration, it checks if the identity is se
 
 - Exception: If the identity name is not passed or selected.
 
-### `set_session_identity`
+#### `set_session_identity`
 
 Sets the session identity in the given config.
 
@@ -128,7 +128,7 @@ Sets the session identity in the given config.
 
 - _None_
 
-### `create_service_client`
+#### `create_service_client`
 
 If `force_update` is True or if there are no gRPC stubs for the given service, the proto files are loaded 
 and compiled using the `generate_client_library()` method of the `SDKCommand` class instance. 
@@ -153,7 +153,7 @@ of the `ServiceClient` class with all the required parameters, which is then ret
 
 - The created service client instance. (ServiceClient)
 
-### `get_service_stub`
+#### `get_service_stub`
 
 Retrieves the gRPC service stub for the given organization and service ID.
 
@@ -170,7 +170,7 @@ Retrieves the gRPC service stub for the given organization and service ID.
 
 - Exception: If an error occurs while importing a module.
 
-### `get_path_to_pb_files`
+#### `get_path_to_pb_files`
 
 Returns the path to the directory containing the protobuf files for a given organization and service.
 
@@ -183,7 +183,7 @@ Returns the path to the directory containing the protobuf files for a given orga
 
 - The path to the directory containing the protobuf files. (str)
 
-### `get_module_by_keyword`
+#### `get_module_by_keyword`
 
 Retrieves the module name from the given organization ID, service ID, and keyword.
 
@@ -197,7 +197,7 @@ Retrieves the module name from the given organization ID, service ID, and keywor
 
 - The module name extracted from the file name. (ModuleName)
 
-### `get_service_metadata`
+#### `get_service_metadata`
 
 Retrieves metadata for a given service in a given organization using Registry first and then IPFS.
 
@@ -214,7 +214,7 @@ Retrieves metadata for a given service in a given organization using Registry fi
 
 - Exception: If the service is not found in the specified organization.
 
-### `_get_first_group`
+#### `_get_first_group`
 
 Returns the first payment group from the given service metadata.
 
@@ -226,7 +226,7 @@ Returns the first payment group from the given service metadata.
 
 - The first group from the service metadata. (dict)
 
-### `_get_group_by_group_name`
+#### `_get_group_by_group_name`
 
 Returns a payment group from the given service metadata based on the group name.
 
@@ -239,7 +239,7 @@ Returns a payment group from the given service metadata based on the group name.
 
 -  The group with the matching group name, or an empty dictionary if no match is found. (dict)
 
-### `_get_service_group_details`
+#### `_get_service_group_details`
 
 Returns a payment group from the given service metadata based on the group name or the first payment group if
 group name is not specified.
@@ -257,7 +257,7 @@ group name is not specified.
 
 - Exception: If no groups are found for the given service.
 
-### `get_organization_list`
+#### `get_organization_list`
 
 Retrieves a list of organization IDs from the Registry contract.
 
@@ -265,7 +265,7 @@ Retrieves a list of organization IDs from the Registry contract.
 
 - A list of strings representing the organization IDs. (list)
 
-### `get_services_list`
+#### `get_services_list`
 
 Retrieves a list of service IDs for a given organization from the Registry contract.
 
