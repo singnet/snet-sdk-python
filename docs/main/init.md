@@ -64,7 +64,7 @@ It provides methods for creating service clients, managing identities, and confi
 #### attributes
 
 - `_sdk_config` (dict): The SDK configuration.
-- `_metadata_provider` (MetadataProvider): An instance of the `MetadataProvider` class. Note: There is currently only 
+- `_metadata_provider` (MetadataProvider): An instance of the `MetadataProvider` class. _Note_: There is currently only 
 one implementation of `MetadataProvider` which is `IPFSMetadataProvider`, so this attribute can only be initialized to 
 `IPFSMetadataProvider` at this time.
 - `web3` (Web3): An instance of the Web3 class for interacting with the Ethereum blockchain.
@@ -72,7 +72,8 @@ one implementation of `MetadataProvider` which is `IPFSMetadataProvider`, so thi
 - `ipfs_client` (ipfshttpclient.Client): An instance of the `ipfshttpclient.Client` class for interacting with the 
 InterPlanetary File System.
 - `registry_contract` (Contract): An instance of the `Contract` class for interacting with the Registry contract.
-- `account` (Account): An instance of the `Account` class for managing the SDK's Ethereum account.
+- `account` (Account): An instance of the `Account` class for interacting with the MultiPartyEscrow and 
+SingularityNetToken contracts.
 
 #### methods
 
@@ -120,9 +121,9 @@ Sets the session identity in the given config.
 
 ###### args:
 
-- identity_name (str): The name of the identity to set.
-- config (Config): The `snet.cli.config.Congig` object to modify.
-- out_f (TextIO): The output to write messages to.
+- `identity_name` (str): The name of the identity to set.
+- `config` (Config): The `snet.cli.config.Congig` object to modify.
+- `out_f` (TextIO): The output to write messages to.
 
 ###### returns:
 
@@ -140,14 +141,14 @@ of the `ServiceClient` class with all the required parameters, which is then ret
 
 ###### args:
 
-- org_id (str): The ID of the organization.
-- service_id (str): The ID of the service.
-- group_name (str): The name of the payment group. Defaults to _None_.
-- payment_channel_management_strategy (PaymentStrategy): The payment channel management strategy. Defaults to _None_.
-- free_call_auth_token_bin (str): The free call authentication token in binary format. Defaults to _None_.
-- free_call_token_expiry_block (int): The block number when the free call token expires. Defaults to _None_.
-- options (dict): Additional options for the service client. Defaults to _None_.
-- concurrent_calls (int): The number of concurrent calls allowed. Defaults to 1.
+- `org_id` (str): The ID of the organization.
+- `service_id` (str): The ID of the service.
+- `group_name` (str): The name of the payment group. Defaults to _None_.
+- `payment_channel_management_strategy` (PaymentStrategy): The payment channel management strategy. Defaults to _None_.
+- `free_call_auth_token_bin` (str): The free call authentication token in binary format. Defaults to _None_.
+- `free_call_token_expiry_block` (int): The block number when the free call token expires. Defaults to _None_.
+- `options` (dict): Additional options for the service client. Defaults to _None_.
+- `concurrent_calls` (int): The number of concurrent calls allowed. Defaults to 1.
 
 ###### returns:
 
@@ -159,8 +160,8 @@ Retrieves the gRPC service stub for the given organization and service ID.
 
 ###### args:
 
-- org_id (str): The ID of the organization.
-- service_id (str): The ID of the service.
+- `org_id` (str): The ID of the organization.
+- `service_id` (str): The ID of the service.
 
 ###### returns:
 
@@ -176,8 +177,8 @@ Returns the path to the directory containing the protobuf files for a given orga
 
 ###### args:
 
-- org_id (str): The ID of the organization.
-- service_id (str): The ID of the service.
+- `org_id` (str): The ID of the organization.
+- `service_id` (str): The ID of the service.
 
 ###### returns:
 
@@ -189,9 +190,9 @@ Retrieves the module name from the given organization ID, service ID, and keywor
 
 ###### args:
 
-- org_id (str): The ID of the organization.
-- service_id (str): The ID of the service.
-- keyword (str): The keyword used to search for the module.
+- `org_id` (str): The ID of the organization.
+- `service_id` (str): The ID of the service.
+- `keyword` (str): The keyword used to search for the module.
 
 ###### returns:
 
@@ -203,8 +204,8 @@ Retrieves metadata for a given service in a given organization using Registry fi
 
 ###### args:
 
-- org_id (str): The ID of the organization.
-- service_id (str): The ID of the service.
+- `org_id` (str): The ID of the organization.
+- `service_id` (str): The ID of the service.
 
 ###### returns:
 
@@ -220,7 +221,7 @@ Returns the first payment group from the given service metadata.
 
 ###### args:
 
-- service_metadata (MPEServiceMetadata): An instance of `MPEServiceMetadata` class.
+- `service_metadata` (MPEServiceMetadata): An instance of `MPEServiceMetadata` class.
 
 ###### returns:
 
@@ -232,8 +233,8 @@ Returns a payment group from the given service metadata based on the group name.
 
 ###### args:
 
-- service_metadata (MPEServiceMetadata): An instance of `MPEServiceMetadata` class.
-- group_name (str): The name of the group to search for.
+- `service_metadata` (MPEServiceMetadata): An instance of `MPEServiceMetadata` class.
+- `group_name` (str): The name of the group to search for.
 
 ###### returns:
 
@@ -246,8 +247,8 @@ group name is not specified.
 
 ###### args:
 
-- service_metadata (MPEServiceMetadata): An instance of `MPEServiceMetadata` class.
-- group_name (str): The name of the group to search for.
+- `service_metadata` (MPEServiceMetadata): An instance of `MPEServiceMetadata` class.
+- `group_name` (str): The name of the group to search for.
 
 ###### returns:
 
@@ -271,7 +272,7 @@ Retrieves a list of service IDs for a given organization from the Registry contr
 
 ###### args:
 
-- org_id (str): The ID of the organization.
+- `org_id` (str): The ID of the organization.
 
 ###### returns:
 
