@@ -1,5 +1,7 @@
 ## module: sdk.account
 
+[link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/account.py) to GitHub
+
 Entities:
 1. [TransactionError](#class-transactionerror)
    - [\_\_init\_\_](#init)
@@ -152,9 +154,9 @@ Parses the receipt of a transaction and returns the result as a JSON string.
 
 ###### args:
 
-- receipt (TxReceipt): The receipt of the transaction.
-- event (Event): The event to process the receipt with.
-- encoder (JSONEncoder): The JSON encoder to use. Defaults to json.JSONEncoder.
+- `receipt` (TxReceipt): The receipt of the transaction.
+- `event` (Event): The event to process the receipt with.
+- `encoder` (JSONEncoder): The JSON encoder to use. Defaults to json.JSONEncoder.
 
 ###### returns:
 
@@ -178,7 +180,7 @@ Deposit the specified amount of AGIX tokens in cogs into the MPE account.
 
 ###### args:
 
-- amount_in_cogs (int): The amount of AGIX tokens in cogs to deposit.
+- `amount_in_cogs` (int): The amount of AGIX tokens in cogs to deposit.
 
 ###### returns:
 
@@ -190,7 +192,7 @@ Approves a transfer of a specified amount of AGIX tokens in cogs to the MPE cont
 
 ###### args:
 
-- amount_in_cogs (int): The amount of AGIX tokens in cogs to approve for transfer.
+- `amount_in_cogs` (int): The amount of AGIX tokens in cogs to approve for transfer.
 
 ###### returns:
 

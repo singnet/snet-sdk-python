@@ -1,5 +1,7 @@
 ## module: sdk.\_\_init\_\_
 
+[link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/__init__.py) to GitHub
+
 Entities:
 1. [Arguments](#class-arguments)
    - [\_\_init\_\_](#init)

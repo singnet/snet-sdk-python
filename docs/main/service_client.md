@@ -1,5 +1,7 @@
 ## module: sdk.service_client
 
+[link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/service_client.py) to GitHub
+
 Entities:
 1. [ServiceClient](#class-serviceclient)
    - [\_\_init\_\_](#init)
