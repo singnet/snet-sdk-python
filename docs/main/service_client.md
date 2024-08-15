@@ -1,4 +1,4 @@
-## module: sdk.service_client.py
+## module: sdk.service_client
 
 Entities:
 1. [ServiceClient](#class-serviceclient)

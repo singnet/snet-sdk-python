@@ -1,4 +1,4 @@
-## module: sdk.\_\_init\_\_.py
+## module: sdk.\_\_init\_\_
 
 Entities:
 1. [Arguments](#class-arguments)
