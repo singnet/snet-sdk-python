@@ -24,9 +24,7 @@ is extended by: -
 
 The `MPEContract` class is responsible for interacting with the MultiPartyEscrow 
 contract on the Ethereum blockchain. It provides methods for retrieving the balance of an address, depositing 
-funds into the contract, opening a channel, adding funds to a channel, extending the expiration of a channel, and more. 
-The class is initialized with a Web3 object and an optional contract address. If no contract address is provided, 
-it uses the default MultiPartyEscrow contract.
+funds into the contract, opening a channel, adding funds to a channel, extending the expiration of a channel, and more.
 
 #### attributes
 
@@ -40,12 +38,12 @@ with the MultiPartyEscrow contract.
 
 #### `__init__`
 
-Initializes a new instance of the class. The class is initialized with a Web3 object and an optional contract address. If no contract address is provided, 
-it uses the default MultiPartyEscrow contract.
+Initializes a new instance of the class. The class is initialized with a Web3 object and an optional contract address. 
+If no contract address is provided, it uses the default MultiPartyEscrow contract.
 
 ###### args:
 
-- `w3` (Web3): An instance of the Web3 class.
+- `w3` (Web3): An instance of the `Web3` class.
 - `address` (str): The address of the MultiPartyEscrow contract. Defaults to None.
 
 ###### returns:

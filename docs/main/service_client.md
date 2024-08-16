@@ -52,7 +52,7 @@ The class is used to manage the communication and payment channel management for
 - `service_metadata` (MPEServiceMetadata): An instance of the `MPEServiceMetadata` class with the metadata of 
 the specified service.
 - `payment_strategy` (PaymentStrategy): The payment strategy. _Note_: In fact, this is an instance of one of 
-the "PaymentStrategy" inheritor classes. 
+the `PaymentStrategy` inheritor classes. 
 - `expiry_threshold` (int): The payment expiration threshold (in blocks).
 - `__base_grpc_channel` (grpc.Channel): The base gRPC channel.
 - `grpc_channel` (grpc.Channel): The gRPC channel with interceptor.
@@ -64,7 +64,7 @@ working with channels and interacting with MPE.
 - `last_read_block` (int): The last read block number.
 - `account` (Account): An instance of the `Account` class for interacting with the MultiPartyEscrow and 
 SingularityNetToken contracts.
-- `sdk_web3` (Web3): The Web3 instance.
+- `sdk_web3` (Web3): The `Web3` instance.
 - `mpe_address` (str): The MPE contract address.
 
 #### methods
@@ -84,7 +84,7 @@ Initializes a new instance of the class.
 - `options` (dict): Additional options for the service client.
 - `mpe_contract` (MPEContract): The MPE contract instance.
 - `account` (Account): An instance of the `Account` class.
-- `sdk_web3` (Web3): The Web3 instance.
+- `sdk_web3` (Web3): The `Web3` instance.
 - `pb2_module` (str | ModuleType): The module containing the gRPC message definitions.
 
 ###### returns:

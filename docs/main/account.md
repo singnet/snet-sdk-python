@@ -73,7 +73,7 @@ the Ethereum blockchain.
 
 - `config` (dict): The configuration settings for the account. _Note_: In fact, this is the same config 
 from `SnetSDK`.
-- `web3` (Web3): An instance of the Web3 class for interacting with the Ethereum blockchain.
+- `web3` (Web3): An instance of the `Web3` class for interacting with the Ethereum blockchain.
 - `mpe_contract` (MPEContract): An instance of the `MPEContract` class for interacting with 
 the MultiPartyEscrow contract.
 - `token_contract` (Contract): An instance of the `Contract` class from the `web3` library for interacting 
@@ -92,9 +92,9 @@ Initializes a new instance of the `Account` class.
 
 ###### args:
 
-- `w3` (Web3): An instance of the Web3 class.
+- `w3` (Web3): An instance of the `Web3` class.
 - `config` (dict): A dictionary containing the configuration settings.
-- `mpe_contract` (MPEContract): An instance of the MPEContract class.
+- `mpe_contract` (MPEContract): An instance of the `MPEContract` class.
 
 ###### returns:
 
