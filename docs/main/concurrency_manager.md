@@ -114,9 +114,9 @@ the `GetToken` method of the stub. Finally, it returns the token reply object co
 
 ###### args:
 
-- service_client (ServiceClient): The service client instance.
-channel (PaymentChannel): The payment channel instance.
-amount (int): The amount for which the token is requested.
+- `service_client` (ServiceClient): The service client instance.
+- `channel` (PaymentChannel): The payment channel instance.
+- `amount` (int): The amount for which the token is requested.
 
 ###### returns:
 
@@ -130,3 +130,4 @@ Increments the `__used_amount` attribute by 1 to record a successful call.
 
 - _None_
 
+ 
