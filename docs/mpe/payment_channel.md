@@ -3,7 +3,7 @@
 [link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/mpe/payment_channel.py) to GitHub
 
 Entities:
-1. [PaymentChannel](#class-mpecontract)
+1. [PaymentChannel](#class-paymentchannel)
    - [\_\_init\_\_](#init)
    - [add_funds](#add_funds)
    - [extend_expiration](#extend_expiration)
@@ -32,6 +32,7 @@ in the SingularityNET platform.
 - `state` (dict): The current state of the payment channel. It contains the following keys:
   - `nonce` (int): The current nonce of the payment channel.
   - `last_signed_amount` (int): The last signed amount of the payment channel.
+
 #### methods
 
 #### `__init__`
