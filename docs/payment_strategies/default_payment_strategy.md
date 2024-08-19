@@ -3,8 +3,8 @@
 [link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/payment_strategies/default_payment_strategy.py) to GitHub
 
 Entities:
-1. [DefaultPaymentStrategy](#class-paymentstrategy)
-   - [\_\_init\_\_](#init)
+1. [DefaultPaymentStrategy](#class-defaultpaymentstrategy)
+   - [\_\_init\_\_](#__init__)
    - [set_concurrency_token](#set_concurrency_token)
    - [set_channel](#set_channel)
    - [get_payment_metadata](#get_payment_metadata)
@@ -14,7 +14,7 @@ Entities:
 
 extends: `PaymentStrategy`
 
-is extended by: 
+is extended by: -
 
 #### description
 
