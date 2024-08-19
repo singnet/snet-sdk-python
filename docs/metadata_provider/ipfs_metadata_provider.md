@@ -18,7 +18,26 @@ is extended by: -
 
 Class for extracting metadata from Interplanetary Filesystem (IPFS).
 
+#### attributes
+
+- `registry_contract` (Contract): An instance of the `Contract` class (from `snet.cli`) for interacting with the Registry contract.
+- `ipfs_client` (ipfshttpclient.Client): An instance of the `ipfshttpclient.Client` class for interacting with the 
+InterPlanetary File System.
+
 #### methods
+
+#### `__init__`
+
+Initializes a new instance of the class.
+
+###### args:
+
+- `ipfs_client` (ipfshttpclient.Client): The IPFS client to use for fetching metadata.
+- `registry_contract` (Contract): The contract instance of the registry.
+
+###### returns:
+
+- _None_
 
 #### `fetch_org_metadata`
 
