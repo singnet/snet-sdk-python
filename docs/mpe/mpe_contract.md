@@ -4,7 +4,7 @@
 
 Entities:
 1. [MPEContract](#class-mpecontract)
-   - [\_\_init\_\_](#init)
+   - [\_\_init\_\_](#__init__)
    - [balance](#balance)
    - [deposit](#deposit)
    - [open_channel](#open_channel)

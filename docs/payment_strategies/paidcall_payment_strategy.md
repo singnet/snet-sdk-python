@@ -96,7 +96,7 @@ Checks whether the payment channel has the required amount of funds.
 
 #### static `_is_valid`
 
-Checks whether the payment channel expiration ends later than it is necessary. <!-- TODO: perhaps, it's needed to change smth -->
+Checks if the payment channel expires later than it should.
 
 ###### args:
 

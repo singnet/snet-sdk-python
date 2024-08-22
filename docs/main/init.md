@@ -4,9 +4,9 @@
 
 Entities:
 1. [Arguments](#class-arguments)
-   - [\_\_init\_\_](#init)
+   - [\_\_init\_\_](#__init__)
 2. [SnetSDK](#class-snetsdk)
-   - [\_\_init\_\_](#init-1)
+   - [\_\_init\_\_](#__init__-1)
    - [setup_config](#setup_config)
    - [set_session_identity](#set_session_identity)
    - [create_service_client](#create_service_client)

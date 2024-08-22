@@ -4,6 +4,7 @@
 
 Entities:
 1. [IPFSMetadataProvider](#class-transactionerror)
+   - [\_\_init\_\_](#__init__)
    - [fetch_org_metadata](#fetch_org_metadata)
    - [fetch_service_metadata](#fetch_service_metadata)
    - [enhance_service_metadata](#enhance_service_metadata)

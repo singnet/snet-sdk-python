@@ -4,7 +4,7 @@
 
 Entities:
 1. [ServiceClient](#class-serviceclient)
-   - [\_\_init\_\_](#init)
+   - [\_\_init\_\_](#__init__)
    - [call_rpc](#call_rpc)
    - [_generate_grpc_stub](#_generate_grpc_stub)
    - [get_grpc_base_channel](#get_grpc_base_channel)

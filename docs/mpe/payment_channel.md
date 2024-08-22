@@ -4,7 +4,7 @@
 
 Entities:
 1. [PaymentChannel](#class-paymentchannel)
-   - [\_\_init\_\_](#init)
+   - [\_\_init\_\_](#__init__)
    - [add_funds](#add_funds)
    - [extend_expiration](#extend_expiration)
    - [extend_and_add_funds](#extend_and_add_funds)

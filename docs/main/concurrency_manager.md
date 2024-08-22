@@ -4,7 +4,7 @@
 
 Entities:
 1. [ConcurrencyManager](#class-concurrencymanager)
-   - [\_\_init\_\_](#init)
+   - [\_\_init\_\_](#__init__)
    - [concurrent_calls](#concurrent_calls)
    - [get_token](#get_token)
    - [__get_token](#__get_token)

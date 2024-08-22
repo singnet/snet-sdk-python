@@ -4,7 +4,7 @@
 
 Entities:
 1. [TransactionError](#class-transactionerror)
-   - [\_\_init\_\_](#init)
+   - [\_\_init\_\_](#__init__)
    - [\_\_str\_\_](#str)
 2. [Account](#class-account)
    - [\_\_init\_\_](#init-1)
