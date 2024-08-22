@@ -17,7 +17,8 @@ is extended by: -
 #### description
 
 The `FreeCallPaymentStrategy` class is a concrete implementation of the `PaymentStrategy` interface.
-It allows you to use free calls (which can be received from the [Dapp](https://beta.singularitynet.io/)) to call services.
+It allows you to use free calls (which can be received from the [Dapp](https://beta.singularitynet.io/)) to 
+call services. 
 
 #### methods
 
@@ -41,7 +42,8 @@ _Note_: If any exception occurs during the process, it returns False.
 
 #### `get_payment_metadata`
 
-Retrieves the payment metadata for a service client using the provided free call configuration.
+Retrieves the payment metadata for a service client with the field `snet-paument-type` equals to `free-call` 
+using the provided free call configuration.
 
 ###### args:
 
