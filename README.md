@@ -1,12 +1,4 @@
 
-<!--
-TODO: Functions that may need to be added to the readme:
-1. service_client
-1.1. load_open_channels (?)
-1.2. update_channel_states (?)
-1.3. get_concurrency_flag (?)
--->
-
 # snet-sdk-python
 
 SingularityNET SDK for Python
@@ -19,16 +11,16 @@ The package is published in PyPI at the following link:
 |----------------------------------------------|---------------------------------------------------------------------|
 |[snet.sdk](https://pypi.org/project/snet.sdk/)|Integrate SingularityNET services seamlessly into Python applications|
 
-## Getting Started  
-  
-These instructions are for the development and use of the SingularityNET SDK for Python.
-
 ### Core concepts
 
 The SingularityNET SDK allows you to make calls to SingularityNET services programmatically from your application.
 To communicate between clients and services, SingularityNET uses [gRPC](https://grpc.io/).
 To handle payment of services, SingularityNET uses [Ethereum state channels](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/).
 The SingularityNET SDK abstracts and manages state channels with service providers on behalf of the user and handles authentication with the SingularityNET services.
+
+## Getting Started  
+  
+These instructions are for the development and use of the SingularityNET SDK for Python.
 
 ### Usage
 
@@ -65,24 +57,25 @@ See [test_sdk_client.py](https://github.com/singnet/snet-sdk-python/blob/master/
 - network: You can set the Ethereum network that will be used to make a call;   
 - force_update: If set to False, will reuse the existing gRPC stubs (if any) instead of downloading proto and regenerating them every time.   
 
-##### List organizations and their services
+#### List organizations and their services
 
 You can use the sdk client instance`s methods get_organization_list() to list all organizations and get_services_list("org_id") to list all services of a given organization.  
 
 ```python
-print(snet_sdk.get_organization_list())
-print(snet_sdk.get_services_list(org_id="26072b8b6a0e448180f8c0e702ab6d2f"))
+orgs_list = snet_sdk.get_organization_list()
+print(*orgs_list, sep="\n")
+# ...
+# GoogleOrg3
+# 26072b8b6a0e448180f8c0e702ab6d2f
+# 43416d873fcb454589900189474b2eaa
+# ...
 ```
-##### Get service metadata
-
-The metadata of services is stored in IPFS. To view it, you need to call the `get_service_metadata()` method, passing 
-the organization id and the service id to it.
 
 ```python
-service_metadata = snet_sdk.get_service_metadata(org_id="26072b8b6a0e448180f8c0e702ab6d2f", service_id="Exampleservice")
-print(*service_metadata.m.items(), sep="\n")
-print(*service_metadata.get_tags())
-print(service_metadata.get_payment_address(group_name="default_group"))
+org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
+services_list = snet_sdk.get_services_list(org_id=org_id)
+print(*services_list, sep="\n")
+# Exampleservice
 ```
 
 ### Calling the service
@@ -95,13 +88,87 @@ service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e7
                                                 service_id="Exampleservice",
                                                 group_name="default_group")
 ```
-##### Free call configuration
+
+After executing this code, you should have client libraries created for this service. They are located at the following path: `~/.snet/org_id/service_id/python/`
+
+_Note_: Currently you can only save files to `~/.snet/`. We will fix this in the future.  
+
+The instance of service_client that has been generated can be utilized to invoke the methods that the service offers. You can list these using the `get_services_and_messages_info_as_pretty_string()` method:
+
+```python
+print(service_client.get_services_and_messages_info_as_pretty_string())
+# Service: Calculator
+#   Method: add, Input: Numbers, Output: Result
+#   Method: sub, Input: Numbers, Output: Result
+#   Method: mul, Input: Numbers, Output: Result
+#   Method: div, Input: Numbers, Output: Result
+# Message: Numbers
+#   Field: float a
+#   Field: float b
+# Message: Result
+#   Field: float value
+
+```
+
+To invoke the service's methods, you can use the `call_rpc()` method. This method requires the names of the method and data object, along with the data itself, to be passed into it. 
+To continue with our example, here’s a call to the *mul* method of the *Exampleservice* from the *26072b8b6a0e448180f8c0e702ab6d2f* organization:
+
+```python
+result = service_client.call_rpc("mul", "Numbers", a=20, b=3)
+print(f"Calculating 20 * 3: {result}") 
+#  Calculating 20 * 3: 60.0
+```
+
+For more information about gRPC and how to use it with Python, please see:
+- [gRPC Basics - Python](https://grpc.io/docs/tutorials/basic/python.html)
+- [gRPC Python’s documentation](https://grpc.io/grpc/python/)
+
+### The complete code of the example
+
+```python
+from snet import sdk
+config = {
+        "private_key": 'YOUR_PRIVATE_WALLET_KEY',
+        "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
+        "email": "your@email.com",
+        "concurrency": False,
+        "identity_name": "local_name_for_that_identity",
+        "identity_type": "key",
+        "network": "sepolia",
+        "force_update": False
+    }
+
+snet_sdk = sdk.SnetSDK(config)
+
+orgs_list = snet_sdk.get_organization_list()
+print(*orgs_list, sep="\n")
+
+org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
+services_list = snet_sdk.get_services_list(org_id=org_id)
+print(*services_list, sep="\n")
+
+service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f", 
+                                                service_id="Exampleservice",
+                                                group_name="default_group")
+
+result = service_client.call_rpc("mul", "Numbers", a=20, b=3)
+print(f"Calculating 20 * 3: {result}")
+```
+
+_Note_: In this example, the user doesn't deposit funds to MPE, doesn't open a channel, and doesn't 
+perform other actions related to payment. In this case, the choice of payment strategy, as well as, if necessary, 
+opening a channel and depositing funds into MPE occurs automatically. For more information on payment, please 
+visit the [Payment](#payment) section.
+
+## Payment
+
+### Free call 
 
 If you want to use the free calls you will need to pass these arguments to the `create_service_client()` method:
 
 ```python    
-free_call_auth_token-bin = "f2548d27ffd319b9c05918eeac15ebab934e5cfcd68e1ec3db2b92765",
-free-call-token-expiry-block = 172800
+free_call_auth_token_bin = "f2548d27ffd319b9c05918eeac15ebab934e5cfcd68e1ec3db2b92765",
+free_call_token_expiry_block = 172800
 ```
 
 You can receive these for a given service from the [Dapp](https://beta.singularitynet.io/)
@@ -115,54 +182,35 @@ service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e7
                                                 free_call_token_expiry_block=172800)
 ```
 
-After executing this code, you should have client libraries created for this service. They are located at the following path: `~/.snet/org_id/service_id/python/`
+### Paid call
 
-Note: Currently you can only save files to `~/.snet/`. We will fix this in the future.  
-
-##### Open channel and list services
-
-```python
-service_client.open_channel(amount=123456, expiration=33333)
-```
 `open_channel(amount, expiration)` opens a payment channel with the specified amount of AGIX tokens in cogs 
 and expiration time. Expiration is payment channel's TTL in blocks.  
 
 ```python
+service_client.open_channel(amount=123456, expiration=33333)
+```
+
+`deposit_and_open_channel(amount, expiration)` function does the same as the previous one, but first deposits 
+the specified amount of AGIX tokens in cogs into an MPE.
+
+```python
 service_client.deposit_and_open_channel(amount=123456, expiration=33333)
 ```
-`deposit_and_open_channel(amount, expiration)` function does the same as the previous one, but first deposits 
-the specified amount of AGIX tokens in cogs into an MPE smart contract.    
 
-The instance of service_client that has been generated can be utilized to invoke the methods that the service offers. You can list these using the `get_services_and_messages_info_as_pretty_string()` method:
-
-```python
-print(service_client.get_services_and_messages_info_as_pretty_string())
-```
-
-But if you need to process lists of services and messages, it is better to use the 
-`get_services_and_messages_info()` method:
+`open_channel()` as well as `deposit_and_open_channel()` returns the payment channel. You can use it to add funds to it
+and extend its expiration.
 
 ```python
-services, messages = service_client.get_services_and_messages_info()
-print(*services.items(), sep="\n")
-print(*messages.items(), sep="\n")
+payment_channel = service_client.open_channel(amount=123456, expiration=33333)
+
+payment_channel.add_funds(amount=123456)
+payment_channel.extend_expiration(expiration=33333)
+
+payment_channel.extend_and_add_funds(amount=123456, expiration=33333)
 ```
 
-##### Call
-
-To invoke the service's methods, you can use the `call_rpc()` method. This method requires the names of the method and data object, along with the data itself, to be passed into it. 
-To continue with our example, here’s a call to the *mul* method of the *Exampleservice* from the *26072b8b6a0e448180f8c0e702ab6d2f* organization:
-
-```python
-result = service_client.call_rpc("mul", "Numbers", a=20, b=3)
-print(f"Calculating 20 * 3: {result}") #  Calculating 20 * 3: 60.0
-```
-
-For more information about gRPC and how to use it with Python, please see:
-- [gRPC Basics - Python](https://grpc.io/docs/tutorials/basic/python.html)
-- [gRPC Python’s documentation](https://grpc.io/grpc/python/)
-
-##### Other useful features
+## Other useful features
 
 Service client also provides several useful functions. If you need to find out the number of 
 the current block in the blockchain, there is a `get_current_block_number()` method for this:
@@ -170,6 +218,7 @@ the current block in the blockchain, there is a `get_current_block_number()` met
 ```python
 block_number = service_client.get_current_block_number()
 print(f"Current block is {block_number}")
+# Current block is 6574322
 ```
 
 To find out the price of calling a service function, you need to use the `get_price()` method:
@@ -177,6 +226,62 @@ To find out the price of calling a service function, you need to use the `get_pr
 ```python
 price = service_client.get_price()
 print(f"The price in cogs for calling the service {service_client.service_id} is {price}")
+# The price in cogs for calling the service Exampleservice is 1
+```
+
+The metadata of services is stored in IPFS. To view it, you need to call the `get_service_metadata()` method, passing 
+the organization id and the service id to it.
+
+```python
+service_metadata = snet_sdk.get_service_metadata(org_id="26072b8b6a0e448180f8c0e702ab6d2f", service_id="Exampleservice")
+print(*service_metadata.m.items(), sep="\n", end="\n\n")
+print(*service_metadata.get_tags(), sep=",", end="\n\n")
+print(*service_metadata.get_all_endpoints_for_group(group_name="default_group"), sep=",", end="\n\n")
+
+# ('version', 1)
+# ('display_name', 'Example service')
+# ('encoding', 'proto')
+# ('service_type', 'grpc')
+# ('model_ipfs_hash', 'QmeyrQkEyba8dd4rc3jrLd5pEwsxHutfH2RvsSaeSMqTtQ')
+# ('mpe_address', '0x7E0aF8988DF45B824b2E0e0A87c6196897744970')
+# ('groups', [{'free_calls': 0, 'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F', 'daemon_addresses': ['0x0709e9b78756b740ab0c64427f43f8305fd6d1a7'], 'pricing': [{'default': True, 'price_model': 'fixed_price', 'price_in_cogs': 1}], 'endpoints': ['http://node1.naint.tech:62400'], 'group_id': '/mb90Qs8VktxGQmU0uRu0bSlGgqeDlYrKrs+WbsOvOQ=', 'group_name': 'default_group'}])
+# ('service_description', {'url': 'https://ropsten-v2-publisher.singularitynet.io/org', 'short_description': 'Example service', 'description': 'Example service'})
+# ('media', [{'order': 1, 'url': 'https://ropsten-marketplace-service-assets.s3.us-east-1.amazonaws.com/26072b8b6a0e448180f8c0e702ab6d2f/services/d05c62bf9aa84843a195457d98417f4e/assets/20240327124952_asset.jpeg', 'file_type': 'image', 'asset_type': 'hero_image', 'alt_text': ''}])
+# ('contributors', [{'name': 'test', 'email_id': ''}])
+# ('tags', ['exampleservice'])
+# 
+# exampleservice
+# 
+# http://node1.naint.tech:62400
+```
+
+In the section [Calling the service](#calling-the-service) we already talked about the function 
+`get_services_and_messages_info_as_pretty_string()`, with which you can get information about the methods and 
+messages of a service. But if you need to process lists of services and messages, it is better to use the 
+`get_services_and_messages_info()` method.
+
+```python
+services, messages = service_client.get_services_and_messages_info()
+
+for service in services.items():
+    print(service[0], *service[1], sep="\n")
+
+print()
+
+for message in messages.items():
+    print(message[0], *message[1], sep="\n")
+
+# Calculator
+# ('add', 'Numbers', 'Result')
+# ('sub', 'Numbers', 'Result')
+# ('mul', 'Numbers', 'Result')
+# ('div', 'Numbers', 'Result')
+# 
+# Numbers
+# ('float', 'a')
+# ('float', 'b')
+# Result
+# ('float', 'value')
 ```
 
 ---
