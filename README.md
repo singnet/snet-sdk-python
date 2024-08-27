@@ -15,8 +15,10 @@ The package is published in PyPI at the following link:
 
 The SingularityNET SDK allows you to make calls to SingularityNET services programmatically from your application.
 To communicate between clients and services, SingularityNET uses [gRPC](https://grpc.io/).
-To handle payment of services, SingularityNET uses [Ethereum state channels](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/).
-The SingularityNET SDK abstracts and manages state channels with service providers on behalf of the user and handles authentication with the SingularityNET services.
+To handle payment of services, SingularityNET uses 
+[Ethereum state channels](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/).
+The SingularityNET SDK abstracts and manages state channels with service providers on behalf of the user and 
+handles authentication with the SingularityNET services.
 
 ## Getting Started  
   
@@ -24,10 +26,12 @@ These instructions are for the development and use of the SingularityNET SDK for
 
 ### Usage
 
-To call a SingularityNET service, the user must be able to deposit funds (AGIX tokens) to the [Multi-Party Escrow](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/) Smart Contract.
-To deposit these tokens or do any other transaction on the Ethereum blockchain, the user must possess an Ethereum identity with available Ether.
+To call a service on a SingularityNET platform, the user must be able to deposit funds (AGIX tokens) to the 
+[Multi-Party Escrow](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/) Smart Contract.
+To deposit these tokens or do any other transaction on the Ethereum blockchain.
 
-Once you have installed snet-sdk in your current environment, you can import it into your Python script and create an instance of the base sdk class:
+Once you have installed snet-sdk in your current environment, you can import it into your Python script and create an 
+instance of the base sdk class:
 ```python
 from snet import sdk
 config = {
@@ -45,7 +49,8 @@ snet_sdk = sdk.SnetSDK(config)
 ```
 
 The `config` parameter is a Python dictionary.
-See [test_sdk_client.py](https://github.com/singnet/snet-sdk-python/blob/master/testcases/functional_tests/test_sdk_client.py) for a reference.
+See [test_sdk_client.py](https://github.com/singnet/snet-sdk-python/blob/master/testcases/functional_tests/test_sdk_client.py) 
+for a reference.
 
 ##### Config options description
 
@@ -81,7 +86,8 @@ print(*services_list, sep="\n")
 ### Calling the service
 
 Now, the instance of the sdk can be used to create the service client instances, using `create_service_client()` method.  
-Continuing from the previous code here is an example using `Exampleservice` from the `26072b8b6a0e448180f8c0e702ab6d2f` organization:
+Continuing from the previous code here is an example using `Exampleservice` from the `26072b8b6a0e448180f8c0e702ab6d2f` 
+organization:
 
 ```python
 service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f", 
@@ -89,11 +95,13 @@ service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e7
                                                 group_name="default_group")
 ```
 
-After executing this code, you should have client libraries created for this service. They are located at the following path: `~/.snet/org_id/service_id/python/`
+After executing this code, you should have client libraries created for this service. They are located at the following 
+path: `~/.snet/org_id/service_id/python/`
 
-_Note_: Currently you can only save files to `~/.snet/`. We will fix this in the future.  
+_Note_: Currently you can only save files to `~/.snet/`.  
 
-The instance of service_client that has been generated can be utilized to invoke the methods that the service offers. You can list these using the `get_services_and_messages_info_as_pretty_string()` method:
+The instance of service_client that has been generated can be utilized to invoke the methods that the service offers. 
+You can list these using the `get_services_and_messages_info_as_pretty_string()` method:
 
 ```python
 print(service_client.get_services_and_messages_info_as_pretty_string())
@@ -110,8 +118,10 @@ print(service_client.get_services_and_messages_info_as_pretty_string())
 
 ```
 
-To invoke the service's methods, you can use the `call_rpc()` method. This method requires the names of the method and data object, along with the data itself, to be passed into it. 
-To continue with our example, here’s a call to the *mul* method of the *Exampleservice* from the *26072b8b6a0e448180f8c0e702ab6d2f* organization:
+To invoke the service's methods, you can use the `call_rpc()` method. This method requires the names of the method and 
+data object, along with the data itself, to be passed into it. 
+To continue with our example, here’s a call to the *mul* method of the *Exampleservice* from the 
+*26072b8b6a0e448180f8c0e702ab6d2f* organization:
 
 ```python
 result = service_client.call_rpc("mul", "Numbers", a=20, b=3)
@@ -122,38 +132,6 @@ print(f"Calculating 20 * 3: {result}")
 For more information about gRPC and how to use it with Python, please see:
 - [gRPC Basics - Python](https://grpc.io/docs/tutorials/basic/python.html)
 - [gRPC Python’s documentation](https://grpc.io/grpc/python/)
-
-### The complete code of the example
-
-```python
-from snet import sdk
-config = {
-        "private_key": 'YOUR_PRIVATE_WALLET_KEY',
-        "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
-        "email": "your@email.com",
-        "concurrency": False,
-        "identity_name": "local_name_for_that_identity",
-        "identity_type": "key",
-        "network": "sepolia",
-        "force_update": False
-    }
-
-snet_sdk = sdk.SnetSDK(config)
-
-orgs_list = snet_sdk.get_organization_list()
-print(*orgs_list, sep="\n")
-
-org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
-services_list = snet_sdk.get_services_list(org_id=org_id)
-print(*services_list, sep="\n")
-
-service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f", 
-                                                service_id="Exampleservice",
-                                                group_name="default_group")
-
-result = service_client.call_rpc("mul", "Numbers", a=20, b=3)
-print(f"Calculating 20 * 3: {result}")
-```
 
 _Note_: In this example, the user doesn't deposit funds to MPE, doesn't open a channel, and doesn't 
 perform other actions related to payment. In this case, the choice of payment strategy, as well as, if necessary, 
@@ -184,22 +162,33 @@ service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e7
 
 ### Paid call
 
-`open_channel(amount, expiration)` opens a payment channel with the specified amount of AGIX tokens in cogs 
-and expiration time. Expiration is payment channel's TTL in blocks.  
+#### Open channel with the specified amount of funds and expiration
+
+`open_channel()`[[1]](#1-this-method-uses-a-call-to-a-paid-smart-contract-function) opens a payment channel with the specified amount of AGIX tokens in cogs and expiration time. 
+Expiration is payment channel's TTL in blocks. When opening a channel, funds are taken from MPE. So they must be 
+pre-deposited on it. For this, you can use the `deposit_to_escrow_account()`[[1]](#1-this-method-uses-a-call-to-a-paid-smart-contract-function) 
+method.
 
 ```python
+snet_sdk.account.deposit_to_escrow_account(123456)
 service_client.open_channel(amount=123456, expiration=33333)
 ```
 
-`deposit_and_open_channel(amount, expiration)` function does the same as the previous one, but first deposits 
-the specified amount of AGIX tokens in cogs into an MPE.
+You can also use the `deposit_and_open_channel()`[[1]](#1-this-method-uses-a-call-to-a-paid-smart-contract-function) 
+method instead. It does the same as the previous one, but first deposits the specified amount of AGIX tokens in cogs 
+into an MPE.
 
 ```python
 service_client.deposit_and_open_channel(amount=123456, expiration=33333)
 ```
 
+#### Extend expiration and add funds
+
 `open_channel()` as well as `deposit_and_open_channel()` returns the payment channel. You can use it to add funds to it
-and extend its expiration.
+and extend its expiration using the following methods: 
+`add_funds()`[[1]](#1-this-method-uses-a-call-to-a-paid-smart-contract-function), 
+`extend_expiration`[[1]](#1-this-method-uses-a-call-to-a-paid-smart-contract-function) 
+and `extend_and_add_funds()`[[1]](#1-this-method-uses-a-call-to-a-paid-smart-contract-function). 
 
 ```python
 payment_channel = service_client.open_channel(amount=123456, expiration=33333)
@@ -212,6 +201,8 @@ payment_channel.extend_and_add_funds(amount=123456, expiration=33333)
 
 ## Other useful features
 
+#### Get the current block number
+
 Service client also provides several useful functions. If you need to find out the number of 
 the current block in the blockchain, there is a `get_current_block_number()` method for this:
 
@@ -221,6 +212,8 @@ print(f"Current block is {block_number}")
 # Current block is 6574322
 ```
 
+#### Get the service call price
+
 To find out the price of calling a service function, you need to use the `get_price()` method:
 
 ```python
@@ -228,6 +221,8 @@ price = service_client.get_price()
 print(f"The price in cogs for calling the service {service_client.service_id} is {price}")
 # The price in cogs for calling the service Exampleservice is 1
 ```
+
+#### Get the metadata of the service
 
 The metadata of services is stored in IPFS. To view it, you need to call the `get_service_metadata()` method, passing 
 the organization id and the service id to it.
@@ -255,6 +250,8 @@ print(*service_metadata.get_all_endpoints_for_group(group_name="default_group"),
 # http://node1.naint.tech:62400
 ```
 
+#### Get raw services and messages info
+
 In the section [Calling the service](#calling-the-service) we already talked about the function 
 `get_services_and_messages_info_as_pretty_string()`, with which you can get information about the methods and 
 messages of a service. But if you need to process lists of services and messages, it is better to use the 
@@ -262,27 +259,16 @@ messages of a service. But if you need to process lists of services and messages
 
 ```python
 services, messages = service_client.get_services_and_messages_info()
+print(services)
+print(messages)
 
-for service in services.items():
-    print(service[0], *service[1], sep="\n")
-
-print()
-
-for message in messages.items():
-    print(message[0], *message[1], sep="\n")
-
-# Calculator
-# ('add', 'Numbers', 'Result')
-# ('sub', 'Numbers', 'Result')
-# ('mul', 'Numbers', 'Result')
-# ('div', 'Numbers', 'Result')
-# 
-# Numbers
-# ('float', 'a')
-# ('float', 'b')
-# Result
-# ('float', 'value')
+# {'Calculator': [('add', 'Numbers', 'Result'), ('sub', 'Numbers', 'Result'), ('mul', 'Numbers', 'Result'), ('div', 'Numbers', 'Result')]}
+# {'Numbers': [('float', 'a'), ('float', 'b')], 'Result': [('float', 'value')]}
 ```
+
+---
+
+###### 1 This method uses a call to a paid smart contract function.
 
 ---
 
