@@ -1,10 +1,10 @@
 from snet.sdk import SnetSDK
 
 config = {
-    "private_key": '668cfafb7d20829e9db5e6970247cf06edb0e7787f7ea8ae8f8320c2995b88d9',
-    "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/87335b880b2645ebb9e1a433e05c0ed9",
+    "private_key": 'APP_PROVIDER_PRIVATE_KEY',
+    "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/INFURE_API_KEY",
     "concurrency": False,
-    "identity_name": "andrey",
+    "identity_name": "NAME",
     "identity_type": "key",
     "network": "sepolia",
     "force_update": False
