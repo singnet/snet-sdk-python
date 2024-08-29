@@ -1,32 +1,48 @@
+"""
+An example of how to use the SnetSDK to create a console application.
+All the functionality of this application is based on the SnetSDK.
+
+It is assumed that there is an application provider (developer), who pays for all the
+transactions and service calls. So, to run the application, you will need to change the values in 'config'.
+"""
+
+
 from snet.sdk import SnetSDK
 from snet.sdk.service_client import ServiceClient
 
+
 def list_organizations():
+    """
+    The function, which is called when the user enters the command 'organizations' in the main menu.
+    Prints the list of organization IDs related to the network specified in 'config'.
+    The list is got from the MPE contract using 'get_organization_list'.
+    """
     print("Organizations:")
     print(*map(lambda x: '\t' + x, snet_sdk.get_organization_list()), sep="\n")
 
 
 def list_services_for_org():
+    """
+    The function, which is called when the user enters the command 'services' in the main menu.
+    Prints the list of services IDs, related to the organization specified by the user.
+    The list is got from the MPE contract using 'get_organization_list'.
+    """
     org_id = input("Enter organization id: ").strip()
     print("Services:")
     print(*map(lambda x: '\t' + x, snet_sdk.get_services_list(org_id=org_id)), sep="\n")
 
 
 def create_service_client():
+    """
+    The function, which is called when the user enters the command 'add' in the service menu.
+    Creates a service client, related to the service specified by the user, and adds it to the
+    list of initialized services. The creation occurs using 'create_service_client'.
+    """
     org_id = input("Enter organization id: ").strip()
     service_id = input("Enter service id: ").strip()
     group_name = input("Enter payment group name: ").strip()
 
-    have_free_calls = input("Use free calls? (y/n): ").strip() == 'y'
-    free_call_token = None
-    free_call_token_expiry_block = None
-    if have_free_calls:
-        free_call_token = input("Enter free call auth token: ").strip()
-        free_call_token_expiry_block = input("Enter free call token expiry block: ").strip()
-
-    service = snet_sdk.create_service_client(org_id=org_id, service_id=service_id, group_name=group_name,
-                                             free_call_auth_token_bin=free_call_token,
-                                             free_call_token_expiry_block=free_call_token_expiry_block)
+    service = snet_sdk.create_service_client(org_id=org_id, service_id=service_id, group_name=group_name)
     initialized_services.append(service)
 
     global active_service
@@ -35,23 +51,31 @@ def create_service_client():
 
 
 def commands_help():
+    """
+    The function, which is called when the user enters the command 'help' in any menu.
+    Prints the list of available commands with descriptions depending on the active menu.
+    """
     global active_commands
     print("Available commands:")
     for command in active_commands.items():
         print(f'\t{command[0]} - {command[1][1]}')
 
 
-def change_config():
-    pass
-
-
 def list_initialized_services():
+    """
+    The function, which is called when the user enters the command 'list' in the service menu.
+    Prints the list of initialized services including their organization ID, service ID and group name.
+    """
     print("INDEX    ORGANIZATION_ID    SERVICE_ID    GROUP_NAME")
     for index, service in enumerate(initialized_services):
         print(f"{index}  {service.org_id}  {service.service_id}  {service.group['group_name']}")
 
 
 def switch_service():
+    """
+    The function, which is called when the user enters the command 'use' in the service menu.
+    Changes the active service to the one whose index the user specified.
+    """
     list_initialized_services()
     index = int(input("Enter the index of one of the initialized services: ").strip())
     if index < len(initialized_services):
@@ -63,6 +87,12 @@ def switch_service():
 
 
 def call():
+    """
+    The function, which is called when the user enters the command 'call' in the service menu.
+    Calls the method specified by the user of the active service. It gets data about the service using the
+    'get_services_and_messages_info' and parses the resulting dict to display the correct names of the input
+    and output values to the user.
+    """
     global active_service
     if active_service is None:
         print("No initialized services!\n"
@@ -71,7 +101,7 @@ def call():
 
     method_name = input("Enter method name: ")
 
-    services, msgs = active_service.get_services_and_messages_info()
+    services, messages = active_service.get_services_and_messages_info()
     is_found = False
     for service in services.items():
         for method in service[1]:
@@ -88,17 +118,22 @@ def call():
         print(f"Method '{method_name}' is not found in service")
         return None
 
-    inputs = {var[1]: float(input(f"{var[1]}: ")) for var in msgs[input_type]}
+    inputs = {var[1]: float(input(f"{var[1]}: ")) for var in messages[input_type]}
 
     print("Service calling...")
 
     result = active_service.call_rpc(method_name, input_type, **inputs)
-    outputs = {var[1]: getattr(result, var[1]) for var in msgs[output_type]}
+    outputs = {var[1]: getattr(result, var[1]) for var in messages[output_type]}
 
     print("Result:", *map(lambda x: f"{x[0]}: {x[1]}", outputs.items()), sep="\n")
 
 
 def print_service_info():
+    """
+    The function, which is called when the user enters the command 'info' in the service menu.
+    Prints data (services, methods and services) of the active service. It gets data about the service using
+    'get_services_and_messages_info_as_pretty_string'.
+    """
     global active_service
     if active_service is None:
         print("No initialized services!\n"
@@ -107,12 +142,32 @@ def print_service_info():
     print(active_service.get_services_and_messages_info_as_pretty_string())
 
 
+def balance():
+    """
+    The function, which is called when the user enters the command 'balance' in the main menu.
+    Prints the balances of AGIX and MPE. It gets the balances using 'balance_of' and 'escrow_balance'.
+    """
+    account_balance = snet_sdk.account.token_contract.functions.balanceOf(snet_sdk.account.address).call()
+    escrow_balance = snet_sdk.account.escrow_balance()
+
+    print(f"AGIX balance: {account_balance}")
+    print(f"MPE balance: {escrow_balance}")
+
+
 def deposit():
+    """
+    The function, which is called when the user enters the command 'deposit' in the main menu.
+    Deposits the user-specified amount of AGIX tokens in cogs into MPE contract using 'deposit_to_escrow_account'.
+    """
     amount = int(input("Enter amount of AGIX tokens in cogs to deposit into an MPE account: "))
     snet_sdk.account.deposit_to_escrow_account(amount)
 
 
 def block_number():
+    """
+    The function, which is called when the user enters the command 'block' in the main menu.
+    Prints the current block number. It gets the block number using 'get_current_block_number'.
+    """
     if active_service is None:
         print("No initialized services!\n"
               "Please enter 'service' to go to the service menu and then enter 'add' to add a service.")
@@ -121,6 +176,13 @@ def block_number():
 
 
 def update_channels():
+    """
+    The function, which is called when the user enters the command 'update' in the channel menu.
+    Updates the list of open channels stored in 'channels'. Gets the list of open channels using
+    'load_open_channels' for each initialized service.
+    The specified method searches for channels through the blockchain, which is why it takes quite a long time
+    to work, so there is a warning for the user about this at the beginning.
+    """
     if active_service is None:
         print("No initialized services!\n"
               "Please enter 'service' to go to the service menu and then enter 'add' to add a service.")
@@ -145,6 +207,12 @@ Continue? (y/n): """).strip() == 'y'
 
 
 def open_channel():
+    """
+    The function, which is called when the user enters the command 'open' in the channel menu.
+    Opens a new channel for the active service. Checks the balance of the MPE contract and asks the user
+    if they want to deposit AGIX tokens into it if there isn't enough funds. Opens the channel using 'open_channel'
+    or 'deposit_and_open_channel' with the user-specified amount of AGIX tokens in cogs and expiration time.
+    """
     global active_service
     global channels
     additions = False
@@ -178,6 +246,10 @@ def open_channel():
 
 
 def list_channels():
+    """
+    The function, which is called when the user enters the command 'list' in the channel menu.
+    Prints the list of open channels stored in 'channels'.
+    """
     global channels
     print("ORGANIZATION_ID    SERVICE_ID    GROUP_NAME    CHANNEL_ID    AMOUNT    EXPIRATION")
     for channel in channels:
@@ -191,6 +263,11 @@ def list_channels():
 
 
 def add_funds():
+    """
+    The function, which is called when the user enters the command 'add-funds' in the channel menu.
+    Adds funds to the channel. Finds the channel by its id specified by the user and adds the user-specified amount
+    of AGIX tokens in cogs to it using 'add_funds'.
+    """
     channel_id = int(input("Enter channel id: ").strip())
     exists = False
     for channel in channels:
@@ -203,6 +280,12 @@ def add_funds():
 
 
 def extend_expiration():
+    """
+    The function, which is called when the user enters the command 'extend-expiration' in the channel menu.
+    Extends expiration time of the channel. Finds the channel by its id specified by the user and Extends its
+    expiration time to a user-specified block using 'extend_expiration', after comparing it with the current
+    block number.
+    """
     channel_id = int(input("Enter channel id: ").strip())
     exists = False
     for channel in channels:
@@ -218,6 +301,10 @@ def extend_expiration():
         print(f"Channel with id {channel_id} is not found!")
 
 
+"""
+SDK configuration that is configured by the application provider.
+To run the application you need to change the 'private_key', 'eth_rpc_endpoint' and 'identity_name' values.
+"""
 config = {
     "private_key": 'APP_PROVIDER_PRIVATE_KEY',
     "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/APP_PROVIDER_INFURA_API_KEY",
@@ -228,16 +315,19 @@ config = {
     "force_update": False
 }
 
-snet_sdk = SnetSDK(config)
-initialized_services = []
-active_service: ServiceClient
-channels = []
+snet_sdk = SnetSDK(config)  # the 'SnetSDK' instance
+initialized_services = []  # the list of initialized services
+active_service: ServiceClient  # the currently active service
+channels = []  # the list of open channels
 
+"""
+Commands available in the application with their descriptions and functions to call.
+"""
 commands = {
     "main": {
         "organizations": (list_organizations, "print a list of organization ids from Registry"),
         "services": (list_services_for_org, "print a list of service ids for an organization from Registry"),
-        # "change-config": change_config,
+        "balance": (balance, "print the account balance and the escrow balance"),
         "deposit": (deposit, "deposit AGIX tokens into MPE"),
         "block": (block_number, "print the current block number"),
         "service": (lambda: None, "go to the services menu"),
@@ -270,10 +360,14 @@ commands = {
     }
 }
 
-active_commands: dict = commands["main"]
+active_commands: dict = commands["main"] # the list of available commands in the active menu
 
 
 def main():
+    """
+    The function, which is called when the application is started.
+    Manages global variables and calls the appropriate functions.
+    """
     global active_commands
 
     print("""
