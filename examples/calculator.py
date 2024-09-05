@@ -1,4 +1,4 @@
-from snet.sdk import SnetSDK
+from snet import sdk
 
 config = {
     "private_key": 'APP_PROVIDER_PRIVATE_KEY',
@@ -17,7 +17,7 @@ operators = {
     "/": "div"
 }
 
-snet_sdk = SnetSDK(config)
+snet_sdk = sdk.SnetSDK(config)
 calc_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f",
                                              service_id="Exampleservice", group_name="default_group")
 
