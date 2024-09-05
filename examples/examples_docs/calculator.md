@@ -1,6 +1,6 @@
 ## Tutorial on developing a console calculator
 
-This is an example of how to use the SnetSDK to create a console сфдсгдфещк that works using a service 
+This is an example of how to use the SnetSDK to create a console calculator that works using a service 
 on the SingularityNET platform.
 
 ### Description
