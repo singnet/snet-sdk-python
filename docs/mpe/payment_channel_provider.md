@@ -1,6 +1,6 @@
 ## module: sdk.mpe.payment_channel_provider
 
-[link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/mpe/payment_channel_provider.py) to GitHub
+[Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/mpe/payment_channel_provider.py) to GitHub
 
 Entities:
 1. [PaymentChannelProvider](#class-paymentchannelprovider)

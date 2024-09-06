@@ -1,6 +1,6 @@
 ## module: sdk.metadata_provider.metadata_provider
 
-[link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/metadata_provider/metadata_provider.py) to GitHub
+[Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/metadata_provider/metadata_provider.py) to GitHub
 
 Entities:
 1. [MetadataProvider](#class-transactionerror)

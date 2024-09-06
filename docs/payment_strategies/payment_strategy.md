@@ -2,7 +2,7 @@
 
 <!-- TODO: Change module name when the name itself changes -->
 
-[link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/payment_strategies/payment_staregy.py) to GitHub
+[Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/payment_strategies/payment_staregy.py) to GitHub
 
 Entities:
 1. [PaymentStrategy](#class-paymentstrategy)

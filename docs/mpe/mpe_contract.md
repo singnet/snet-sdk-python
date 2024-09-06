@@ -1,6 +1,6 @@
 ## module: sdk.mpe.mpe_contract
 
-[link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/mpe/mpe_contract.py) to GitHub
+[Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/mpe/mpe_contract.py) to GitHub
 
 Entities:
 1. [MPEContract](#class-mpecontract)

@@ -1,6 +1,6 @@
 ## module: sdk.payment_strategies.freecall_payment_strategy
 
-[link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/payment_strategies/freecall_payment_strategy.py) to GitHub
+[Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/payment_strategies/freecall_payment_strategy.py) to GitHub
 
 Entities:
 1. [FreeCallPaymentStrategy](#class-freecallpaymentstrategy)

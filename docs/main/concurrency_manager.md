@@ -1,6 +1,6 @@
 ## module: sdk.concurrency_manager
 
-[link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/concurrency_manager.py) to GitHub
+[Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/concurrency_manager.py) to GitHub
 
 Entities:
 1. [ConcurrencyManager](#class-concurrencymanager)

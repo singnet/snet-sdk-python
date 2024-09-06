@@ -1,6 +1,6 @@
 ## module: sdk.account
 
-[link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/account.py) to GitHub
+[Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/account.py) to GitHub
 
 Entities:
 1. [TransactionError](#class-transactionerror)
