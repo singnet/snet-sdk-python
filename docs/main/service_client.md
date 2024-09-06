@@ -155,17 +155,7 @@ Retrieves the metadata required for making a service call using the payment stra
 
 - Payment metadata. (list[tuple[str, Any]])
 
-#### `_intercept_call`
-
-<!-- TODO: implement this method -->
-
-###### args:
-
-- 
-
-###### returns:
-
--  
+<!-- TODO: implement method "_intercept_call"-->
 
 #### `_filter_existing_channels_from_new_payment_channels`
 
