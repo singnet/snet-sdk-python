@@ -1,6 +1,6 @@
 ## Tutorial on developing a console calculator
 
-This is an example of how to use the SnetSDK to create a console calculator that works using a service 
+This is an example of how to use SingularityNET Python SDK to create a console calculator that works using a service 
 on the SingularityNET platform.
 
 ### Description
@@ -8,7 +8,7 @@ on the SingularityNET platform.
 It is assumed that there is an application provider (developer), who pays for all the
 transactions and service calls.
 
-So the application must have the next console interface:
+So, the application must have the next console interface:
 
 ```commandline
 Welcome to the calculator powered by SingularityNET platform!

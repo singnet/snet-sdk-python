@@ -7,8 +7,7 @@ transactions and service calls. So, to run the application, you will need to cha
 """
 
 
-from snet.sdk import SnetSDK
-from snet.sdk.service_client import ServiceClient
+from snet import sdk
 
 
 def list_organizations():
@@ -89,8 +88,8 @@ def switch_service():
 def call():
     """
     The function, which is called when the user enters the command 'call' in the service menu.
-    Calls the method specified by the user of the active service. It gets data about the service using the
-    'get_services_and_messages_info' and parses the resulting dict to display the correct names of the input
+    Calls the method specified by the user of the active service using `call_rpc` method. It gets data about the service
+    using the 'get_services_and_messages_info' and parses the resulting dict to display the correct names of the input
     and output values to the user.
     """
     global active_service
@@ -315,9 +314,9 @@ config = {
     "force_update": False
 }
 
-snet_sdk = SnetSDK(config)  # the 'SnetSDK' instance
-initialized_services = []  # the list of initialized services
-active_service: ServiceClient  # the currently active service
+snet_sdk = sdk.SnetSDK(config)  # the 'SnetSDK' instance
+initialized_services = []  # the list of initialized service clients
+active_service: sdk.service_client.ServiceClient  # the currently active service
 channels = []  # the list of open channels
 
 """
