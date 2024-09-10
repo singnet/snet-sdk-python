@@ -19,59 +19,6 @@ from snet.sdk.resources.root_certificate import certificate
 RESOURCES_PATH = PurePath(os.path.dirname(sdk.__file__)).joinpath("resources")
 
 
-class DefaultAttributeObject(object):
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            if v is not None:
-                setattr(self, k, v)
-
-    def getstring(self, item):
-        return getattr(self, item)
-
-    def getint(self, item):
-        if getattr(self, item) is None:
-            return None
-        return int(getattr(self, item))
-
-    def getfloat(self, item):
-        if getattr(self, item) is None:
-            return None
-        return float(getattr(self, item))
-
-    def getboolean(self, item):
-        if getattr(self, item) is None:
-            return None
-        i = self.getstring(item)
-        if i in ["yes", "on", "true", "True", "1"]:
-            return True
-        return False
-
-    def __getattr__(self, item):
-        return self.__dict__.get(item, None)
-
-    def __repr__(self):
-        return self.__dict__.__repr__()
-
-    def __str__(self):
-        return self.__dict__.__str__()
-
-
-def get_web3(rpc_endpoint):
-    if rpc_endpoint.startswith("ws:"):
-        provider = web3.WebsocketProvider(rpc_endpoint)
-    else:
-        provider = web3.HTTPProvider(rpc_endpoint)
-
-    return web3.Web3(provider)
-
-
-def serializable(o):
-    if isinstance(o, bytes):
-        return o.hex()
-    else:
-        return o.__dict__
-
-
 def safe_address_converter(a):
     if not web3.Web3.is_checksum_address(a):
         raise Exception("%s is not is not a valid Ethereum checksum address" % a)
@@ -97,48 +44,6 @@ def type_converter(t):
 
 def bytes32_to_str(b):
     return b.rstrip(b"\0").decode("utf-8")
-
-
-def _add_next_paths(path, entry_path, seen_paths, next_paths):
-    with open(path) as f:
-        for line in f:
-            if line.strip().startswith("import"):
-                import_statement = "".join(line.split('"')[1::2])
-                if not import_statement.startswith("google/protobuf"):
-                    import_statement_path = Path(path.parent.joinpath(import_statement)).resolve()
-                    if entry_path.parent in path.parents:
-                        if import_statement_path not in seen_paths:
-                            seen_paths.add(import_statement_path)
-                            next_paths.append(import_statement_path)
-                    else:
-                        raise ValueError("Path must not be a parent of entry path")
-
-
-def walk_imports(entry_path):
-    seen_paths = set()
-    next_paths = []
-    for file_path in os.listdir(entry_path):
-        if file_path.endswith(".proto"):
-            file_path = entry_path.joinpath(file_path)
-            seen_paths.add(file_path)
-            next_paths.append(file_path)
-    while next_paths:
-        path = next_paths.pop()
-        if os.path.isfile(path):
-            _add_next_paths(path, entry_path, seen_paths, next_paths)
-        else:
-            raise IOError("Import path must be a valid file: {}".format(path))
-    return seen_paths
-
-
-def read_temp_tar(f):
-    f.flush()
-    f.seek(0)
-    return f
-
-
-def get_cli_version():
-    return distribution("snet.cli").version
 
 
 def compile_proto(entry_path, codegen_dir, proto_file=None, target_language="python"):
@@ -187,23 +92,6 @@ def compile_proto(entry_path, codegen_dir, proto_file=None, target_language="pyt
         return False
 
 
-def abi_get_element_by_name(abi, name):
-    """ Return element of abi (return None if fails to find) """
-    if abi and "abi" in abi:
-        for a in abi["abi"]:
-            if "name" in a and a["name"] == name:
-                return a
-    return None
-
-
-def abi_decode_struct_to_dict(abi, struct_list):
-    return {el_abi["name"]: el for el_abi, el in zip(abi["outputs"], struct_list)}
-
-
-def int4bytes_big(b):
-    return int.from_bytes(b, byteorder='big')
-
-
 def is_valid_endpoint(url):
     """
     Just ensures the url has a scheme (http/https), and a net location (IP or domain name).
@@ -231,40 +119,6 @@ def is_valid_endpoint(url):
         return False
 
 
-def remove_http_https_prefix(endpoint):
-    """remove http:// or https:// prefix if presented in endpoint"""
-    endpoint = endpoint.replace("https://", "")
-    endpoint = endpoint.replace("http://", "")
-    return endpoint
-
-
-def open_grpc_channel(endpoint):
-    """
-       open grpc channel:
-           - for http://  we open insecure_channel
-           - for https:// we open secure_channel (with default credentials)
-           - without prefix we open insecure_channel
-    """
-    _GB = 1024 ** 3
-    options = [('grpc.max_send_message_length', _GB),
-               ('grpc.max_receive_message_length', _GB)]
-    if endpoint.startswith("https://"):
-        return grpc.secure_channel(remove_http_https_prefix(endpoint), grpc.ssl_channel_credentials(root_certificates=certificate))
-    return grpc.insecure_channel(remove_http_https_prefix(endpoint))
-
-
-def rgetattr(obj, attr):
-    """
-    >>> from types import SimpleNamespace
-    >>> args = SimpleNamespace(a=1, b=SimpleNamespace(c=2, d='e'))
-    >>> rgetattr(args, "a")
-    1
-    >>> rgetattr(args, "b.c")
-    2
-    """
-    return functools.reduce(getattr, [obj] + attr.split('.'))
-
-
 def normalize_private_key(private_key):
     if private_key.startswith("0x"):
         private_key = bytes(bytearray.fromhex(private_key[2:]))
@@ -277,7 +131,7 @@ def get_address_from_private(private_key):
     return web3.Account.from_key(private_key).address
 
 
-class add_to_path():
+class add_to_path:
     def __init__(self, path):
         self.path = path
 
@@ -296,15 +150,3 @@ def find_file_by_keyword(directory, keyword):
             for file in files:
                 if keyword in file:
                     return file
-
-
-def is_valid_url(url):
-    regex = re.compile(
-        r'^(?:http|ftp)s?://'
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'
-        r'localhost|'
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'
-        r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'
-        r'(?::\d+)?'
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-    return re.match(regex, url) is not None
