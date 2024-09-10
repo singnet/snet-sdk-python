@@ -9,8 +9,8 @@ import grpc
 import web3
 from eth_account.messages import defunct_hash_message
 from rfc3986 import urlparse
-from snet.cli.resources.root_certificate import certificate
-from snet.cli.utils.utils import RESOURCES_PATH, add_to_path, find_file_by_keyword
+from snet.sdk.resources.root_certificate import certificate
+from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path, find_file_by_keyword
 
 import snet.sdk.generic_client_interceptor as generic_client_interceptor
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider

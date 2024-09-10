@@ -14,10 +14,9 @@ with warnings.catch_warnings():
     from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
 
 from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
-from snet.cli.commands.sdk_command import SDKCommand
-from snet.cli.commands.commands import BlockchainCommand
-from snet.cli.config import Config
-from snet.cli.utils.utils import bytes32_to_str, type_converter
+from snet.sdk.client_lib_generator import ClientLibGenerator
+from snet.sdk.config import Config
+from snet.sdk.utils.utils import bytes32_to_str, type_converter
 
 google.protobuf.internal.api_implementation.Type = lambda: 'python'
 
@@ -26,12 +25,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 _sym_db.RegisterMessage = lambda x: None
 
-
-from urllib.parse import urljoin
-
-
 import web3
-from rfc3986 import urlparse
 import ipfshttpclient
 
 from snet.sdk.service_client import ServiceClient
@@ -40,20 +34,12 @@ from snet.sdk.mpe.mpe_contract import MPEContract
 
 from snet.contracts import get_contract_object
 
-from snet.cli.metadata.service import mpe_service_metadata_from_json
-from snet.cli.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
-from snet.cli.utils.utils import find_file_by_keyword
+from snet.sdk.metadata_provider.service_metadata import mpe_service_metadata_from_json
+from snet.sdk.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
+from snet.sdk.utils.utils import find_file_by_keyword
 
 ModuleName = NewType('ModuleName', str)
 ServiceStub = NewType('ServiceStub', Any)
-
-
-class Arguments:
-    def __init__(self, org_id=None, service_id=None):
-        self.org_id = org_id
-        self.service_id = service_id
-        self.language = "python"
-        self.protodir = Path("~").expanduser().joinpath(".snet")
 
 
 class SnetSDK:
@@ -123,20 +109,20 @@ class SnetSDK:
                               options=None,
                               concurrent_calls=1):
 
-        # Create and instance of the Config object, so we can create an instance of SDKCommand
+        # Create and instance of the Config object, so we can create an instance of ClientLibGenerator
         sdk_config_object = Config(sdk_config=self._sdk_config)
-        sdk = SDKCommand(sdk_config_object, args=Arguments(org_id, service_id))
+        lib_generator = ClientLibGenerator(sdk_config_object, self.registry_contract, org_id, service_id)
 
         # Download the proto file and generate stubs if needed
         force_update = self._sdk_config.get('force_update', False)
         if force_update:
-            sdk.generate_client_library()
+            lib_generator.generate_client_library()
         else:
             path_to_pb_files = self.get_path_to_pb_files(org_id, service_id)
             pb_2_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2.py")
             pb_2_grpc_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2_grpc.py")
             if not pb_2_file_name or not pb_2_grpc_file_name:
-                sdk.generate_client_library()
+                lib_generator.generate_client_library()
         
         if payment_channel_management_strategy is None:
             payment_channel_management_strategy = DefaultPaymentStrategy(concurrent_calls)
@@ -223,21 +209,16 @@ class SnetSDK:
         return self._get_group_by_group_name(service_metadata, group_name)
 
     def get_organization_list(self) -> list:
-        global_config = Config(sdk_config=self._sdk_config)
-        blockchain_command = BlockchainCommand(config=global_config, args=Arguments())
-        org_list = blockchain_command.call_contract_command(
-            "Registry", "listOrganizations", [])
+        org_list = self.registry_contract.functions.listOrganizations().call()
         organization_list = []
         for idx, org_id in enumerate(org_list):
             organization_list.append(bytes32_to_str(org_id))
         return organization_list
 
     def get_services_list(self, org_id: str) -> list:
-        global_config = Config(sdk_config=self._sdk_config)
-        blockchain_command = BlockchainCommand(config=global_config, args=Arguments())
-        (found, org_service_list) = blockchain_command.call_contract_command("Registry",
-                                                                             "listServicesForOrganization",
-                                                               [type_converter("bytes32")(org_id)])
+        found, org_service_list = self.registry_contract.functions.listServicesForOrganization(
+            type_converter("bytes32")(org_id)
+        ).call()
         if not found:
             raise Exception(f"Organization with id={org_id} doesn't exist!")
         org_service_list = list(map(bytes32_to_str, org_service_list))

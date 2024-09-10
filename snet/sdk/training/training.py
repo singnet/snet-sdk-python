@@ -5,8 +5,8 @@ from urllib.parse import urlparse
 import grpc
 import web3
 
-from snet.cli.resources.root_certificate import certificate
-from snet.cli.utils.utils import add_to_path, RESOURCES_PATH
+from snet.sdk.resources.root_certificate import certificate
+from snet.sdk.utils.utils import add_to_path, RESOURCES_PATH
 
 
 # for local debug

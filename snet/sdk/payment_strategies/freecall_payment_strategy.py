@@ -3,8 +3,8 @@ from urllib.parse import urlparse
 
 import grpc
 import web3
-from snet.cli.resources.root_certificate import certificate
-from snet.cli.utils.utils import RESOURCES_PATH, add_to_path
+from snet.sdk.resources.root_certificate import certificate
+from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
 
 from snet.sdk.payment_strategies.payment_staregy import PaymentStrategy
 
