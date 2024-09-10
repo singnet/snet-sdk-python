@@ -3,9 +3,7 @@
 [Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/__init__.py) to GitHub
 
 Entities:
-1. [Arguments](#class-arguments)
-   - [\_\_init\_\_](#__init__)
-2. [SnetSDK](#class-snetsdk)
+1. [SnetSDK](#class-snetsdk)
    - [\_\_init\_\_](#__init__-1)
    - [setup_config](#setup_config)
    - [set_session_identity](#set_session_identity)
@@ -19,38 +17,6 @@ Entities:
    - [_get_service_group_details](#_get_service_group_details)
    - [get_organization_list](#get_organization_list)
    - [get_services_list](#get_services_list)
-
-### class `Arguments`
-
-extends: -
-
-is extended by: -
-
-#### description
-
-Represents the arguments for the `BlockchainCommand` from `snet.cli`.
-
-#### attributes
-
-- `org_id` (str): The organization id.
-- `service_id` (str): The service id.
-- `language` (str): The language used. Defaults to "python".
-- `protodir` (Path): The path to the directory with protobuf files. Defaults to "~/USER_NAME/.snet".
-
-#### methods
-
-#### `__init__`
-
-Initializes a new instance of the class.
-
-###### args:
-
-- `org_id` (str): The organization id. Defaults to _None_.
-- `service_id` (str): The service id. Defaults to _None_.
-
-###### returns:
-
-- _None_
 
 ### class `SnetSDK`
 
@@ -134,7 +100,7 @@ Sets the session identity in the given config.
 #### `create_service_client`
 
 If `force_update` is True or if there are no gRPC stubs for the given service, the proto files are loaded 
-and compiled using the `generate_client_library()` method of the `SDKCommand` class instance. 
+and compiled using the `generate_client_library()` method of the `ClientLibGenerator` class instance. 
 It then initializes `payment_channel_management_strategy` to `DefaultPaymentStrategy` if it is not specified. 
 It also sets the `options` dictionary with some default values. If `self._metadata_provider` is not specified 
 it is initialized by `IPFSMetadataProvider`. It also gets the service stub using the `self.get_service_stub` 

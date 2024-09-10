@@ -21,21 +21,28 @@ A getting started guide for the SNET SDK for Python is available [here](https://
 2. [account](main/account.md)
 3. [service_client](main/service_client.md)
 4. [concurrency_manager](main/concurrency_manager.md)
-5. [generic_client_interceptor](main/generic_client_interceptor.md)
-6. metadata_provider
+5. [config](main/config.md)
+6. [client_lib_generator](main/client_lib_generator.md)
+7. metadata_provider
    1. [metadata_provider](metadata_provider/metadata_provider.md)
    2. [ipfs_metadata_provider](metadata_provider/ipfs_metadata_provider.md)
-7. mpe
+   3. [service_metadata](metadata_provider/service_metadata.md)
+8. mpe
    1. [mpe_contract](mpe/mpe_contract.md)
    2. [payment_channel](mpe/payment_channel.md)
    3. [payment_channel_provider](mpe/payment_channel_provider.md)
-8. payment_strategies
+9. payment_strategies
    1. [payment_strategy](payment_strategies/payment_strategy.md)
    2. [default_payment_strategy](payment_strategies/default_payment_strategy.md)
    3. [freecall_payment_strategy](payment_strategies/freecall_payment_strategy.md)
    4. [paidcall_payment_strategy](payment_strategies/paidcall_payment_strategy.md)
    5. [prepaid_payment_strategy](payment_strategies/prepaid_payment_strategy.md)
-9. training
-   1. [training](training/training.md)
+10. utils
+    1. [utils](utils/utils.md)
+    2. [ipfs_utils](utils/ipfs_utils.md)
+<!--
+11. training
+    1. [training](training/training.md)
+-->
 
 

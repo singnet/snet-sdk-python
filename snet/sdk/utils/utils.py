@@ -1,20 +1,15 @@
 import json
 import os
 import subprocess
-import functools
-import re
 import sys
 import importlib.resources
-from importlib.metadata import distribution
 from urllib.parse import urlparse
 from pathlib import Path, PurePath
 
 import web3
-import grpc
 from grpc_tools.protoc import main as protoc
 
 from snet import sdk
-from snet.sdk.resources.root_certificate import certificate
 
 RESOURCES_PATH = PurePath(os.path.dirname(sdk.__file__)).joinpath("resources")
 
@@ -146,7 +141,7 @@ class add_to_path:
 
 
 def find_file_by_keyword(directory, keyword):
-        for root, dirs, files in os.walk(directory):
-            for file in files:
-                if keyword in file:
-                    return file
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if keyword in file:
+                return file
