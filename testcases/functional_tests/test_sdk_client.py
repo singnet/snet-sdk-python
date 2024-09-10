@@ -34,6 +34,7 @@ def get_test_service_data():
     }
 
     snet_sdk = sdk.SnetSDK(config)
+    
     service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f",
                                                     service_id="Exampleservice", group_name="default_group")
     path_to_pb_files = snet_sdk.get_path_to_pb_files(org_id="26072b8b6a0e448180f8c0e702ab6d2f",
