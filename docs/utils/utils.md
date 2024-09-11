@@ -3,15 +3,15 @@
 [Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/utils/utils.py) to GitHub
 
 Entities:
-1. [safe_address_converter]()
-2. [type_converter]()
-2. [bytes32_to_str]()
-3. [compile_proto]()
-4. [is_valid_endpoint]()
-5. [normalize_private_key]()
-6. [get_address_from_private]()
-7. [add_to_path]()
-8. [find_file_by_keyword]()
+1. [safe_address_converter](#safe_address_converter)
+2. [type_converter](#type_converter)
+3. [bytes32_to_str](#bytes32_to_str)
+4. [compile_proto](#compile_proto)
+5. [is_valid_endpoint](#is_valid_endpoint)
+6. [normalize_private_key](#normalize_private_key)
+7. [get_address_from_private](#get_address_from_private)
+8. [add_to_path](#add_to_path)
+9. [find_file_by_keyword](#find_file_by_keyword)
 
 
 #### Function `safe_address_converter`
@@ -61,10 +61,10 @@ Generated files as well as .proto files are stored in the `~/.snet` directory.
 
 ###### args:
 
-- entry_path (Path): The path to the .proto file.
-- codegen_dir (PurePath): The directory where the compiled code will be generated.
-- proto_file (str): The name of the .proto file to compile. Defaults to `None`.
-- target_language (str, optional): The target language for the compiled code. Defaults to "python".
+- `entry_path` (Path): The path to the .proto file.
+- `codegen_dir` (PurePath): The directory where the compiled code will be generated.
+- `proto_file` (str): The name of the .proto file to compile. Defaults to `None`.
+- `target_language` (str, optional): The target language for the compiled code. Defaults to "python".
 
 ###### returns:
 
@@ -80,7 +80,7 @@ Checks if the given endpoint is valid.
 
 ###### args:
 
-- url (str): The endpoint to check.
+- `url` (str): The endpoint to check.
 
 ###### returns:
 
@@ -96,7 +96,7 @@ Returns the normalized private key.
 
 ###### args:
 
-- private_key (str): The private key in hex format to normalize.
+- `private_key` (str): The private key in hex format to normalize.
 
 ###### returns:
 
@@ -108,7 +108,7 @@ Returns the wallet address from the private key.
 
 ###### args:
 
-- private_key (Any): The private key.
+- `private_key` (Any): The private key.
 
 ###### returns:
 
@@ -123,7 +123,7 @@ context manager is exited, and it removes the path from sys.path.
 
 ###### args:
 
-- path (str): The path to add to sys.path.
+- `path` (str): The path to add to sys.path.
 
 #### Function `find_file_by_keyword`
 
@@ -131,8 +131,8 @@ Finds a file by keyword in the current directory and subdirectories.
 
 ###### args:
 
-- directory (AnyStr | PathLike[AnyStr]): The directory to search in.
-- keyword (AnyStr): The keyword to search for.
+- `directory` (AnyStr | PathLike[AnyStr]): The directory to search in.
+- `keyword` (AnyStr): The keyword to search for.
 
 ###### returns:
 

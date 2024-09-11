@@ -62,7 +62,7 @@ def safe_extract_proto_from_ipfs(ipfs_client, ipfs_hash, protodir):
                     "tarball has directories. We do not support it.")
             if not m.isfile():
                 raise Exception(
-                    "tarball contains %s which is not a files" % m.name)
+                    "tarball contains %s which is not a file" % m.name)
             fullname = os.path.join(protodir, m.name)
             if os.path.exists(fullname):
                 os.remove(fullname)
