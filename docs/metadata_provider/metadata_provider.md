@@ -8,7 +8,7 @@ Entities:
    - [fetch_service_metadata](#fetch_service_metadata)
    - [enhance_service_group_details](#enhance_service_group_details)
 
-### abstract class `MetadataProvider`
+### Abstract Class `MetadataProvider`
 
 extends: `object`
 

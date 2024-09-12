@@ -18,7 +18,7 @@ Entities:
    - [approve_transfer](#approve_transfer)
    - [allowance](#allowance)
 
-### class `TransactionError`
+### Class `TransactionError`
 
 extends: `Exception`
 
@@ -57,7 +57,7 @@ Returns a string representation of the `TransactionError` object.
 
 - A string containing the `message` attribute of the TransactionError object. (str)
 
-### class `Account`
+### Class `Account`
 
 extends: -
 

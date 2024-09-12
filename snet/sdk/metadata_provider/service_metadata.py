@@ -55,7 +55,8 @@ class AssetType(Enum):
 
     @staticmethod
     def is_single_value(asset_type):
-        if asset_type == AssetType.HERO_IMAGE.value or asset_type == AssetType.DOCUMENTATION.value or asset_type == AssetType.TERMS_OF_USE.value:
+        if (asset_type == AssetType.HERO_IMAGE.value or asset_type == AssetType.DOCUMENTATION.value
+                or asset_type == AssetType.TERMS_OF_USE.value):
             return True
 
 
@@ -215,7 +216,7 @@ class MPEServiceMetadata:
     def remove_all_assets(self):
         self.m['assets'] = {}
 
-    def remove_assets(self, asset_type):
+    def remove_asset(self, asset_type):
         if 'assets' in self.m:
             if AssetType.is_single_value(asset_type):
                 self.m['assets'][asset_type] = ""
@@ -262,7 +263,7 @@ class MPEServiceMetadata:
         return False
 
     def get_group_by_group_id(self, group_id):
-        """ return group with given group_id (return None if doesn't exists) """
+        """ return group with given group_id (return None if it doesn't exist) """
         group_id_base64 = base64.b64encode(group_id).decode('ascii')
         groups = self.m["groups"]
         for g in groups:
@@ -396,7 +397,8 @@ class MPEServiceMetadata:
 
     def remove_contributor_by_email(self, email_id):
         self.m["contributors"] = [
-            contributor for contributor in self.m["contributors"] if contributor["email_id"] != email_id]
+            contributor for contributor in self.m["contributors"] if contributor["email_id"] != email_id
+        ]
 
     def group_init(self, group_name):
         """Required values for creating a new payment group.

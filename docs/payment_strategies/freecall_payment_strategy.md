@@ -8,7 +8,7 @@ Entities:
    - [get_payment_metadata](#get_payment_metadata)
    - [generate_signature](#generate_signature)
 
-### class `FreeCallPaymentStrategy`
+### Class `FreeCallPaymentStrategy`
 
 extends: `PaymentStrategy`
 

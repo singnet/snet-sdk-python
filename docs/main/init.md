@@ -18,7 +18,7 @@ Entities:
    - [get_organization_list](#get_organization_list)
    - [get_services_list](#get_services_list)
 
-### class `SnetSDK`
+### Class `SnetSDK`
 
 extends: -
 

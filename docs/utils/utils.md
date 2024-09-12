@@ -14,7 +14,7 @@ Entities:
 9. [find_file_by_keyword](#find_file_by_keyword)
 
 
-#### Function `safe_address_converter`
+### Function `safe_address_converter`
 
 Checks if the address is a valid checksum address and returns it, otherwise raises an exception.
 
@@ -30,7 +30,7 @@ Checks if the address is a valid checksum address and returns it, otherwise rais
 
 - `Exception`: If the address isn't a valid checksum address.
 
-#### Function `type_converter
+### Function `type_converter
 
 Creates a function that converts a value to the specified type.
 
@@ -42,7 +42,7 @@ Creates a function that converts a value to the specified type.
 
 - A function that converts the value to the specified type. (Any -> Any)
 
-#### Function `bytes32_to_str`
+### Function `bytes32_to_str`
 
 Converts a bytes32 value to a string.
 
@@ -54,7 +54,7 @@ Converts a bytes32 value to a string.
 
 - The string representation of the bytes32 value. (str)
 
-#### Function `compile_proto`
+### Function `compile_proto`
 
 Compiles Protocol Buffer (protobuf) files into code for a specific target language.
 Generated files as well as .proto files are stored in the `~/.snet` directory.
@@ -74,7 +74,7 @@ Generated files as well as .proto files are stored in the `~/.snet` directory.
 
 - `Exception`: If the error occurs while performing the function.
 
-#### Function `is_valid_endpoint`
+### Function `is_valid_endpoint`
 
 Checks if the given endpoint is valid.
 
@@ -90,7 +90,7 @@ Checks if the given endpoint is valid.
 
 - `ValueError`: If the error occurs while performing the function.
 
-#### Function `normalize_private_key`
+### Function `normalize_private_key`
 
 Returns the normalized private key.
 
@@ -102,7 +102,7 @@ Returns the normalized private key.
 
 - The normalized private key. (bytes)
 
-#### Function `get_address_from_private`
+### Function `get_address_from_private`
 
 Returns the wallet address from the private key.
 
@@ -114,7 +114,7 @@ Returns the wallet address from the private key.
 
 - The wallet address. (ChecksumAddress)
 
-#### Class `add_to_path`
+### Class `add_to_path`
 
 `add_to_path` class is a _**context manager**_ that temporarily adds a given path to the system's `sys.path` list. 
 This allows for the import of modules or packages from that path. The `__enter__` method is called when the context 
@@ -125,7 +125,7 @@ context manager is exited, and it removes the path from sys.path.
 
 - `path` (str): The path to add to sys.path.
 
-#### Function `find_file_by_keyword`
+### Function `find_file_by_keyword`
 
 Finds a file by keyword in the current directory and subdirectories.
 

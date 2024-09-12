@@ -10,7 +10,7 @@ Entities:
    - [deposit_and_open_channel](#deposit_and_open_channel)
    - [_get_newly_opened_channel](#_get_newly_opened_channel)
 
-### class `PaymentChannelProvider`
+### Class `PaymentChannelProvider`
 
 extends: `object`
 

@@ -14,7 +14,7 @@ Entities:
    - [channel_extend_and_add_funds](#channel_extend_and_add_funds)
    - [_fund_escrow_account](#_fund_escrow_account)
 
-### class `MPEContract`
+### Class `MPEContract`
 
 extends: -
 

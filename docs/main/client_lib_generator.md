@@ -9,7 +9,7 @@ Entities:
    - [_get_service_metadata_from_registry](#_get_service_metadata_from_registry)
    - [_get_service_registration](#_get_service_registration)
 
-### class `ClientLibGenerator`
+### Class `ClientLibGenerator`
 
 extends: -
 

@@ -13,7 +13,7 @@ Entities:
    - [_is_valid](#_is_valid)
 
 
-### class `PrePaidPaymentStrategy`
+### Class `PrePaidPaymentStrategy`
 
 extends: `PaymentStrategy`
 

@@ -10,7 +10,7 @@ Entities:
    - [get_payment_metadata](#get_payment_metadata)
    - [get_concurrency_token_and_channel](#get_concurrency_token_and_channel)
 
-### class `DefaultPaymentStrategy`
+### Class `DefaultPaymentStrategy`
 
 extends: `PaymentStrategy`
 

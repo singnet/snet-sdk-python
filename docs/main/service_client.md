@@ -31,7 +31,7 @@ Entities:
    - [get_services_and_messages_info](#get_services_and_messages_info)
    - [get_services_and_messages_info_as_pretty_string](#get_services_and_messages_info_as_pretty_string)
 
-### class `ServiceClient`
+### Class `ServiceClient`
 
 extends: -
 

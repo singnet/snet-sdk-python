@@ -10,7 +10,7 @@ Entities:
 
 
 
-#### Function `get_from_ipfs_and_checkhash`
+### Function `get_from_ipfs_and_checkhash`
 
 This function retrieves a file from IPFS and optionally verifies its integrity by 
 checking the hash. If `validate` is True, it manually parses the IPFS block, extracts the file data, and verifies 
@@ -31,7 +31,7 @@ it simply retrieves the file data.
 
 - `Exception`: If the hash validation fails or if the IPFS hash is not a file.
 
-#### Function `bytesuri_to_hash`
+### Function `bytesuri_to_hash`
 
 Converts a bytes URI to a hash.
 
@@ -47,7 +47,7 @@ Converts a bytes URI to a hash.
 
 - `Exception`: If the input is not an IPFS URI.
 
-#### Function `safe_extract_proto_from_ipfs`
+### Function `safe_extract_proto_from_ipfs`
 
 This function safely extracts a tar file from IPFS to a specified directory. It checks for potential security risks by:
 - Ensuring the tar file does not contain directories
@@ -62,11 +62,15 @@ If any of these checks fail, it raises an exception. Otherwise, it extracts the 
 - `ipfs_hash` (str): The IPFS hash of the tar file to extract.
 - `protodir` (str): The directory to extract the tar file to.
 
+###### returns:
+
+- _None_
+
 ###### raises:
 
 - `Exception`: If the tarball contains directories or non-file entries.
 
-#### Function `get_ipfs_client`
+### Function `get_ipfs_client`
 
 Returns an IPFS client instance based on the provided configuration.
 

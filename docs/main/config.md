@@ -3,7 +3,7 @@
 [Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/config.py) to GitHub
 
 Entities:
-1. [ClientLibGenerator](#class-clientlibgenerator)
+1. [Config](#class-clientlibgenerator)
    - [\_\_init\_\_](#__init__)
    - [get_session_network_name](#get_session_network_name)
    - [safe_get_session_identity_network_names](#safe_get_session_identity_network_names)
@@ -36,29 +36,33 @@ Entities:
 5. [get_session_network_keys_removable](#function-get_session_network_keys_removable)
 6. [get_session_keys](#function-get_session_keys)
 
-### class `ClientLibGenerator`
+### Class `Config`
 
-extends: -
+extends: `ConfigParser`
 
 is extended by: -
 
 #### description
 
-
+This is a configuration manager for the SDK. It is responsible for handling configuration settings for the SDK.
 
 #### attributes
 
-- 
+- `_config_file` (Path): The path to the configuration file.
+- `sdk_config` (dict): The SDK configuration.
+- `is_sdk` (bool): Whether the configuration is for the SDK.
 
 #### methods
 
 #### `__init__`
 
-Initializes a new instance of the class. 
+Initializes a new instance of the class. Reads the configuration file or creates a default one if it doesn't exist.
+Initializes attributes by the passed arguments.
 
 ###### args:
 
-- 
+- `_snet_folder` (Path): The path to the folder where the configuration file is located. Defaults to "~/.snet".
+- `sdk_config` (dict): The SDK configuration. Defaults to _None_.
 
 ###### returns:
 
@@ -66,147 +70,126 @@ Initializes a new instance of the class.
 
 #### `get_session_network_name`
 
-
-
-###### args:
-
-- 
+Returns the name of the session network.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- (str): The name of the session network.
 
 #### `safe_get_session_identity_network_names`
 
-
-
-###### args:
-
-- 
+Returns the names of the session network and identity.
 
 ###### returns:
 
-- 
+- The names of the session network and identity. (str, str)
 
 ###### raises:
 
-- 
+- Exception: If the session identity does not bind to the session network.
 
 #### `set_session_network`
 
-
+Sets the session network using `_set_session_network`.
 
 ###### args:
 
-- 
+- `network` (str): The name of the session network.
+- `out_f` (TextIO): The output to write messages to.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- _None_
 
 #### `_set_session_network`
 
-
+Sets the session network.
 
 ###### args:
 
-- 
+- `network` (str): The name of the session network.
+- `out_f` (TextIO): The output to write messages to.
 
 ###### returns:
 
-- 
+- _None_
 
 ###### raises:
 
-- 
+- Exception: If the network is not in the config.
 
 #### `set_session_identity`
 
-
+Sets the session identity.
 
 ###### args:
 
-- 
+- `identity` (str): The name of the session identity.
+- `out_f` (TextIO): The output to write messages to.
 
 ###### returns:
 
-- 
+- _None_
 
 ###### raises:
 
-- 
+- Exception: If the identity is not in the config.
 
 #### `get_session_field`
 
-
+Retrieves a session field based on the provided key.
 
 ###### args:
 
-- 
+- `key` (str): The key of the session field to retrieve.
+- `exception_if_not_found` (bool): Whether to raise an exception if the field is not found. Defaults to _True_.
 
 ###### returns:
 
-- 
+- The value of the session field if found, otherwise _None_. (str | None)
 
 ###### raises:
 
-- 
+- `Exception`: If the field is not found and `exception_if_not_found` is _True_.
 
 #### `set_session_field`
 
-
+Sets a session field based on the provided key and value.
 
 ###### args:
 
-- 
+- `key` (str): The key of the session field to set.
+- `value` (str): The value of the session field to set.
+- `out_f` (TextIO): The output to write messages to.
 
 ###### returns:
 
-- 
+- _None_
 
 ###### raises:
 
-- 
+- `Exception`: If the key is not in the config.
 
 #### `unset_session_field`
 
-
+Unsets a session field based on the provided key.
 
 ###### args:
 
-- 
+- `key` (str): The key of the session field to unset.
+- `out_f` (TextIO): The output to write messages to.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- _None_
 
 #### `session_to_dict`
 
-
-
-###### args:
-
-- 
+Converts the session configuration to a dictionary.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- The session configuration as a dictionary. (dict)
 
 #### `add_network`
 
@@ -448,7 +431,7 @@ Initializes a new instance of the class.
 
 - 
 
-#### Function `first_identity_message_and_exit`
+### Function `first_identity_message_and_exit`
 
 
 
@@ -464,7 +447,7 @@ Initializes a new instance of the class.
 
 - 
 
-#### Function `get_session_identity_keys`
+### Function `get_session_identity_keys`
 
 
 
@@ -480,7 +463,7 @@ Initializes a new instance of the class.
 
 - 
 
-#### Function `get_session_network_keys`
+### Function `get_session_network_keys`
 
 
 
@@ -496,7 +479,7 @@ Initializes a new instance of the class.
 
 - 
 
-#### Function `get_session_network_keys_removable`
+### Function `get_session_network_keys_removable`
 
 
 
@@ -512,7 +495,7 @@ Initializes a new instance of the class.
 
 - 
 
-#### Function `get_session_keys`
+### Function `get_session_keys`
 
 
 

@@ -11,7 +11,7 @@ Entities:
    - [sync_state](#sync_state)
    - [_get_current_channel_state](#_get_current_channel_state)
 
-### class `PaymentChannel`
+### Class `PaymentChannel`
 
 extends: -
 

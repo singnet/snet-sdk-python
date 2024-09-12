@@ -9,7 +9,7 @@ Entities:
    - [fetch_service_metadata](#fetch_service_metadata)
    - [enhance_service_metadata](#enhance_service_metadata)
 
-### class `IPFSMetadataProvider`
+### Class `IPFSMetadataProvider`
 
 extends: `object`
 

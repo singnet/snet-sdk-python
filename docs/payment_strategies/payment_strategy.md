@@ -9,7 +9,7 @@ Entities:
    - [get_payment_metadata](#get_payment_metadata)
    - [get_price](#get_price)
 
-### abstract class `PaymentStrategy`
+### Abstract Class `PaymentStrategy`
 
 extends: `object`
 

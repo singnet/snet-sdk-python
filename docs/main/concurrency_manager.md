@@ -12,7 +12,7 @@ Entities:
    - [__get_token_for_amount](#__get_token_for_amount)
    - [record_successful_call](#record_successful_call)
 
-### class `ConcurrencyManager`
+### Class `ConcurrencyManager`
 
 extends: -
 

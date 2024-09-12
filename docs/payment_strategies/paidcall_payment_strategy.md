@@ -12,7 +12,7 @@ Entities:
    - [_is_valid](#_is_valid)
 
 
-### class `PaidCallPaymentStrategy`
+### Class `PaidCallPaymentStrategy`
 
 extends: `PaymentStrategy`
 
