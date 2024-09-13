@@ -5,9 +5,9 @@
 Entities:
 1. [TransactionError](#class-transactionerror)
    - [\_\_init\_\_](#__init__)
-   - [\_\_str\_\_](#str)
+   - [\_\_str\_\_](#__str__)
 2. [Account](#class-account)
-   - [\_\_init\_\_](#init-1)
+   - [\_\_init\_\_](#__init__-1)
    - [_get_nonce](#_get_nonce)
    - [_get_gas_price](#_get_gas_price)
    - [_send_signed_transaction](#_send_signed_transaction)

@@ -8,9 +8,8 @@ Entities:
    - [get_price](#get_price)
    - [get_payment_metadata](#get_payment_metadata)
    - [select_channel](#select_channel)
-   - [_has_sufficient_funds](#_has_sufficient_funds)
-   - [_is_valid](#_is_valid)
-
+   - [_has_sufficient_funds](#static-_has_sufficient_funds)
+   - [_is_valid](#static-_is_valid)
 
 ### Class `PaidCallPaymentStrategy`
 
@@ -26,7 +25,7 @@ expiration are checked before each call and the payment itself is made each call
 
 #### attributes
 
-- `block_offset` (int): Current block number. <!-- TODO: find out what is a block_offset -->
+- `block_offset` (int): Block offset.
 - `call_allowance` (int): The amount of allowed calls.
 
 #### methods
@@ -37,7 +36,7 @@ Initializes a new instance of the class.
 
 ###### args:
 
-- `block_offset` (int): Current block number. Defaults to 240. <!-- TODO: find out what is a block_offset -->
+- `block_offset` (int): Block offset.
 - `call_allowance` (int): The amount of allowed calls. Defaults to 1.
 
 ###### returns:

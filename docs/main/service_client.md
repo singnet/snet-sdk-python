@@ -10,7 +10,6 @@ Entities:
    - [get_grpc_base_channel](#get_grpc_base_channel)
    - [_get_grpc_channel](#_get_grpc_channel)
    - [_get_service_call_metadata](#_get_service_call_metadata)
-   - [_intercept_call](#_intercept_call)
    - [_filter_existing_channels_from_new_payment_channels](#_filter_existing_channels_from_new_payment_channels)
    - [load_open_channels](#load_open_channels)
    - [get_current_block_number](#get_current_block_number)

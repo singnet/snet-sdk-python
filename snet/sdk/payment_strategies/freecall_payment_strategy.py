@@ -6,7 +6,7 @@ import web3
 from snet.sdk.resources.root_certificate import certificate
 from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
 
-from snet.sdk.payment_strategies.payment_staregy import PaymentStrategy
+from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
 
 
 class FreeCallPaymentStrategy(PaymentStrategy):

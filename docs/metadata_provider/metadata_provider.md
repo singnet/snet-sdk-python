@@ -3,7 +3,7 @@
 [Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/metadata_provider/metadata_provider.py) to GitHub
 
 Entities:
-1. [MetadataProvider](#class-transactionerror)
+1. [MetadataProvider](#abstract-class-metadataprovider)
    - [fetch_org_metadata](#fetch_org_metadata)
    - [fetch_service_metadata](#fetch_service_metadata)
    - [enhance_service_group_details](#enhance_service_group_details)

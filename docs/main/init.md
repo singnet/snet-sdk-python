@@ -4,7 +4,7 @@
 
 Entities:
 1. [SnetSDK](#class-snetsdk)
-   - [\_\_init\_\_](#__init__-1)
+   - [\_\_init\_\_](#__init__)
    - [setup_config](#setup_config)
    - [set_session_identity](#set_session_identity)
    - [create_service_client](#create_service_client)

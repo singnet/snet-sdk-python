@@ -3,10 +3,10 @@
 [Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/utils/ipfs_utils.py) to GitHub
 
 Entities:
-1. [get_from_ipfs_and_checkhash](#get_from_ipfs_and_checkhash)
-2. [bytesuri_to_hash](#bytesuri_to_hash)
-3. [safe_extract_proto_from_ipfs](#safe_extract_proto_from_ipfs)
-4. [get_ipfs_client](#get_ipfs_client)
+1. [get_from_ipfs_and_checkhash](#function-get_from_ipfs_and_checkhash)
+2. [bytesuri_to_hash](#function-bytesuri_to_hash)
+3. [safe_extract_proto_from_ipfs](#function-safe_extract_proto_from_ipfs)
+4. [get_ipfs_client](#function-get_ipfs_client)
 
 
 

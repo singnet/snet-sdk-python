@@ -3,15 +3,15 @@
 [Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/utils/utils.py) to GitHub
 
 Entities:
-1. [safe_address_converter](#safe_address_converter)
-2. [type_converter](#type_converter)
-3. [bytes32_to_str](#bytes32_to_str)
-4. [compile_proto](#compile_proto)
-5. [is_valid_endpoint](#is_valid_endpoint)
-6. [normalize_private_key](#normalize_private_key)
-7. [get_address_from_private](#get_address_from_private)
-8. [add_to_path](#add_to_path)
-9. [find_file_by_keyword](#find_file_by_keyword)
+1. [safe_address_converter](#function-safe_address_converter)
+2. [type_converter](#function-type_converter)
+3. [bytes32_to_str](#function-bytes32_to_str)
+4. [compile_proto](#function-compile_proto)
+5. [is_valid_endpoint](#function-is_valid_endpoint)
+6. [normalize_private_key](#function-normalize_private_key)
+7. [get_address_from_private](#function-get_address_from_private)
+8. [add_to_path](#class-add_to_path)
+9. [find_file_by_keyword](#function-find_file_by_keyword)
 
 
 ### Function `safe_address_converter`
