@@ -3,7 +3,7 @@
 [Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/config.py) to GitHub
 
 Entities:
-1. [Config](#class-clientlibgenerator)
+1. [Config](#class-config)
    - [\_\_init\_\_](#__init__)
    - [get_session_network_name](#get_session_network_name)
    - [safe_get_session_identity_network_names](#safe_get_session_identity_network_names)
@@ -193,321 +193,250 @@ Converts the session configuration to a dictionary.
 
 #### `add_network`
 
-
+Adds a new network configuration to the existing config.
 
 ###### args:
 
-- 
+- `network` (str): The name of the network to add.
+- `rpc_endpoint` (str): The RPC endpoint of the network.
+- `default_gas_price` (str): The default gas price of the network.
 
 ###### returns:
 
-- 
+- _None_
 
 ###### raises:
 
-- 
+- `Exception`: If the specified network section already exists in config.
 
 #### `set_network_field`
 
-
+Sets a network field based on the provided key and value.
 
 ###### args:
 
-- 
+- `network` (str): The name of the network to set.
+- `key` (str): The key of the network field to set.
+- `value` (str): The value of the network field to set.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- _None_
 
 #### `add_identity`
 
-
+Adds a new identity configuration to the existing config.
 
 ###### args:
 
-- 
+- `identity_name` (str): The name of the identity to add.
+- `identity` (dict): The identity configuration.
+- `out_f` (TextIO): The output to write messages to. Defaults to _sys.stdout_.
 
 ###### returns:
 
-- 
+- _None_
 
 ###### raises:
 
-- 
+- `Exception`: If the specified identity section already exists in config or if network of the identity is not in config.
 
 #### `set_identity_field`
 
-
+Sets an identity field based on the provided key and value.
 
 ###### args:
 
-- 
+- `identity` (str): The name of the identity to set.
+- `key` (str): The key of the identity field to set.
+- `value` (str): The value of the identity field to set.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- _None_
 
 #### `_get_network_section`
 
-
+Returns the config section for the specified network.
 
 ###### args:
 
-- 
+- `network` (str): The name of the network.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- The config section for the specified network. (dict | SectionProxy)
 
 #### `_get_identity_section`
 
-
+Returns the config section for the specified identity.
 
 ###### args:
 
-- 
+- `identity` (str): The name of the identity.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- The config section for the specified identity. (dict | SectionProxy)
 
 #### `get_ipfs_endpoint`
 
-
-
-###### args:
-
-- 
+Returns default IPFS endpoint from config.
 
 ###### returns:
 
-- 
+- The default IPFS endpoint. (str)
 
-###### raises:
+#### `set_ipfs_endpoint`
 
-- 
+Sets default IPFS endpoint in config.
+
+###### args:
+
+- `ipfs_endpoint` (str): The IPFS endpoint to set.
+
+###### returns:
+
+- _None_
 
 #### `get_all_identities_names`
 
-
-
-###### args:
-
-- 
+Returns all identity names from config.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- The list of identity names. (list[str]) 
 
 #### `get_all_networks_names`
 
-
-
-###### args:
-
-- 
+Returns all network names from config.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- The list of network names. (list[str])
 
 #### `delete_identity`
 
-
+Deletes an identity from config.
 
 ###### args:
 
-- 
+- `identity_name` (str): The name of the identity to delete.
 
 ###### returns:
 
-- 
+- _None_
 
 ###### raises:
 
-- 
+- `Exception`: If the specified identity name does not exist in config or if the specified identity name is in use.
 
 #### `create_default_config`
 
-
-
-###### args:
-
-- 
+Creates default configuration if config file does not exist. Determines default endpoints for each network and IPFS.
+Sets identity if it is provided by sdk.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- _None_
 
 #### `_check_section`
 
-
+Checks if the specified section exists in config, raises an exception if it does not.
 
 ###### args:
 
-- 
+- `s` (sts): The section name to check.
 
 ###### returns:
 
-- 
+- _None_
 
 ###### raises:
 
-- 
+- `Exception`: If the specified section does not exist in config.
 
 #### `_persist`
 
-
-
-###### args:
-
-- 
+Persists the config to disk.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- _None_
 
 #### `get_param_from_sdk_config`
 
-
+Returns the value of the specified parameter from the `sdk_config` dict.
 
 ###### args:
 
-- 
+- `param` (str): The name of the parameter to get.
+- `alternative` (any): The value to return if the parameter is not found in `sdk_config`. Defaults to _None_.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- The value of the parameter or `alternative` if the parameter is not found or _None_ if `sdk_config` is not set. (Any)
 
 #### `setup_identity`
 
+Sets up and returns a new identity in the config with the parameters from the `sdk_config`.
 
-
-###### args:
-
-- 
+_Note_: currently, only `key` identity type is supported.
 
 ###### returns:
 
-- 
+- The identity as a dict. (dict)
 
 ###### raises:
 
-- 
+- Exception: If the `identity_type` is not passed in the `sdk_config`.
 
 ### Function `first_identity_message_and_exit`
 
-
+Prints a message instructing the user to create their first identity and then exits the program. 
+The message differs depending on whether the `is_sdk` parameter is True or False, indicating whether the function 
+is being called from an SDK or not. The message lists the available identity types and how to create an identity.
 
 ###### args:
 
-- 
+- `is_sdk` (bool): Whether the function is being called from an SDK.
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- _None_
 
 ### Function `get_session_identity_keys`
 
-
-
-###### args:
-
-- 
+Returns a list with the only one element "default_wallet_index".
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- List with the only one element. (list[str])
 
 ### Function `get_session_network_keys`
 
-
-
-###### args:
-
-- 
+Returns a list with the elements "default_gas_price", "current_registry_at", "current_multipartyescrow_at", 
+"current_singularitynettoken_at" and "default_eth_rpc_endpoint".
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- List with the elements. (list[str])
 
 ### Function `get_session_network_keys_removable`
 
-
-
-###### args:
-
-- 
+Returns a list with the elements "default_gas_price", "current_registry_at", "current_multipartyescrow_at" and 
+"current_singularitynettoken_at".
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- List with the elements. (list[str])
 
 ### Function `get_session_keys`
 
-
-
-###### args:
-
-- 
+Returns a list with the elements from the `get_session_identity_keys` and `get_session_network_keys` methods, plus
+the "default_ipfs_endpoint".
 
 ###### returns:
 
-- 
-
-###### raises:
-
-- 
+- List with the elements. (list[str])
 
