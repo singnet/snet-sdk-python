@@ -11,10 +11,6 @@ The SingularityNET SDK abstracts and manages state channels with service provide
 
 A getting started guide for the SNET SDK for Python is available [here](https://github.com/singnet/snet-sdk-python/blob/master/README.md).
 
-### Package Diagram
-
-![Package Diagram]()
-
 ### Modules
 
 1. [\_\_init\_\_](main/init.md)
