@@ -40,9 +40,8 @@ A getting started guide for the SNET SDK for Python is available [here](https://
 10. utils
     1. [utils](utils/utils.md)
     2. [ipfs_utils](utils/ipfs_utils.md)
-<!--
 11. training
     1. [training](training/training.md)
--->
+
 
 

@@ -62,15 +62,16 @@ class TrainingModel:
     # params from AI-service: status, model_id
     # params pass to daemon: grpc_service_name, grpc_method_name, address_list,
     # description, model_name, training_data_link, is_public_accessible
-    def create_model(self, service_client, grpc_method_name: str, model_name: str,
-                     description: str = '',
+    def create_model(self, service_client, grpc_method_name: str,
+                     model_name: str, description: str = '',
                      training_data_link: str = '', grpc_service_name='service',
                      is_publicly_accessible=False, address_list: list[str] = None):
         if address_list is None:
             address_list = []
         try:
             auth_req, channel = self._invoke_model(service_client, ModelMethodMessage.CreateModel)
-            model_details = self.training_pb2.ModelDetails(grpc_method_name=grpc_method_name, description=description,
+            model_details = self.training_pb2.ModelDetails(grpc_method_name=grpc_method_name,
+                                                           description=description,
                                                            training_data_link=training_data_link,
                                                            grpc_service_name=grpc_service_name,
                                                            model_name=model_name, address_list=address_list,
@@ -89,7 +90,8 @@ class TrainingModel:
         try:
             auth_req, channel = self._invoke_model(service_client, ModelMethodMessage.GetModelStatus)
             model_details = self.training_pb2.ModelDetails(grpc_method_name=grpc_method_name,
-                                                           grpc_service_name=grpc_service_name, model_id=str(model_id))
+                                                           grpc_service_name=grpc_service_name,
+                                                           model_id=str(model_id))
             stub = self.training_pb2_grpc.ModelStub(channel)
             response = stub.get_model_status(
                 self.training_pb2.ModelDetailsRequest(authorization=auth_req, model_details=model_details))
@@ -100,12 +102,13 @@ class TrainingModel:
 
     # params from AI-service: status
     # params to daemon: grpc_service_name, grpc_method_name, model_id
-    def delete_model(self, service_client, model_id: str, grpc_method_name: str,
-                     grpc_service_name='service'):
+    def delete_model(self, service_client, model_id: str,
+                     grpc_method_name: str, grpc_service_name='service'):
         try:
             auth_req, channel = self._invoke_model(service_client, ModelMethodMessage.DeleteModel)
             model_details = self.training_pb2.ModelDetails(grpc_method_name=grpc_method_name,
-                                                           grpc_service_name=grpc_service_name, model_id=str(model_id))
+                                                           grpc_service_name=grpc_service_name,
+                                                           model_id=str(model_id))
             stub = self.training_pb2_grpc.ModelStub(channel)
             response = stub.delete_model(
                 self.training_pb2.UpdateModelRequest(authorization=auth_req, update_model_details=model_details))
@@ -119,13 +122,16 @@ class TrainingModel:
     # all params required
     def update_model_access(self, service_client, model_id: str, grpc_method_name: str,
                             model_name: str, is_public: bool,
-                            description: str, grpc_service_name: str = 'service', address_list: list[str] = None):
+                            description: str, grpc_service_name: str = 'service',
+                            address_list: list[str] = None):
         try:
             auth_req, channel = self._invoke_model(service_client, ModelMethodMessage.UpdateModelAccess)
-            model_details = self.training_pb2.ModelDetails(grpc_method_name=grpc_method_name, description=description,
+            model_details = self.training_pb2.ModelDetails(grpc_method_name=grpc_method_name,
+                                                           description=description,
                                                            grpc_service_name=grpc_service_name,
                                                            address_list=address_list,
-                                                           is_publicly_accessible=is_public, model_name=model_name,
+                                                           is_publicly_accessible=is_public,
+                                                           model_name=model_name,
                                                            model_id=str(model_id))
             stub = self.training_pb2_grpc.ModelStub(channel)
             response = stub.update_model_access(
@@ -142,7 +148,8 @@ class TrainingModel:
             auth_req, channel = self._invoke_model(service_client, ModelMethodMessage.GetAllModels)
             stub = self.training_pb2_grpc.ModelStub(channel)
             response = stub.get_all_models(
-                self.training_pb2.AccessibleModelsRequest(authorization=auth_req, grpc_service_name=grpc_service_name,
+                self.training_pb2.AccessibleModelsRequest(authorization=auth_req,
+                                                          grpc_service_name=grpc_service_name,
                                                           grpc_method_name=grpc_method_name))
             return response
         except Exception as e:
