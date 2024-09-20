@@ -45,7 +45,7 @@ ServiceStub = NewType('ServiceStub', Any)
 class SnetSDK:
     """Base Snet SDK"""
 
-    def __init__(self, sdk_config, metadata_provider=None):
+    def __init__(self, sdk_config: Config, metadata_provider=None):
         self._sdk_config = sdk_config
         self._metadata_provider = metadata_provider
 
@@ -66,7 +66,7 @@ class SnetSDK:
             self.mpe_contract = MPEContract(self.web3, _mpe_contract_address)
 
         # Instantiate IPFS client
-        ipfs_endpoint = self._sdk_config.get("default_ipfs_endpoint", "/dns/ipfs.singularitynet.io/tcp/80/")
+        ipfs_endpoint = self._sdk_config["ipfs_endpoint"]
         self.ipfs_client = ipfshttpclient.connect(ipfs_endpoint)
 
         # Get Registry contract address from config if specified; mostly for local testing
@@ -78,30 +78,6 @@ class SnetSDK:
 
         self.account = Account(self.web3, sdk_config, self.mpe_contract)
 
-        global_config = Config(sdk_config=sdk_config)
-        self.setup_config(global_config)
-
-    def setup_config(self, config: Config) -> None:
-        out_f = sys.stdout
-        network = self._sdk_config.get("network", None)
-        identity_name = self._sdk_config.get("identity_name", None)
-        # Checking for an empty network
-        if network and config["session"]["network"] != network:
-            config.set_session_network(network, out_f)
-        if identity_name:
-            self.set_session_identity(identity_name, config, out_f)
-        elif len(config.get_all_identities_names()) > 0:
-            if "identity" not in config["session"] or config["session"]["identity"] == "":
-                raise Exception("identity_name is not passed or selected")
-
-    def set_session_identity(self, identity_name: str, config: Config, out_f):
-        if identity_name not in config.get_all_identities_names():
-            identity = config.setup_identity()
-            config.add_identity(identity_name, identity, out_f)
-            config.set_session_identity(identity_name, out_f)
-        elif config["session"]["identity"] != identity_name:
-            config.set_session_identity(identity_name, out_f)
-
     def create_service_client(self, org_id: str, service_id: str, group_name=None,
                               payment_channel_management_strategy=None,
                               free_call_auth_token_bin=None,
@@ -110,8 +86,7 @@ class SnetSDK:
                               concurrent_calls=1):
 
         # Create and instance of the Config object, so we can create an instance of ClientLibGenerator
-        sdk_config_object = Config(sdk_config=self._sdk_config)
-        lib_generator = ClientLibGenerator(sdk_config_object, self.registry_contract, org_id, service_id)
+        lib_generator = ClientLibGenerator(self._sdk_config, self.registry_contract, org_id, service_id)
 
         # Download the proto file and generate stubs if needed
         force_update = self._sdk_config.get('force_update', False)
