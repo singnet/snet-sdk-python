@@ -34,33 +34,31 @@ Once you have installed snet-sdk in your current environment, you can import it 
 instance of the base sdk class:
 ```python
 from snet import sdk
-config = {
-        "private_key": 'YOUR_PRIVATE_WALLET_KEY',
-        "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
-        "email": "your@email.com",
-        "concurrency": False,
-        "identity_name": "local_name_for_that_identity",
-        "identity_type": "key",
-        "network": "sepolia",
-        "force_update": False
-    }
+
+config = sdk.config.Config(private_key="YOUR_PRIVATE_KEY",
+                               eth_rpc_endpoint=f"https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
+                               concurrency=False,
+                               force_update=False)
 
 snet_sdk = sdk.SnetSDK(config)
 ```
 
-The `config` parameter is a Python dictionary.
-See [test_sdk_client.py](https://github.com/singnet/snet-sdk-python/blob/master/testcases/functional_tests/test_sdk_client.py) 
+The `config` parameter is an instance of the `Config` class.
+See [config.py](https://github.com/singnet/snet-sdk-python/blob/master/docs/main/config.md) 
 for a reference.
 
-##### Config options description
+##### Config parameters description
 
-- private_key: Your wallet's private key that will be used to pay for calls. Is **required** to make a call;   
-- eth_rpc_endpoint: RPC endpoint that is used to access the Ethereum network. Is **required** to make a call;   
-- email: Your email;  
-- identity_name: Name that will be used locally to save your wallet settings. You can check your identities in the `~/.snet/config` file;   
-- identity_type: Type of your wallet authentication. Note that snet-sdk currently supports only "key" identity_type;   
-- network: You can set the Ethereum network that will be used to make a call;   
-- force_update: If set to False, will reuse the existing gRPC stubs (if any) instead of downloading proto and regenerating them every time.   
+- `private_key`: Your wallet's private key that will be used to pay for calls. Is **required** in config;   
+- `eth_rpc_endpoint`: RPC endpoint that is used to access the Ethereum network. Is **required** in config;
+- `wallet_index`: The index of the wallet that will be used to pay for calls;
+- `ipfs_endpoint`: IPFS endpoint that is used to access IPFS;
+- `concurrency`: If set to True, will enable concurrency for the SDK;
+- `force_update`: If set to False, will reuse the existing gRPC stubs (if any) instead of downloading proto and regenerating them every time.   
+- `mpe_contract_address`: The address of the Multi-Party Escrow smart contract;
+- `token_contract_address`: The address of the SingularityNET token smart contract;
+- `registry_contract_address`: The address of the Registry smart contract;
+- `signer_private_key`: The private key of the signer. Used to sign the service call. Equals to `private_key` by default.
 
 #### List organizations and their services
 

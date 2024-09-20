@@ -1,14 +1,9 @@
 from snet import sdk
 
-config = {
-    "private_key": 'APP_PROVIDER_PRIVATE_KEY',
-    "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/INFURE_API_KEY",
-    "concurrency": False,
-    "identity_name": "NAME",
-    "identity_type": "key",
-    "network": "sepolia",
-    "force_update": False
-}
+config = sdk.config.Config(private_key="YOUR_PRIVATE_KEY",
+                               eth_rpc_endpoint=f"https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
+                               concurrency=False,
+                               force_update=False)
 
 operators = {
     "+": "add",

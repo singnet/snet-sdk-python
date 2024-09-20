@@ -50,8 +50,7 @@ class SnetSDK:
         self._metadata_provider = metadata_provider
 
         # Instantiate Ethereum client
-        eth_rpc_endpoint = self._sdk_config.get("eth_rpc_endpoint",
-                                                "https://mainnet.infura.io/v3/e7732e1f679e461b9bb4da5653ac3fc2")
+        eth_rpc_endpoint = self._sdk_config["eth_rpc_endpoint"]
         eth_rpc_request_kwargs = self._sdk_config.get("eth_rpc_request_kwargs")
 
         provider = web3.HTTPProvider(endpoint_uri=eth_rpc_endpoint, request_kwargs=eth_rpc_request_kwargs)

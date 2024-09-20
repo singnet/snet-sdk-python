@@ -23,15 +23,10 @@ class TestSDKClient(unittest.TestCase):
 
 
 def get_test_service_data():
-    config = {
-        "private_key": os.environ['SNET_TEST_WALLET_PRIVATE_KEY'],
-        "eth_rpc_endpoint": f"https://sepolia.infura.io/v3/{os.environ['SNET_TEST_INFURA_KEY']}",
-        "concurrency": False,
-        "identity_name": "test",
-        "identity_type": "key",
-        "network": "sepolia",
-        "force_update": False
-    }
+    config = sdk.config.Config(private_key=os.environ['SNET_TEST_WALLET_PRIVATE_KEY'],
+                               eth_rpc_endpoint=f"https://sepolia.infura.io/v3/{os.environ['SNET_TEST_INFURA_KEY']}",
+                               concurrency=False,
+                               force_update=False)
 
     snet_sdk = sdk.SnetSDK(config)
     
