@@ -22,11 +22,12 @@ def parse_expression(expression):
     if len(elements) != 3:
         raise Exception(f"Invalid expression '{expression}'. Three items required.")
 
-    a = int(elements[0])
-    b = int(elements[2])
     if elements[1] not in ["+", "-", "*", "/"]:
-        raise Exception(f"Invalid expression '{expression}'. Operation must be '+' or '-' or '*' or '/'")
-    elif not isinstance(a, (float, int)) or not isinstance(b, (float, int)):
+        raise Exception(f"Invalid expression '{expression}'. Operation must be '+' or '-' or '*' or '/'.")
+    try:
+        a = float(elements[0])
+        b = float(elements[2])
+    except ValueError:
         raise Exception(f"Invalid expression '{expression}'. Operands must be integers or floating point numbers.")
     op = elements[1]
 

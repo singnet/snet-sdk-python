@@ -104,7 +104,7 @@ This class represents the service metadata.
 
 #### `__init__`
 
-Initializes a new instance of the class. Initializes the `m` dict with empty of default values.
+Initializes a new instance of the class. Initializes the `m` dict with empty or default values.
 
 ###### returns:
 
@@ -272,7 +272,7 @@ If the asset type is not supported, an exception is raised.
 #### `add_endpoint_to_group`
 
 Checks the endpoint is valid and adds it to the `endpoints` field of the specified payment group in the `m` dict. 
-If the endpoint is not valid of if the group does not exist or if the endpoint is already present, an exception is 
+If the endpoint is not valid or if the group does not exist or if the endpoint is already present, an exception is 
 raised.
 
 ###### args:
