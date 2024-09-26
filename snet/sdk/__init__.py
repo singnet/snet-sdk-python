@@ -7,6 +7,8 @@ import warnings
 
 import google.protobuf.internal.api_implementation
 
+from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
+
 with warnings.catch_warnings():
     # Suppress the eth-typing package`s warnings related to some new networks
     warnings.filterwarnings("ignore", "Network .* does not have a valid ChainId. eth-typing should be "
@@ -76,6 +78,8 @@ class SnetSDK:
             self.registry_contract = get_contract_object(self.web3, "Registry", _registry_contract_address)
 
         self.account = Account(self.web3, sdk_config, self.mpe_contract)
+        self.payment_channel_provider = PaymentChannelProvider(self.web3, self.mpe_contract)
+        self.payment_channel_provider.update_cache()
 
     def create_service_client(self, org_id: str, service_id: str, group_name=None,
                               payment_channel_management_strategy=None,
@@ -122,7 +126,7 @@ class SnetSDK:
         pb2_module = self.get_module_by_keyword(org_id, service_id, keyword="pb2.py")
         
         service_client = ServiceClient(org_id, service_id, service_metadata, group, service_stub, strategy,
-                                       options, self.mpe_contract, self.account, self.web3, pb2_module)
+                                       options, self.mpe_contract, self.account, self.web3, pb2_module, self.payment_channel_provider)
         return service_client
 
     def get_service_stub(self, org_id: str, service_id: str) -> ServiceStub:
