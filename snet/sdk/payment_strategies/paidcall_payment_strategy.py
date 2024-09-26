@@ -1,5 +1,5 @@
 import web3
-from snet.sdk.payment_strategies.payment_staregy import PaymentStrategy
+from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
 
 
 class PaidCallPaymentStrategy(PaymentStrategy):
