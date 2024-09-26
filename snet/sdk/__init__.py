@@ -14,10 +14,9 @@ with warnings.catch_warnings():
     from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
 
 from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
-from snet.cli.commands.sdk_command import SDKCommand
-from snet.cli.commands.commands import BlockchainCommand
-from snet.cli.config import Config
-from snet.cli.utils.utils import bytes32_to_str, type_converter
+from snet.sdk.client_lib_generator import ClientLibGenerator
+from snet.sdk.config import Config
+from snet.sdk.utils.utils import bytes32_to_str, type_converter
 
 google.protobuf.internal.api_implementation.Type = lambda: 'python'
 
@@ -26,12 +25,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 _sym_db.RegisterMessage = lambda x: None
 
-
-from urllib.parse import urljoin
-
-
 import web3
-from rfc3986 import urlparse
 import ipfshttpclient
 
 from snet.sdk.service_client import ServiceClient
@@ -40,32 +34,23 @@ from snet.sdk.mpe.mpe_contract import MPEContract
 
 from snet.contracts import get_contract_object
 
-from snet.cli.metadata.service import mpe_service_metadata_from_json
-from snet.cli.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
-from snet.cli.utils.utils import find_file_by_keyword
+from snet.sdk.metadata_provider.service_metadata import mpe_service_metadata_from_json
+from snet.sdk.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
+from snet.sdk.utils.utils import find_file_by_keyword
 
 ModuleName = NewType('ModuleName', str)
 ServiceStub = NewType('ServiceStub', Any)
 
 
-class Arguments:
-    def __init__(self, org_id=None, service_id=None):
-        self.org_id = org_id
-        self.service_id = service_id
-        self.language = "python"
-        self.protodir = Path("~").expanduser().joinpath(".snet")
-
-
 class SnetSDK:
     """Base Snet SDK"""
 
-    def __init__(self, sdk_config, metadata_provider=None):
+    def __init__(self, sdk_config: Config, metadata_provider=None):
         self._sdk_config = sdk_config
         self._metadata_provider = metadata_provider
 
         # Instantiate Ethereum client
-        eth_rpc_endpoint = self._sdk_config.get("eth_rpc_endpoint",
-                                                "https://mainnet.infura.io/v3/e7732e1f679e461b9bb4da5653ac3fc2")
+        eth_rpc_endpoint = self._sdk_config["eth_rpc_endpoint"]
         eth_rpc_request_kwargs = self._sdk_config.get("eth_rpc_request_kwargs")
 
         provider = web3.HTTPProvider(endpoint_uri=eth_rpc_endpoint, request_kwargs=eth_rpc_request_kwargs)
@@ -80,7 +65,7 @@ class SnetSDK:
             self.mpe_contract = MPEContract(self.web3, _mpe_contract_address)
 
         # Instantiate IPFS client
-        ipfs_endpoint = self._sdk_config.get("default_ipfs_endpoint", "/dns/ipfs.singularitynet.io/tcp/80/")
+        ipfs_endpoint = self._sdk_config["ipfs_endpoint"]
         self.ipfs_client = ipfshttpclient.connect(ipfs_endpoint)
 
         # Get Registry contract address from config if specified; mostly for local testing
@@ -92,30 +77,6 @@ class SnetSDK:
 
         self.account = Account(self.web3, sdk_config, self.mpe_contract)
 
-        global_config = Config(sdk_config=sdk_config)
-        self.setup_config(global_config)
-
-    def setup_config(self, config: Config) -> None:
-        out_f = sys.stdout
-        network = self._sdk_config.get("network", None)
-        identity_name = self._sdk_config.get("identity_name", None)
-        # Checking for an empty network
-        if network and config["session"]["network"] != network:
-            config.set_session_network(network, out_f)
-        if identity_name:
-            self.set_session_identity(identity_name, config, out_f)
-        elif len(config.get_all_identities_names()) > 0:
-            if "identity" not in config["session"] or config["session"]["identity"] == "":
-                raise Exception("identity_name is not passed or selected")
-
-    def set_session_identity(self, identity_name: str, config: Config, out_f):
-        if identity_name not in config.get_all_identities_names():
-            identity = config.setup_identity()
-            config.add_identity(identity_name, identity, out_f)
-            config.set_session_identity(identity_name, out_f)
-        elif config["session"]["identity"] != identity_name:
-            config.set_session_identity(identity_name, out_f)
-
     def create_service_client(self, org_id: str, service_id: str, group_name=None,
                               payment_channel_management_strategy=None,
                               free_call_auth_token_bin=None,
@@ -123,20 +84,19 @@ class SnetSDK:
                               options=None,
                               concurrent_calls=1):
 
-        # Create and instance of the Config object, so we can create an instance of SDKCommand
-        sdk_config_object = Config(sdk_config=self._sdk_config)
-        sdk = SDKCommand(sdk_config_object, args=Arguments(org_id, service_id))
+        # Create and instance of the Config object, so we can create an instance of ClientLibGenerator
+        lib_generator = ClientLibGenerator(self._sdk_config, self.registry_contract, org_id, service_id)
 
         # Download the proto file and generate stubs if needed
         force_update = self._sdk_config.get('force_update', False)
         if force_update:
-            sdk.generate_client_library()
+            lib_generator.generate_client_library()
         else:
             path_to_pb_files = self.get_path_to_pb_files(org_id, service_id)
             pb_2_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2.py")
             pb_2_grpc_file_name = find_file_by_keyword(path_to_pb_files, keyword="pb2_grpc.py")
             if not pb_2_file_name or not pb_2_grpc_file_name:
-                sdk.generate_client_library()
+                lib_generator.generate_client_library()
         
         if payment_channel_management_strategy is None:
             payment_channel_management_strategy = DefaultPaymentStrategy(concurrent_calls)
@@ -223,21 +183,16 @@ class SnetSDK:
         return self._get_group_by_group_name(service_metadata, group_name)
 
     def get_organization_list(self) -> list:
-        global_config = Config(sdk_config=self._sdk_config)
-        blockchain_command = BlockchainCommand(config=global_config, args=Arguments())
-        org_list = blockchain_command.call_contract_command(
-            "Registry", "listOrganizations", [])
+        org_list = self.registry_contract.functions.listOrganizations().call()
         organization_list = []
         for idx, org_id in enumerate(org_list):
             organization_list.append(bytes32_to_str(org_id))
         return organization_list
 
     def get_services_list(self, org_id: str) -> list:
-        global_config = Config(sdk_config=self._sdk_config)
-        blockchain_command = BlockchainCommand(config=global_config, args=Arguments())
-        (found, org_service_list) = blockchain_command.call_contract_command("Registry",
-                                                                             "listServicesForOrganization",
-                                                               [type_converter("bytes32")(org_id)])
+        found, org_service_list = self.registry_contract.functions.listServicesForOrganization(
+            type_converter("bytes32")(org_id)
+        ).call()
         if not found:
             raise Exception(f"Organization with id={org_id} doesn't exist!")
         org_service_list = list(map(bytes32_to_str, org_service_list))
