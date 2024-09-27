@@ -9,7 +9,7 @@ from snet.contracts import get_contract_deployment_block
 
 
 BLOCKS_PER_BATCH = 5000
-CHANNELS_DIR = Path.home().joinpath(".snet", "channels")
+CHANNELS_DIR = Path.home().joinpath(".snet", "cache", "mpe")
 
 
 class PaymentChannelProvider(object):
@@ -28,6 +28,7 @@ class PaymentChannelProvider(object):
         last_read_block = self.deployment_block
 
         if not self.channels_file.exists():
+            print(f"Channels cache is empty. Caching may take some time when first accessing channels.\nCaching in progress...")
             self.channels_file.parent.mkdir(parents=True, exist_ok=True)
             with open(self.channels_file, "wb") as f:
                 empty_dict = {
@@ -109,18 +110,15 @@ class PaymentChannelProvider(object):
 
     def open_channel(self, account, amount, expiration, payment_address, group_id, payment_channel_state_service_client):
         receipt = self.mpe_contract.open_channel(account, payment_address, group_id, amount, expiration)
-        self.update_cache()
         return self._get_newly_opened_channel(account, payment_address, group_id, receipt, payment_channel_state_service_client)
 
     def deposit_and_open_channel(self, account, amount, expiration, payment_address, group_id, payment_channel_state_service_client):
         receipt = self.mpe_contract.deposit_and_open_channel(account, payment_address, group_id, amount, expiration)
-        self.update_cache()
         return self._get_newly_opened_channel(account, payment_address, group_id, receipt, payment_channel_state_service_client)
 
     def _get_newly_opened_channel(self, account, payment_address, group_id, receipt, payment_channel_state_service_client):
         open_channels = self.get_past_open_channels(account, payment_address, group_id, payment_channel_state_service_client)
-        n_channels = len(open_channels)
-        if n_channels == 0:
+        if not open_channels:
             raise Exception(f"Error while opening channel, please check transaction {receipt.transactionHash.hex()} ")
-        return open_channels[n_channels - 1]
+        return open_channels[-1]
 

@@ -79,7 +79,6 @@ class SnetSDK:
 
         self.account = Account(self.web3, sdk_config, self.mpe_contract)
         self.payment_channel_provider = PaymentChannelProvider(self.web3, self.mpe_contract)
-        self.payment_channel_provider.update_cache()
 
     def create_service_client(self, org_id: str, service_id: str, group_name=None,
                               payment_channel_management_strategy=None,
