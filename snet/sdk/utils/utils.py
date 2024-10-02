@@ -1,10 +1,12 @@
 import json
-import os
 import subprocess
 import sys
 import importlib.resources
 from urllib.parse import urlparse
 from pathlib import Path, PurePath
+import os
+import tarfile
+import io
 
 import web3
 from grpc_tools.protoc import main as protoc
@@ -145,3 +147,35 @@ def find_file_by_keyword(directory, keyword):
         for file in files:
             if keyword in file:
                 return file
+
+
+def bytesuri_to_hash(s):
+    s = s.rstrip(b"\0").decode('ascii')
+    if s.startswith("ipfs://"):
+        return "ipfs", s[7:]
+    elif s.startswith("lighthouse://"):
+        return "lighthouse", s[13:]
+    else:
+        raise Exception("We support only ipfs and lighthouse uri in Registry")
+
+
+def safe_extract_proto(spec_tar, protodir):
+    """
+    Tar files might be dangerous (see https://bugs.python.org/issue21109,
+    and https://docs.python.org/3/library/tarfile.html, TarFile.extractall warning)
+    we extract only simple files
+    """
+    with tarfile.open(fileobj=io.BytesIO(spec_tar)) as f:
+        for m in f.getmembers():
+            if os.path.dirname(m.name) != "":
+                raise Exception(
+                    "tarball has directories. We do not support it.")
+            if not m.isfile():
+                raise Exception(
+                    "tarball contains %s which is not a file" % m.name)
+            fullname = os.path.join(protodir, m.name)
+            if os.path.exists(fullname):
+                os.remove(fullname)
+                print("%s removed." % fullname)
+        # now it is safe to call extractall
+        f.extractall(protodir)
