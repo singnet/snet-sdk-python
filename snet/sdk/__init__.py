@@ -1,5 +1,6 @@
 import importlib
 import os
+from logging import DEBUG
 from pathlib import Path
 import sys
 from typing import Any, NewType
@@ -13,7 +14,7 @@ with warnings.catch_warnings():
     # Suppress the eth-typing package`s warnings related to some new networks
     warnings.filterwarnings("ignore", "Network .* does not have a valid ChainId. eth-typing should be "
                                       "updated with the latest networks.", UserWarning)
-    from snet.sdk.metadata_provider.ipfs_metadata_provider import IPFSMetadataProvider
+    from snet.sdk.storage_provider.storage_provider import StorageProvider
 
 from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
 from snet.sdk.client_lib_generator import ClientLibGenerator
@@ -28,7 +29,6 @@ _sym_db = _symbol_database.Default()
 _sym_db.RegisterMessage = lambda x: None
 
 import web3
-import ipfshttpclient
 
 from snet.sdk.service_client import ServiceClient
 from snet.sdk.account import Account
@@ -36,8 +36,8 @@ from snet.sdk.mpe.mpe_contract import MPEContract
 
 from snet.contracts import get_contract_object
 
-from snet.sdk.metadata_provider.service_metadata import mpe_service_metadata_from_json
-from snet.sdk.utils.ipfs_utils import bytesuri_to_hash, get_from_ipfs_and_checkhash
+from snet.sdk.storage_provider.service_metadata import mpe_service_metadata_from_json
+from snet.sdk.utils.ipfs_utils import get_from_ipfs_and_checkhash
 from snet.sdk.utils.utils import find_file_by_keyword
 
 ModuleName = NewType('ModuleName', str)
@@ -66,16 +66,15 @@ class SnetSDK:
         else:
             self.mpe_contract = MPEContract(self.web3, _mpe_contract_address)
 
-        # Instantiate IPFS client
-        ipfs_endpoint = self._sdk_config["ipfs_endpoint"]
-        self.ipfs_client = ipfshttpclient.connect(ipfs_endpoint)
-
         # Get Registry contract address from config if specified; mostly for local testing
         _registry_contract_address = self._sdk_config.get("registry_contract_address", None)
         if _registry_contract_address is None:
             self.registry_contract = get_contract_object(self.web3, "Registry")
         else:
             self.registry_contract = get_contract_object(self.web3, "Registry", _registry_contract_address)
+
+        if self._metadata_provider is None:
+            self._metadata_provider = StorageProvider(self._sdk_config, self.registry_contract)
 
         self.account = Account(self.web3, sdk_config, self.mpe_contract)
         self.payment_channel_provider = PaymentChannelProvider(self.web3, self.mpe_contract)
@@ -88,7 +87,7 @@ class SnetSDK:
                               concurrent_calls=1):
 
         # Create and instance of the Config object, so we can create an instance of ClientLibGenerator
-        lib_generator = ClientLibGenerator(self._sdk_config, self.registry_contract, org_id, service_id)
+        lib_generator = ClientLibGenerator(self._metadata_provider, org_id, service_id)
 
         # Download the proto file and generate stubs if needed
         force_update = self._sdk_config.get('force_update', False)
@@ -113,9 +112,6 @@ class SnetSDK:
         options['email'] = self._sdk_config.get("email", "")
         options['concurrency'] = self._sdk_config.get("concurrency", True)
 
-        if self._metadata_provider is None:
-            self._metadata_provider = IPFSMetadataProvider(self.ipfs_client, self.registry_contract)
-
         service_metadata = self._metadata_provider.enhance_service_metadata(org_id, service_id)
         group = self._get_service_group_details(service_metadata, group_name)
         strategy = payment_channel_management_strategy
@@ -124,9 +120,9 @@ class SnetSDK:
         
         pb2_module = self.get_module_by_keyword(org_id, service_id, keyword="pb2.py")
         
-        service_client = ServiceClient(org_id, service_id, service_metadata, group, service_stub, strategy,
+        _service_client = ServiceClient(org_id, service_id, service_metadata, group, service_stub, strategy,
                                        options, self.mpe_contract, self.account, self.web3, pb2_module, self.payment_channel_provider)
-        return service_client
+        return _service_client
 
     def get_service_stub(self, org_id: str, service_id: str) -> ServiceStub:
         path_to_pb_files = self.get_path_to_pb_files(org_id, service_id)
@@ -154,18 +150,7 @@ class SnetSDK:
         return ModuleName(module_name)
 
     def get_service_metadata(self, org_id, service_id):
-        (found, registration_id, metadata_uri) = self.registry_contract.functions.getServiceRegistrationById(
-            bytes(org_id, "utf-8"),
-            bytes(service_id, "utf-8")
-        ).call()
-
-        if found is not True:
-            raise Exception('No service "{}" found in organization "{}"'.format(service_id, org_id))
-
-        metadata_hash = bytesuri_to_hash(metadata_uri)
-        metadata_json = get_from_ipfs_and_checkhash(self.ipfs_client, metadata_hash)
-        metadata = mpe_service_metadata_from_json(metadata_json)
-        return metadata
+        return self._metadata_provider.get_service_metadata(org_id, service_id)
 
     def _get_first_group(self, service_metadata):
         return service_metadata['groups'][0]
