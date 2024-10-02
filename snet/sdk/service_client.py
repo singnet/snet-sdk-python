@@ -13,7 +13,6 @@ from snet.sdk.resources.root_certificate import certificate
 from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path, find_file_by_keyword
 
 import snet.sdk.generic_client_interceptor as generic_client_interceptor
-from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
 
 
 class _ClientCallDetails(
@@ -26,7 +25,7 @@ class _ClientCallDetails(
 
 class ServiceClient:
     def __init__(self, org_id, service_id, service_metadata, group, service_stub, payment_strategy,
-                 options, mpe_contract, account, sdk_web3, pb2_module):
+                 options, mpe_contract, account, sdk_web3, pb2_module, payment_channel_provider):
         self.org_id = org_id
         self.service_id = service_id
         self.options = options
@@ -38,9 +37,8 @@ class ServiceClient:
         self.__base_grpc_channel = self._get_grpc_channel()
         self.grpc_channel = grpc.intercept_channel(self.__base_grpc_channel,
                                                    generic_client_interceptor.create(self._intercept_call))
-        self.payment_channel_provider = PaymentChannelProvider(sdk_web3,
-                                                               self._generate_payment_channel_state_service_client(),
-                                                               mpe_contract)
+        self.payment_channel_provider = payment_channel_provider
+        self.payment_channel_state_service_client = self._generate_payment_channel_state_service_client()
         self.service = self._generate_grpc_stub(service_stub)
         self.pb2_module = importlib.import_module(pb2_module) if isinstance(pb2_module, str) else pb2_module
         self.payment_channels = []
@@ -122,7 +120,8 @@ class ServiceClient:
         payment_address = self.group["payment"]["payment_address"]
         group_id = base64.b64decode(str(self.group["group_id"]))
         new_payment_channels = self.payment_channel_provider.get_past_open_channels(self.account, payment_address,
-                                                                                    group_id, self.last_read_block)
+                                                                                    group_id,
+                                                                                    self.payment_channel_state_service_client)
         self.payment_channels = self.payment_channels + \
                                 self._filter_existing_channels_from_new_payment_channels(new_payment_channels)
         self.last_read_block = current_block_number
@@ -150,13 +149,14 @@ class ServiceClient:
         payment_address = self.group["payment"]["payment_address"]
         group_id = base64.b64decode(str(self.group["group_id"]))
         return self.payment_channel_provider.open_channel(self.account, amount, expiration, payment_address,
-                                                          group_id)
+                                                          group_id, self.payment_channel_state_service_client)
 
     def deposit_and_open_channel(self, amount, expiration):
         payment_address = self.group["payment"]["payment_address"]
         group_id = base64.b64decode(str(self.group["group_id"]))
         return self.payment_channel_provider.deposit_and_open_channel(self.account, amount, expiration,
-                                                                      payment_address, group_id)
+                                                                      payment_address, group_id,
+                                                                      self.payment_channel_state_service_client)
 
     def get_price(self):
         return self.group["pricing"][0]["price_in_cogs"]
