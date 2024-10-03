@@ -64,14 +64,14 @@ class StorageProvider(object):
 
     def fetch_and_extract_proto(self, service_api_source, protodir):
         try:
-            proto_provider_type, service_api_source = bytesuri_to_hash(service_api_source)
+            proto_provider_type, service_api_source = bytesuri_to_hash(service_api_source, to_decode=False)
         except Exception:
             proto_provider_type = "ipfs"
 
         if proto_provider_type == "ipfs":
             spec_tar = get_from_ipfs_and_checkhash(self._ipfs_client, service_api_source)
         else:
-            _, spec_tar = self.lighthouse_client.download(service_api_source)
+            spec_tar, _ = self.lighthouse_client.download(service_api_source)
 
         safe_extract_proto(spec_tar, protodir)
 

@@ -150,7 +150,7 @@ class SnetSDK:
         return ModuleName(module_name)
 
     def get_service_metadata(self, org_id, service_id):
-        return self._metadata_provider.get_service_metadata(org_id, service_id)
+        return self._metadata_provider.fetch_service_metadata(org_id, service_id)
 
     def _get_first_group(self, service_metadata):
         return service_metadata['groups'][0]

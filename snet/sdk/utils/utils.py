@@ -149,14 +149,15 @@ def find_file_by_keyword(directory, keyword):
                 return file
 
 
-def bytesuri_to_hash(s):
-    s = s.rstrip(b"\0").decode('ascii')
+def bytesuri_to_hash(s, to_decode=True):
+    if to_decode:
+        s = s.rstrip(b"\0").decode('ascii')
     if s.startswith("ipfs://"):
         return "ipfs", s[7:]
-    elif s.startswith("lighthouse://"):
-        return "lighthouse", s[13:]
+    elif s.startswith("filecoin://"):
+        return "filecoin", s[11:]
     else:
-        raise Exception("We support only ipfs and lighthouse uri in Registry")
+        raise Exception("We support only ipfs and filecoin uri in Registry")
 
 
 def safe_extract_proto(spec_tar, protodir):
