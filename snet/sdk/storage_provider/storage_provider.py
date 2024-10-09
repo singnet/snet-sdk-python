@@ -43,7 +43,7 @@ class StorageProvider(object):
         if service_provider_type == "ipfs":
             service_metadata_json = get_from_ipfs_and_checkhash(self._ipfs_client, service_metadata_hash)
         else:
-            service_metadata_json, _ = self.lighthouse_client.download(service_metadata_uri)
+            service_metadata_json, _ = self.lighthouse_client.download(service_metadata_hash)
         service_metadata = mpe_service_metadata_from_json(service_metadata_json)
 
         return service_metadata
