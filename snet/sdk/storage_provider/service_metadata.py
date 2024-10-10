@@ -310,6 +310,9 @@ class MPEServiceMetadata:
     def __contains__(self, key):
         return key in self.m
 
+    def get(self, key, default=None):
+        return self.m.get(key, default)
+
     def get_group_name_nonetrick(self, group_name=None):
         """ In all getter function in case of single payment group, group_name can be None """
         groups = self.m["groups"]

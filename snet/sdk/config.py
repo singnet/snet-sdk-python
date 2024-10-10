@@ -22,7 +22,8 @@ class Config:
             "mpe_contract_address": mpe_contract_address,
             "token_contract_address": token_contract_address,
             "registry_contract_address": registry_contract_address,
-            "signer_private_key": signer_private_key
+            "signer_private_key": signer_private_key,
+            "lighthouse_token": " "
         }
 
     def __getitem__(self, key):
@@ -33,5 +34,4 @@ class Config:
 
     def get_ipfs_endpoint(self):
         return self["ipfs_endpoint"]
-
 
