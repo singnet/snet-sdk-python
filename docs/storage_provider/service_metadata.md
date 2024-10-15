@@ -1,4 +1,4 @@
-## module: sdk.metadata_provider.service_metadata
+## module: sdk.storage_provider.service_metadata
 
 [Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/metadata_provider/service_metadata.py) to GitHub
 
@@ -31,6 +31,7 @@ Entities:
    - [save_pretty](#save_pretty)
    - [\_\_getitem\_\_](#__getitem__)
    - [\_\_contains\_\_](#__contains__)
+   - [get](#get)
    - [get_group_name_nonetrick](#get_group_name_nonetrick)
    - [get_group](#get_group)
    - [get_group_id_base64](#get_group_id_base64)
@@ -432,6 +433,19 @@ Overrides the `__contains__` Python special method.
 ###### returns:
 
 - _True_ if the key is in the `m` dict, _False_ otherwise. (bool)
+
+#### `get`
+
+Returns the value associated with the given key from the `m` dict or the default value if the key is not found.
+
+###### args:
+
+- `key` (str): The name of the field.
+- `default` (Any): The default value to return if the key is not found. Defaults to _None_.
+
+###### returns:
+
+- The value associated with the given key. (Any)
 
 #### `get_group_name_nonetrick`
 

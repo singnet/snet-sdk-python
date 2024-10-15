@@ -10,7 +10,7 @@ transactions and service calls.
 
 So, the application must have the next console interface:
 
-```commandline
+```
 Welcome to the calculator powered by SingularityNET platform!
 Please type the expression you want to calculate, e.g. 2 + 3.
 Type 'exit' to exit the program.
@@ -29,7 +29,7 @@ Calculator> exit
 
 Before the beginning we need to install `snet.sdk` package:
 
-```commandline
+```sh
 pip install snet.sdk
 ```
 
@@ -130,5 +130,5 @@ created instance of the ServiceClient class - `calc_client`, using `call_rpc` me
 on the screen.
 
 The entire application code can be viewed at the 
-[link](https://github.com/Arondondon/snet-sdk-python/blob/depelopment-app-example/examples/calculator.py) to GitHub.
+[link](https://github.com/singnet/snet-sdk-python/blob/master/examples/calculator.py) to GitHub.
 

@@ -4,17 +4,12 @@
 
 Entities:
 1. [get_from_ipfs_and_checkhash](#function-get_from_ipfs_and_checkhash)
-2. [bytesuri_to_hash](#function-bytesuri_to_hash)
-3. [safe_extract_proto_from_ipfs](#function-safe_extract_proto_from_ipfs)
-4. [get_ipfs_client](#function-get_ipfs_client)
-
-
+2. [get_ipfs_client](#function-get_ipfs_client)
 
 ### Function `get_from_ipfs_and_checkhash`
 
 This function retrieves a file from IPFS and optionally verifies its integrity by 
-checking the hash. If `validate` is True, it manually parses the IPFS block, extracts the file data, and verifies 
-the hash using a multihash object. If the hash does not match, it raises an exception. If `validate` is False, 
+checking the hash (if `validate` is True). If the hash does not match, it raises an exception. If `validate` is False, 
 it simply retrieves the file data. 
 
 ###### args:
@@ -30,45 +25,6 @@ it simply retrieves the file data.
 ###### raises:
 
 - `Exception`: If the hash validation fails or if the IPFS hash is not a file.
-
-### Function `bytesuri_to_hash`
-
-Converts a bytes URI to a hash.
-
-###### args:
-
-- `s` (bytes): The bytes URI to convert.
-
-###### returns:
-
-- The hash extracted from the bytes URI. (str)
-
-###### raises:
-
-- `Exception`: If the input is not an IPFS URI.
-
-### Function `safe_extract_proto_from_ipfs`
-
-This function safely extracts a tar file from IPFS to a specified directory. It checks for potential security risks by:
-- Ensuring the tar file does not contain directories
-- Ensuring all contents are files
-- Removing any existing files with the same name before extraction
-
-If any of these checks fail, it raises an exception. Otherwise, it extracts the tar file to the specified directory.
-
-###### args:
-
-- `ipfs_client` (ipfshttpclient.client.Client): The IPFS client instance.
-- `ipfs_hash` (str): The IPFS hash of the tar file to extract.
-- `protodir` (str): The directory to extract the tar file to.
-
-###### returns:
-
-- _None_
-
-###### raises:
-
-- `Exception`: If the tarball contains directories or non-file entries.
 
 ### Function `get_ipfs_client`
 

@@ -19,10 +19,9 @@ A getting started guide for the SNET SDK for Python is available [here](https://
 4. [concurrency_manager](main/concurrency_manager.md)
 5. [config](main/config.md)
 6. [client_lib_generator](main/client_lib_generator.md)
-7. metadata_provider
-   1. [metadata_provider](metadata_provider/metadata_provider.md)
-   2. [ipfs_metadata_provider](metadata_provider/ipfs_metadata_provider.md)
-   3. [service_metadata](metadata_provider/service_metadata.md)
+7. storage_provider
+   1. [storage_provider](storage_provider/storage_provider.md)
+   2. [service_metadata](storage_provider/service_metadata.md)
 8. mpe
    1. [mpe_contract](mpe/mpe_contract.md)
    2. [payment_channel](mpe/payment_channel.md)
