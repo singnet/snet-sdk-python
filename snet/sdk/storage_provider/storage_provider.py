@@ -29,7 +29,6 @@ class StorageProvider(object):
 
         return org_metadata
 
-
     def fetch_service_metadata(self,org_id,service_id):
         org = web3.Web3.to_bytes(text=org_id).ljust(32, b"\0")
         service = web3.Web3.to_bytes(text=service_id).ljust(32, b"\0")
