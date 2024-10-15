@@ -1,6 +1,6 @@
 import json
 
-from snet.cli.utils.utils import get_address_from_private, normalize_private_key
+from snet.sdk.utils.utils import get_address_from_private, normalize_private_key
 from snet.contracts import get_contract_object
 
 DEFAULT_GAS = 300000
