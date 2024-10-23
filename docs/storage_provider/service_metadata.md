@@ -1,6 +1,6 @@
 ## module: sdk.storage_provider.service_metadata
 
-[Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/metadata_provider/service_metadata.py) to GitHub
+[Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/storage_provider/service_metadata.py) to GitHub
 
 Entities:
 1. [AssetType](#class-assettype)

@@ -24,7 +24,7 @@ class StorageProvider(object):
         if org_provider_type == "ipfs":
             org_metadata_json = get_from_ipfs_and_checkhash(self._ipfs_client, org_metadata_hash)
         else:
-            org_metadata_json, _ = self.lighthouse_client.download(org_metadata_uri)
+            org_metadata_json, _ = self.lighthouse_client.download(org_metadata_hash)
         org_metadata = json.loads(org_metadata_json)
 
         return org_metadata
