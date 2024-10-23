@@ -16,7 +16,7 @@ The package is published in PyPI at the following link:
 The SingularityNET SDK allows you to make calls to SingularityNET services programmatically from your application.
 To communicate between clients and services, SingularityNET uses [gRPC](https://grpc.io/).
 To handle payment of services, SingularityNET uses 
-[Ethereum state channels](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/).
+[Ethereum state channels](https://dev.singularitynet.io/docs/ai-consumers/mpe/).
 The SingularityNET SDK abstracts and manages state channels with service providers on behalf of the user and 
 handles authentication with the SingularityNET services.
 
@@ -144,7 +144,8 @@ If you want to use the free calls you will need to pass these arguments to the `
 
 ```python    
 free_call_auth_token_bin = "f2548d27ffd319b9c05918eeac15ebab934e5cfcd68e1ec3db2b92765",
-free_call_token_expiry_block = 172800
+free_call_token_expiry_block = 172800,
+email = "test@test.com" # which using in AI marketplace account
 ```
 
 You can receive these for a given service from the [Dapp](https://beta.singularitynet.io/)
@@ -152,10 +153,10 @@ You can receive these for a given service from the [Dapp](https://beta.singulari
 Creating a service client with free calls included would look like this:
 ```python
 service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f", 
-                                                service_id="Exampleservice",
-                                                group_name="default_group",
+                                                service_id="Exampleservice"
                                                 free_call_auth_token_bin="f2548d27ffd319b9c05918eeac15ebab934e5cfcd68e1ec3db2b92765",
-                                                free_call_token_expiry_block=172800)
+                                                free_call_token_expiry_block=172800,
+                                                email="test@mail.com")
 ```
 
 ### Paid call
