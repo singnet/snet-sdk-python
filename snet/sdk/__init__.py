@@ -82,6 +82,7 @@ class SnetSDK:
                               payment_channel_management_strategy=None,
                               free_call_auth_token_bin=None,
                               free_call_token_expiry_block=None,
+                              email=None,
                               options=None,
                               concurrent_calls=1):
 
@@ -108,7 +109,7 @@ class SnetSDK:
             free_call_token_expiry_block else ""
         options['free-call-token-expiry-block'] = free_call_token_expiry_block if\
             free_call_token_expiry_block else 0
-        options['email'] = self._sdk_config.get("email", "")
+        options['email'] = email if email else ""
         options['concurrency'] = self._sdk_config.get("concurrency", True)
 
         service_metadata = self._metadata_provider.enhance_service_metadata(org_id, service_id)

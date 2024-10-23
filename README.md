@@ -16,7 +16,7 @@ The package is published in PyPI at the following link:
 The SingularityNET SDK allows you to make calls to SingularityNET services programmatically from your application.
 To communicate between clients and services, SingularityNET uses [gRPC](https://grpc.io/).
 To handle payment of services, SingularityNET uses 
-[Ethereum state channels](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/).
+[Ethereum state channels](https://dev.singularitynet.io/docs/ai-consumers/mpe/).
 The SingularityNET SDK abstracts and manages state channels with service providers on behalf of the user and 
 handles authentication with the SingularityNET services.
 
