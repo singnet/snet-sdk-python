@@ -56,9 +56,9 @@ class Account:
         gas_price = self.web3.eth.gas_price
         if gas_price <= 15000000000:
             gas_price += gas_price * 1 / 3
-        elif gas_price > 15000000000 and gas_price <= 50000000000:
+        elif 15000000000 < gas_price <= 50000000000:
             gas_price += gas_price * 1 / 5
-        elif gas_price > 50000000000 and gas_price <= 150000000000:
+        elif 50000000000 < gas_price <= 150000000000:
             gas_price += 7000000000
         elif gas_price > 150000000000:
             gas_price += gas_price * 1 / 10

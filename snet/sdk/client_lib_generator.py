@@ -1,9 +1,10 @@
 import os
 from pathlib import Path, PurePath
+import shutil
 
 from snet.sdk import StorageProvider
 from snet.sdk.utils import ipfs_utils
-from snet.sdk.utils.utils import compile_proto, type_converter
+from snet.sdk.utils.utils import compile_proto, type_converter, RESOURCES_PATH
 
 
 class ClientLibGenerator:
@@ -41,6 +42,8 @@ class ClientLibGenerator:
             # Receive proto files
             self._metadata_provider.fetch_and_extract_proto(service_api_source, library_dir_path)
 
+            self.check_protos_and_copy(library_dir_path)
+
             # Compile proto files
             compile_proto(Path(library_dir_path), library_dir_path, target_language=self.language)
 
@@ -48,3 +51,19 @@ class ClientLibGenerator:
                   f'generated at {library_dir_path}')
         except Exception as e:
             print(e)
+
+    def check_protos_and_copy(self, lib_dir_path):
+        source_dir = RESOURCES_PATH.joinpath("proto")
+        target_dir = lib_dir_path
+
+        files_to_check = ["training.proto", "pricing.proto"]
+
+        missing_files = []
+        for file in files_to_check:
+            if not os.path.exists(os.path.join(target_dir, file)):
+                missing_files.append(file)
+
+        for file in missing_files:
+            source_path = os.path.join(source_dir, file)
+            target_path = os.path.join(target_dir, file)
+            shutil.copy2(source_path, target_path)
