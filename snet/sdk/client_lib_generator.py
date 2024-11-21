@@ -1,50 +1,61 @@
-import os
-from pathlib import Path, PurePath
+from pathlib import Path
 
-from snet.sdk import StorageProvider
-from snet.sdk.utils import ipfs_utils
-from snet.sdk.utils.utils import compile_proto, type_converter
+from snet.sdk.storage_provider.storage_provider import StorageProvider
+from snet.sdk.utils.utils import compile_proto
 
 
 class ClientLibGenerator:
+    def __init__(self, metadata_provider: StorageProvider, org_id: str,
+                 service_id: str, protodir: Path | None = None):
+        self._metadata_provider: StorageProvider = metadata_provider
+        self.org_id: str = org_id
+        self.service_id: str = service_id
+        self.language: str = "python"
+        self.protodir: Path = (protodir if protodir else
+                               Path.home().joinpath(".snet"))
+        self.library_dir_path: Path | None = None
 
-    def __init__(self, metadata_provider, org_id, service_id):
-        self._metadata_provider = metadata_provider
-        self.org_id = org_id
-        self.service_id = service_id
-        self.language = "python"
-        self.protodir = Path("~").expanduser().joinpath(".snet")
-
-    def generate_client_library(self):
-
-        if os.path.isabs(self.protodir):
-            client_libraries_base_dir_path = PurePath(self.protodir)
+    def generate_directory_by_params(self) -> None:
+        if self.protodir.is_absolute():
+            base_dir_path = Path(self.protodir)
         else:
-            cur_dir_path = PurePath(os.getcwd())
-            client_libraries_base_dir_path = cur_dir_path.joinpath(self.protodir)
+            base_dir_path = Path.cwd().joinpath(self.protodir)
 
-        os.makedirs(client_libraries_base_dir_path, exist_ok=True)
+        base_dir_path.mkdir(exist_ok=True)
 
         # Create service client libraries path
-        library_language = self.language
-        library_org_id = self.org_id
-        library_service_id = self.service_id
+        self.library_dir_path = base_dir_path.joinpath(self.org_id,
+                                                       self.service_id,
+                                                       self.language)
+        self.library_dir_path.mkdir(parents=True, exist_ok=True)
 
-        library_dir_path = client_libraries_base_dir_path.joinpath(library_org_id,
-                                                                   library_service_id,
-                                                                   library_language)
+    def receive_proto_files(self) -> None:
+        metadata = self._metadata_provider.fetch_service_metadata(
+            self.org_id,
+            self.service_id
+        )
+        service_api_source = (metadata.get("service_api_source") or
+                              metadata.get("model_ipfs_hash"))
 
+        # Receive proto files
+        if self.library_dir_path.exists():
+            self._metadata_provider.fetch_and_extract_proto(
+                service_api_source,
+                self.library_dir_path
+            )
+        else:
+            raise Exception("Directory for storing proto files not found")
+
+    def generate_client_library(self) -> None:
         try:
-            metadata = self._metadata_provider.fetch_service_metadata(self.org_id, self.service_id)
-            service_api_source = metadata.get("service_api_source") or metadata.get("model_ipfs_hash")
+            self.generate_directory_by_params()
+            self.receive_proto_files()
+            compile_proto(self.library_dir_path,
+                          self.library_dir_path,
+                          target_language=self.language)
 
-            # Receive proto files
-            self._metadata_provider.fetch_and_extract_proto(service_api_source, library_dir_path)
-
-            # Compile proto files
-            compile_proto(Path(library_dir_path), library_dir_path, target_language=self.language)
-
-            print(f'client libraries for service with id "{library_service_id}" in org with id "{library_org_id}" '
-                  f'generated at {library_dir_path}')
+            print(f'client libraries for service with id "{self.service_id}" '
+                  f'in org with id "{self.org_id}" '
+                  f'generated at {self.library_dir_path}')
         except Exception as e:
             print(e)
