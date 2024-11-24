@@ -62,7 +62,7 @@ contract. Instantiates the Account object with the specified Web3 client, SDK co
 
 If `force_update` is True or if there are no gRPC stubs for the given service, the proto files are loaded 
 and compiled using the `generate_client_library()` method of the `ClientLibGenerator` class instance. 
-It then initializes `payment_channel_management_strategy` to `DefaultPaymentStrategy` if it is not specified. 
+It then initializes `payment_strategy` to `DefaultPaymentStrategy` if it is not specified. 
 It also sets the `options` dictionary with some default values. If `self._metadata_provider` is not specified 
 it is initialized by `IPFSMetadataProvider`. It also gets the service stub using the `self.get_service_stub` 
 method and the pb2 module using the `self.get_module_by_keyword` method. Finally, it creates a new instance 
@@ -73,7 +73,7 @@ of the `ServiceClient` class with all the required parameters, which is then ret
 - `org_id` (str): The ID of the organization.
 - `service_id` (str): The ID of the service.
 - `group_name` (str): The name of the payment group. Defaults to _None_.
-- `payment_channel_management_strategy` (PaymentStrategy): The payment channel management strategy. Defaults to _None_.
+- `payment_strategy` (PaymentStrategy): The payment channel management strategy. Defaults to _None_.
 - `free_call_auth_token_bin` (str): The free call authentication token in binary format. Defaults to _None_.
 - `free_call_token_expiry_block` (int): The block number when the free call token expires. Defaults to _None_.
 - `options` (dict): Additional options for the service client. Defaults to _None_.

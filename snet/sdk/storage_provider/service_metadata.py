@@ -536,13 +536,13 @@ class MPEServiceMetadata:
             }
 
 
-def load_mpe_service_metadata(f):
+def load_mpe_service_metadata(f) -> MPEServiceMetadata:
     metadata = MPEServiceMetadata()
     metadata.load(f)
     return metadata
 
 
-def mpe_service_metadata_from_json(j):
+def mpe_service_metadata_from_json(j) -> MPEServiceMetadata:
     metadata = MPEServiceMetadata()
     metadata.set_from_json(j)
     return metadata

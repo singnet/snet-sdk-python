@@ -2,6 +2,7 @@ import json
 import subprocess
 import sys
 import importlib.resources
+from typing import Any, NewType
 from urllib.parse import urlparse
 from pathlib import Path, PurePath
 import os
@@ -14,6 +15,9 @@ from grpc_tools.protoc import main as protoc
 from snet import sdk
 
 RESOURCES_PATH = PurePath(os.path.dirname(sdk.__file__)).joinpath("resources")
+
+ModuleName = NewType('ModuleName', str)
+ServiceStub = NewType('ServiceStub', Any)
 
 
 def safe_address_converter(a):
@@ -43,7 +47,12 @@ def bytes32_to_str(b):
     return b.rstrip(b"\0").decode("utf-8")
 
 
-def compile_proto(entry_path, codegen_dir, proto_file=None, target_language="python"):
+def compile_proto(
+    entry_path: Path,
+    codegen_dir: Path,
+    proto_file: str | None = None,
+    target_language: str = "python"
+) -> bool:
     try:
         if not os.path.exists(codegen_dir):
             os.makedirs(codegen_dir)
@@ -177,6 +186,6 @@ def safe_extract_proto(spec_tar, protodir):
             fullname = os.path.join(protodir, m.name)
             if os.path.exists(fullname):
                 os.remove(fullname)
-                print("%s removed." % fullname)
+                print(f"{fullname} removed.")
         # now it is safe to call extractall
-        f.extractall(protodir)
+        f.extractall(path=protodir)

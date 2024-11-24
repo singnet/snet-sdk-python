@@ -4,7 +4,7 @@ import json
 
 from snet.sdk.utils.ipfs_utils import get_ipfs_client, get_from_ipfs_and_checkhash
 from snet.sdk.utils.utils import bytesuri_to_hash, safe_extract_proto
-from snet.sdk.storage_provider.service_metadata import mpe_service_metadata_from_json
+from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata, mpe_service_metadata_from_json
 
 class StorageProvider(object):
     def __init__(self, config, registry_contract):
@@ -29,20 +29,34 @@ class StorageProvider(object):
 
         return org_metadata
 
-    def fetch_service_metadata(self,org_id,service_id):
+    def fetch_service_metadata(self, org_id: str,
+                               service_id: str) -> MPEServiceMetadata:
         org = web3.Web3.to_bytes(text=org_id).ljust(32, b"\0")
         service = web3.Web3.to_bytes(text=service_id).ljust(32, b"\0")
 
-        found, _, service_metadata_uri = self._registry_contract.functions.getServiceRegistrationById(org, service).call()
+        found, _, service_metadata_uri = (
+            self._registry_contract.functions.getServiceRegistrationById(
+                org,
+                service
+            ).call()
+        )
         if found is not True:
-            raise Exception('No service "{}" found in organization "{}"'.format(service_id, org_id))
+            raise Exception(f"No service '{service_id}' "
+                            f"found in organization '{org_id}'")
 
-        service_provider_type, service_metadata_hash = bytesuri_to_hash(service_metadata_uri)
+        service_provider_type, service_metadata_hash = bytesuri_to_hash(
+            s=service_metadata_uri
+        )
 
         if service_provider_type == "ipfs":
-            service_metadata_json = get_from_ipfs_and_checkhash(self._ipfs_client, service_metadata_hash)
+            service_metadata_json = get_from_ipfs_and_checkhash(
+                self._ipfs_client,
+                service_metadata_hash
+            )
         else:
-            service_metadata_json, _ = self.lighthouse_client.download(service_metadata_hash)
+            service_metadata_json, _ = self.lighthouse_client.download(
+                cid=service_metadata_hash
+            )
         service_metadata = mpe_service_metadata_from_json(service_metadata_json)
 
         return service_metadata

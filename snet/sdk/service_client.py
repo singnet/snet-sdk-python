@@ -4,15 +4,22 @@ import importlib
 import re
 import os
 from pathlib import Path
+from typing import Any
 
 import grpc
 import web3
 from eth_account.messages import defunct_hash_message
 from rfc3986 import urlparse
-from snet.sdk.resources.root_certificate import certificate
-from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path, find_file_by_keyword
 
-import snet.sdk.generic_client_interceptor as generic_client_interceptor
+from snet.sdk import generic_client_interceptor
+from snet.sdk.account import Account
+from snet.sdk.mpe.mpe_contract import MPEContract
+from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
+from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
+from snet.sdk.resources.root_certificate import certificate
+from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
+from snet.sdk.utils.utils import (RESOURCES_PATH, ModuleName, ServiceStub,
+                                  add_to_path, find_file_by_keyword)
 
 
 class _ClientCallDetails(
@@ -24,30 +31,47 @@ class _ClientCallDetails(
 
 
 class ServiceClient:
-    def __init__(self, org_id, service_id, service_metadata, group, service_stub, payment_strategy,
-                 options, mpe_contract, account, sdk_web3, pb2_module, payment_channel_provider):
-        self.org_id = org_id
-        self.service_id = service_id
-        self.options = options
-        self.group = group
-        self.service_metadata = service_metadata
-
-        self.payment_strategy = payment_strategy
-        self.expiry_threshold = self.group["payment"]["payment_expiration_threshold"]
-        self.__base_grpc_channel = self._get_grpc_channel()
-        self.grpc_channel = grpc.intercept_channel(self.__base_grpc_channel,
-                                                   generic_client_interceptor.create(self._intercept_call))
-        self.payment_channel_provider = payment_channel_provider
-        self.payment_channel_state_service_client = self._generate_payment_channel_state_service_client()
-        self.service = self._generate_grpc_stub(service_stub)
-        self.pb2_module = importlib.import_module(pb2_module) if isinstance(pb2_module, str) else pb2_module
-        self.payment_channels = []
-        self.last_read_block = 0
-        self.account = account
-        self.sdk_web3 = sdk_web3
+    def __init__(
+        self,
+        org_id: str,
+        service_id: str,
+        service_metadata: MPEServiceMetadata,
+        group: dict,
+        service_stub: ServiceStub,
+        payment_strategy: PaymentStrategy,
+        options: dict,
+        mpe_contract: MPEContract,
+        account: Account,
+        sdk_web3: web3.Web3,
+        pb2_module: ModuleName,
+        payment_channel_provider: PaymentChannelProvider
+    ):
+        self.org_id: str = org_id
+        self.service_id: str = service_id
+        self.service_metadata: MPEServiceMetadata = service_metadata
+        self.group: dict = group
+        self.payment_strategy: PaymentStrategy = payment_strategy
+        self.options: dict = options
         self.mpe_address = mpe_contract.contract.address
+        self.account: Account = account
+        self.sdk_web3: web3.Web3 = sdk_web3
+        self.pb2_module: str = (importlib.import_module(pb2_module)
+                                if isinstance(pb2_module, str)
+                                else pb2_module)
+        self.payment_channel_provider: PaymentChannelProvider = payment_channel_provider
 
-    def call_rpc(self, rpc_name: str, message_class: str, **kwargs):
+        self.expiry_threshold: int = self.group["payment"]["payment_expiration_threshold"]
+        self.__base_grpc_channel: grpc.Channel = self._get_grpc_channel()
+        self.grpc_channel: grpc.Channel = grpc.intercept_channel(
+            self.__base_grpc_channel,
+            generic_client_interceptor.create(self._intercept_call)
+        )
+        self.service = self._generate_grpc_stub(service_stub)
+        self.payment_channel_state_service_client = self._generate_payment_channel_state_service_client()
+        self.payment_channels: list = []
+        self.last_read_block: int = 0
+
+    def call_rpc(self, rpc_name: str, message_class: str, **kwargs) -> Any:
         rpc_method = getattr(self.service, rpc_name)
         request = getattr(self.pb2_module, message_class)(**kwargs)
         return rpc_method(request)
@@ -55,18 +79,21 @@ class ServiceClient:
     def _get_payment_expiration_threshold_for_group(self):
         pass
 
-    def _generate_grpc_stub(self, service_stub):
+    def _generate_grpc_stub(self, service_stub: ServiceStub) -> Any:
         grpc_channel = self.__base_grpc_channel
-        disable_blockchain_operations = self.options.get("disable_blockchain_operations", False)
+        disable_blockchain_operations: bool = self.options.get(
+            "disable_blockchain_operations",
+            False
+        )
         if disable_blockchain_operations is False:
             grpc_channel = self.grpc_channel
         stub_instance = service_stub(grpc_channel)
         return stub_instance
 
-    def get_grpc_base_channel(self):
+    def get_grpc_base_channel(self) -> grpc.Channel:
         return self.__base_grpc_channel
 
-    def _get_grpc_channel(self):
+    def _get_grpc_channel(self) -> grpc.Channel:
         endpoint = self.options.get("endpoint", None)
         if endpoint is None:
             endpoint = self.service_metadata.get_all_endpoints_for_group(self.group["group_name"])[0]
