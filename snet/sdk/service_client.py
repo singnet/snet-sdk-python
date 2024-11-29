@@ -6,7 +6,9 @@ import os
 from pathlib import Path
 from typing import Any
 
+from eth_typing import BlockNumber, ChecksumAddress
 import grpc
+from hexbytes import HexBytes
 import web3
 from eth_account.messages import defunct_hash_message
 from rfc3986 import urlparse
@@ -14,12 +16,14 @@ from rfc3986 import urlparse
 from snet.sdk import generic_client_interceptor
 from snet.sdk.account import Account
 from snet.sdk.mpe.mpe_contract import MPEContract
+from snet.sdk.mpe.payment_channel import PaymentChannel
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
-from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
+# from snet.sdk.payment_strategies import default_payment_strategy as strategy
 from snet.sdk.resources.root_certificate import certificate
 from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
-from snet.sdk.utils.utils import (RESOURCES_PATH, ModuleName, ServiceStub,
-                                  add_to_path, find_file_by_keyword)
+from snet.sdk.typing import ModuleName, ServiceStub
+from snet.sdk.utils.utils import (RESOURCES_PATH, add_to_path,
+                                  find_file_by_keyword)
 
 
 class _ClientCallDetails(
@@ -38,37 +42,39 @@ class ServiceClient:
         service_metadata: MPEServiceMetadata,
         group: dict,
         service_stub: ServiceStub,
-        payment_strategy: PaymentStrategy,
+        payment_strategy,
         options: dict,
         mpe_contract: MPEContract,
         account: Account,
         sdk_web3: web3.Web3,
         pb2_module: ModuleName,
-        payment_channel_provider: PaymentChannelProvider
+        payment_channel_provider: PaymentChannelProvider,
+        path_to_pb_files: Path
     ):
-        self.org_id: str = org_id
-        self.service_id: str = service_id
-        self.service_metadata: MPEServiceMetadata = service_metadata
-        self.group: dict = group
-        self.payment_strategy: PaymentStrategy = payment_strategy
-        self.options: dict = options
+        self.org_id = org_id
+        self.service_id = service_id
+        self.service_metadata = service_metadata
+        self.group = group
+        self.payment_strategy = payment_strategy
+        self.options = options
         self.mpe_address = mpe_contract.contract.address
-        self.account: Account = account
-        self.sdk_web3: web3.Web3 = sdk_web3
-        self.pb2_module: str = (importlib.import_module(pb2_module)
+        self.account = account
+        self.sdk_web3 = sdk_web3
+        self.pb2_module = (importlib.import_module(pb2_module)
                                 if isinstance(pb2_module, str)
                                 else pb2_module)
-        self.payment_channel_provider: PaymentChannelProvider = payment_channel_provider
+        self.payment_channel_provider = payment_channel_provider
+        self.path_to_pb_files = path_to_pb_files
 
         self.expiry_threshold: int = self.group["payment"]["payment_expiration_threshold"]
-        self.__base_grpc_channel: grpc.Channel = self._get_grpc_channel()
-        self.grpc_channel: grpc.Channel = grpc.intercept_channel(
+        self.__base_grpc_channel = self._get_grpc_channel()
+        self.grpc_channel = grpc.intercept_channel(
             self.__base_grpc_channel,
             generic_client_interceptor.create(self._intercept_call)
         )
         self.service = self._generate_grpc_stub(service_stub)
         self.payment_channel_state_service_client = self._generate_payment_channel_state_service_client()
-        self.payment_channels: list = []
+        self.payment_channels = []
         self.last_read_block: int = 0
 
     def call_rpc(self, rpc_name: str, message_class: str, **kwargs) -> Any:
@@ -111,8 +117,8 @@ class ServiceClient:
         else:
             raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
 
-    def _get_service_call_metadata(self):
-        metadata = self.payment_strategy.get_payment_metadata(self)
+    def _get_service_call_metadata(self) -> list[tuple]:
+        metadata: list = self.payment_strategy.get_payment_metadata(self)
         return metadata
 
     def _intercept_call(self, client_call_details, request_iterator, request_streaming,
@@ -126,7 +132,10 @@ class ServiceClient:
             client_call_details.credentials)
         return client_call_details, request_iterator, None
 
-    def _filter_existing_channels_from_new_payment_channels(self, new_payment_channels):
+    def _filter_existing_channels_from_new_payment_channels(
+        self,
+        new_payment_channels: list[PaymentChannel]
+    ) -> list[PaymentChannel]:
         new_channels_to_be_added = []
 
         # need to change this logic ,use maps to manage channels so that we can easily navigate it
@@ -142,99 +151,111 @@ class ServiceClient:
 
         return new_channels_to_be_added
 
-    def load_open_channels(self):
+    def load_open_channels(self) -> list[PaymentChannel]:
         current_block_number = self.sdk_web3.eth.block_number
         payment_address = self.group["payment"]["payment_address"]
         group_id = base64.b64decode(str(self.group["group_id"]))
-        new_payment_channels = self.payment_channel_provider.get_past_open_channels(self.account, payment_address,
-                                                                                    group_id,
-                                                                                    self.payment_channel_state_service_client)
-        self.payment_channels = self.payment_channels + \
-                                self._filter_existing_channels_from_new_payment_channels(new_payment_channels)
+        new_payment_channels = (
+            self.payment_channel_provider.get_past_open_channels(
+                self.account, payment_address,
+                group_id, self.payment_channel_state_service_client
+            )
+        )
+        filter_new_channels = self._filter_existing_channels_from_new_payment_channels(new_payment_channels)
+        self.payment_channels = (self.payment_channels + filter_new_channels)
         self.last_read_block = current_block_number
         return self.payment_channels
 
-    def get_current_block_number(self):
+    def get_current_block_number(self) -> BlockNumber:
         return self.sdk_web3.eth.block_number
 
-    def update_channel_states(self):
+    def update_channel_states(self) -> list[PaymentChannel]:
         for channel in self.payment_channels:
             channel.sync_state()
         return self.payment_channels
 
-    def default_channel_expiration(self):
+    def default_channel_expiration(self) -> int:
         current_block_number = self.sdk_web3.eth.get_block("latest").number
         return current_block_number + self.expiry_threshold
 
-    def _generate_payment_channel_state_service_client(self):
+    def _generate_payment_channel_state_service_client(self) -> Any:
         grpc_channel = self.__base_grpc_channel
         with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
-            state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
-        return state_service_pb2_grpc.PaymentChannelStateServiceStub(grpc_channel)
+            state_service = importlib.import_module("state_service_pb2_grpc")
+        return state_service.PaymentChannelStateServiceStub(grpc_channel)
 
-    def open_channel(self, amount, expiration):
+    def open_channel(self, amount: int, expiration: int) -> PaymentChannel:
         payment_address = self.group["payment"]["payment_address"]
         group_id = base64.b64decode(str(self.group["group_id"]))
-        return self.payment_channel_provider.open_channel(self.account, amount, expiration, payment_address,
-                                                          group_id, self.payment_channel_state_service_client)
+        return self.payment_channel_provider.open_channel(
+            self.account, amount, expiration, payment_address,
+            group_id, self.payment_channel_state_service_client
+        )
 
-    def deposit_and_open_channel(self, amount, expiration):
+    def deposit_and_open_channel(self, amount: int,
+                                 expiration: int) -> PaymentChannel:
         payment_address = self.group["payment"]["payment_address"]
         group_id = base64.b64decode(str(self.group["group_id"]))
-        return self.payment_channel_provider.deposit_and_open_channel(self.account, amount, expiration,
-                                                                      payment_address, group_id,
-                                                                      self.payment_channel_state_service_client)
+        return self.payment_channel_provider.deposit_and_open_channel(
+            self.account, amount, expiration, payment_address,
+            group_id, self.payment_channel_state_service_client
+        )
 
-    def get_price(self):
+    def get_price(self) -> int:
         return self.group["pricing"][0]["price_in_cogs"]
 
-    def generate_signature(self, message):
-        signature = bytes(self.sdk_web3.eth.account.signHash(defunct_hash_message(message),
-                                                             self.account.signer_private_key).signature)
+    def generate_signature(self, message: bytes) -> bytes:
+        return bytes(self.sdk_web3.eth.account.signHash(
+            defunct_hash_message(message), self.account.signer_private_key
+        ).signature)
 
-        return signature
-
-    def generate_training_signature(self, text: str, address, block_number):
+    def generate_training_signature(self, text: str, address: ChecksumAddress,
+                                    block_number: BlockNumber) -> HexBytes:
         message = web3.Web3.solidity_keccak(
             ["string", "address", "uint256"],
             [text, address, block_number]
         )
-        return self.sdk_web3.eth.account.signHash(defunct_hash_message(message),
-                                                  self.account.signer_private_key).signature
+        return self.sdk_web3.eth.account.signHash(
+            defunct_hash_message(message), self.account.signer_private_key
+        ).signature
 
-    def get_free_call_config(self):
-        return self.options['email'], self.options['free_call_auth_token-bin'], self.options[
-            'free-call-token-expiry-block']
+    def get_free_call_config(self) -> tuple[str, str, int]:
+        return (self.options['email'],
+                self.options['free_call_auth_token-bin'],
+                self.options['free-call-token-expiry-block'])
 
-    def get_service_details(self):
-        return self.org_id, self.service_id, self.group["group_id"], \
-            self.service_metadata.get_all_endpoints_for_group(self.group["group_name"])[0]
+    def get_service_details(self) -> tuple[str, str, str, str]:
+        return (self.org_id,
+                self.service_id,
+                self.group["group_id"],
+                self.service_metadata.get_all_endpoints_for_group(
+                    self.group["group_name"]
+                )[0])
 
-    def get_concurrency_flag(self):
+    def get_concurrency_flag(self) -> bool:
         return self.options.get('concurrency', True)
 
-    def get_concurrency_token_and_channel(self):
+    def get_concurrency_token_and_channel(self) -> tuple[str, PaymentChannel]:
         return self.payment_strategy.get_concurrency_token_and_channel(self)
 
-    def set_concurrency_token_and_channel(self, token, channel):
+    def set_concurrency_token_and_channel(self, token: str,
+                                          channel: PaymentChannel) -> None:
         self.payment_strategy.concurrency_token = token
         self.payment_strategy.channel = channel
 
-    def get_path_to_pb_files(self, org_id: str, service_id: str) -> str:
-        client_libraries_base_dir_path = Path("~").expanduser().joinpath(".snet")
-        path_to_pb_files = f"{client_libraries_base_dir_path}/{org_id}/{service_id}/python/"
-        return path_to_pb_files
-
-    def get_services_and_messages_info(self):
+    def get_services_and_messages_info(self) -> tuple[dict, dict]:
         # Get proto file filepath and open it
-        path_to_pb_files = self.get_path_to_pb_files(self.org_id, self.service_id)
-        proto_file_name = find_file_by_keyword(path_to_pb_files, keyword=".proto")
-        proto_filepath = os.path.join(path_to_pb_files, proto_file_name)
+        proto_file_name = find_file_by_keyword(directory=self.path_to_pb_files,
+                                               keyword=".proto")
+        proto_filepath = os.path.join(self.path_to_pb_files, proto_file_name)
         with open(proto_filepath, 'r') as file:
             proto_content = file.read()
-        # Regular expression patterns to match services, methods, messages, and fields
+        # Regular expression patterns to match services, methods,
+        # messages and fields
         service_pattern = re.compile(r'service\s+(\w+)\s*{')
-        rpc_pattern = re.compile(r'rpc\s+(\w+)\s*\((\w+)\)\s+returns\s+\((\w+)\)')
+        rpc_pattern = re.compile(
+            r'rpc\s+(\w+)\s*\((\w+)\)\s+returns\s+\((\w+)\)'
+        )
         message_pattern = re.compile(r'message\s+(\w+)\s*{')
         field_pattern = re.compile(r'\s*(\w+)\s+(\w+)\s*=\s*\d+\s*;')
 
@@ -258,7 +279,8 @@ class ServiceClient:
                     method_name = rpc_match.group(1)
                     input_type = rpc_match.group(2)
                     output_type = rpc_match.group(3)
-                    services[current_service].append((method_name, input_type, output_type))
+                    services[current_service].append((method_name, input_type,
+                                                      output_type))
 
             # Match a message definition
             message_match = message_pattern.search(line)
@@ -277,7 +299,7 @@ class ServiceClient:
 
         return services, messages
 
-    def get_services_and_messages_info_as_pretty_string(self):
+    def get_services_and_messages_info_as_pretty_string(self) -> str:
         services, messages = self.get_services_and_messages_info()
 
         string_output = ""
@@ -285,7 +307,9 @@ class ServiceClient:
         for service, methods in services.items():
             string_output += f"Service: {service}\n"
             for method_name, input_type, output_type in methods:
-                string_output += f"  Method: {method_name}, Input: {input_type}, Output: {output_type}\n"
+                string_output += (f"  Method: {method_name},"
+                                  f" Input: {input_type},"
+                                  f" Output: {output_type}\n")
 
         # Prettify the messages and their fields
         for message, fields in messages.items():

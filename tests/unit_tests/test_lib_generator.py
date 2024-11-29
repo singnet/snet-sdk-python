@@ -13,7 +13,7 @@ class TestClientLibGenerator(unittest.TestCase):
         self.org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
         self.service_id = "Exampleservice"
         self.language = "python"
-        self.protodir = Path.home().joinpath(".snet1")
+        self.protodir = Path.home().joinpath(".snet_test")
         self.generator = ClientLibGenerator(
             metadata_provider=self.mock_metadata_provider,
             org_id=self.org_id,
@@ -22,13 +22,43 @@ class TestClientLibGenerator(unittest.TestCase):
         )
 
     @patch("pathlib.Path.mkdir")
-    def test_generate_directories_by_params(self, mock_mkdir):
+    def test_generate_directories_by_params_by_absolute_path(self, mock_mkdir):
         expected_library_dir = self.protodir.joinpath(
             self.org_id, self.service_id, self.language
         )
         self.generator.generate_directories_by_params()
         self.assertEqual(self.generator.protodir, expected_library_dir)
         mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
+
+    @patch("pathlib.Path.mkdir")
+    def test_generate_directories_by_params_by_relative_path(self, mock_mkdir):
+        self.generator.protodir = Path(".snet_test")
+        expected_library_dir = Path.cwd().joinpath(self.generator.protodir,
+                                                   self.org_id,
+                                                   self.service_id,
+                                                   self.language)
+        self.generator.generate_directories_by_params()
+        self.assertEqual(self.generator.protodir, expected_library_dir)
+        mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
+
+    def test_create_service_client_libraries_path(self):
+        mock_protodir = Mock(spec=Path)
+        self.generator.protodir = mock_protodir
+        mock_library_path = Mock(spec=Path)
+        mock_protodir.joinpath.return_value = mock_library_path
+
+        # Call the method
+        self.generator.create_service_client_libraries_path()
+
+        # Assert that joinpath and mkdir were called with correct arguments
+        mock_protodir.joinpath.assert_called_once_with(self.org_id,
+                                                       self.service_id,
+                                                       self.language)
+        mock_library_path.mkdir.assert_called_once_with(parents=True,
+                                                        exist_ok=True)
+
+        # Assert that the protodir is updated correctly
+        self.assertEqual(self.generator.protodir, mock_library_path)
 
     def test_receive_proto_files_success(self):
         # Set up mocks

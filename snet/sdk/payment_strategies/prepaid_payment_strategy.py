@@ -1,9 +1,11 @@
+from snet.sdk.concurrency_manager import ConcurrencyManager
 from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
 
 
 class PrePaidPaymentStrategy(PaymentStrategy):
 
-    def __init__(self, concurrency_manager, block_offset=240, call_allowance=1):
+    def __init__(self, concurrency_manager: ConcurrencyManager,
+                 block_offset: int = 240, call_allowance: int = 1):
         self.concurrency_manager = concurrency_manager
         self.block_offset = block_offset
         self.call_allowance = call_allowance

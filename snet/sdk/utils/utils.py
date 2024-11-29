@@ -2,7 +2,6 @@ import json
 import subprocess
 import sys
 import importlib.resources
-from typing import Any, NewType
 from urllib.parse import urlparse
 from pathlib import Path, PurePath
 import os
@@ -15,9 +14,6 @@ from grpc_tools.protoc import main as protoc
 from snet import sdk
 
 RESOURCES_PATH = PurePath(os.path.dirname(sdk.__file__)).joinpath("resources")
-
-ModuleName = NewType('ModuleName', str)
-ServiceStub = NewType('ServiceStub', Any)
 
 
 def safe_address_converter(a):

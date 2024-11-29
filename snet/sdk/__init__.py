@@ -29,8 +29,9 @@ from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
 from snet.sdk.payment_strategies import default_payment_strategy as strategy
 from snet.sdk.service_client import ServiceClient
 from snet.sdk.storage_provider.storage_provider import StorageProvider
-from snet.sdk.utils.utils import (ModuleName, ServiceStub, bytes32_to_str,
-                                  find_file_by_keyword, type_converter)
+from snet.sdk.typing import ModuleName, ServiceStub
+from snet.sdk.utils.utils import (bytes32_to_str, find_file_by_keyword,
+                                  type_converter)
 
 google.protobuf.internal.api_implementation.Type = lambda: 'python'
 _sym_db = _symbol_database.Default()
@@ -96,7 +97,7 @@ class SnetSDK:
                               free_call_token_expiry_block=None,
                               email=None,
                               options=None,
-                              concurrent_calls=1):
+                              concurrent_calls: int = 1):
 
         # Create and instance of the Config object,
         # so we can create an instance of ClientLibGenerator
@@ -108,6 +109,7 @@ class SnetSDK:
         if force_update:
             self.lib_generator.generate_client_library()
         else:
+            self.lib_generator.create_service_client_libraries_path()
             path_to_pb_files = self.lib_generator.protodir
             pb_2_file_name = find_file_by_keyword(path_to_pb_files,
                                                   keyword="pb2.py")
@@ -145,7 +147,8 @@ class SnetSDK:
                                         group, service_stub, payment_strategy,
                                         options, self.mpe_contract,
                                         self.account, self.web3, pb2_module,
-                                        self.payment_channel_provider)
+                                        self.payment_channel_provider,
+                                        self.lib_generator.protodir)
         return _service_client
 
     def get_service_stub(self) -> ServiceStub:

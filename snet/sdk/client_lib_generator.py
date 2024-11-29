@@ -31,8 +31,9 @@ class ClientLibGenerator:
     def generate_directories_by_params(self) -> None:
         if not self.protodir.is_absolute():
             self.protodir = Path.cwd().joinpath(self.protodir)
+        self.create_service_client_libraries_path()
 
-        # Create service client libraries path
+    def create_service_client_libraries_path(self) -> None:
         self.protodir = self.protodir.joinpath(self.org_id,
                                                self.service_id,
                                                self.language)
