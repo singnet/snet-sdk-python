@@ -1,0 +1,120 @@
+syntax = "proto3";
+package training_daemon;
+import "google/protobuf/descriptor.proto";  // нужно для работы индикаторов
+import "google/protobuf/struct.proto";   // нужно для google.protobuf.ListValue
+import "training_v2.proto";
+option go_package = "../training";
+import "google/protobuf/empty.proto";
+
+
+message AuthorizationDetails {
+  uint64 current_block = 1; // проверять актуальность на +-N блоков
+  // Signer can fill in any message here
+  string message = 2;
+  // signature of the following message:
+  // ("user specified message", user_address, current_block_number)
+  bytes signature = 3;
+  string signer_address = 4;
+}
+
+message NewModelRequest {
+  AuthorizationDetails authorization = 1;
+  trainingV2.NewModel model = 2;
+}
+
+message ValidateRequest {
+  AuthorizationDetails authorization = 1;
+  string model_id = 2;
+  string training_data_link = 3;
+}
+
+message UploadAndValidateRequest {
+  AuthorizationDetails authorization = 1;
+  string model_id = 2;
+  bytes data = 3;
+}
+
+message CommonRequest {
+  AuthorizationDetails authorization = 1;
+  string model_id = 2;
+}
+
+message UpdateModelRequest {
+  AuthorizationDetails authorization = 1;
+  string model_id = 2;
+  string model_name = 3;
+  string description = 4;
+  repeated string address_list = 5;
+}
+
+message ModelsResponse {
+  repeated trainingV2.ModelResponse list_of_models = 1;
+}
+
+// Эти методы имплементируют только демон, сервис провайдер должен игнорировать их
+service Daemon {
+  // free
+  rpc create_model(NewModelRequest) returns (trainingV2.ModelResponse) {}
+
+  // free
+  rpc validate_model_price(ValidateRequest) returns (trainingV2.PriceInBaseUnit) {}
+
+  // paid
+  rpc upload_and_validate(stream UploadAndValidateRequest) returns (trainingV2.StatusResponse) {}
+
+  // paid
+  rpc validate_model(ValidateRequest) returns (trainingV2.StatusResponse) {}
+
+  // free, одна подпись для методов train_model_price & train_model
+  rpc train_model_price(CommonRequest) returns (trainingV2.PriceInBaseUnit) {}
+
+  // paid
+  rpc train_model(CommonRequest) returns (trainingV2.StatusResponse) {}
+
+  // free
+  // После удаления модели status становится DELETED в etcd
+  rpc delete_model(CommonRequest) returns (trainingV2.StatusResponse) {}
+
+  // уникальные методы by daemon
+  // одна подпись для всех геттеров
+  rpc get_training_metadata(google.protobuf.Empty) returns (TrainingMetadata) {}
+
+  rpc get_all_models(AllModelsRequest) returns (ModelsResponse) {}
+
+  rpc get_model(CommonRequest) returns (trainingV2.ModelResponse) {}
+
+  rpc update_model(UpdateModelRequest) returns (trainingV2.ModelResponse) {}
+
+  // free & without auth
+  rpc get_dataset_requirements(DatasetRequirementsRequest) returns (DatasetRequirements) {}
+}
+
+message DatasetRequirementsRequest{
+  string grpc_method_name = 1;
+  string grpc_service_name = 2;
+}
+
+message AllModelsRequest{
+  AuthorizationDetails authorization = 1;
+  // фильтры
+  trainingV2.Status status = 2;
+  bool is_public = 3;
+  string name = 4; // поиск по названию
+  uint64 page_size = 5; // пагинация
+  uint64 page = 6;
+}
+
+message TrainingMetadata {
+  bool trainingEnabled = 1;
+  bool trainingInProto = 2;
+  // ключ - grpc_service_name, значение - массив grpc_method_name
+  map<string, google.protobuf.ListValue> trainingMethods = 3;
+}
+
+message DatasetRequirements {
+  uint64 max_size_mb = 1;
+  uint64 count_files = 2; // максимальное кол-во файлов в датасете
+  uint64 max_size_mb_single = 3; // максимальный размер одного файла в датасете
+  repeated string file_type = 4; // массив, пример: [jpg, png, mp3]
+  string description = 5; // any text
+}

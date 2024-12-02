@@ -24,6 +24,7 @@ from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
 from snet.sdk.typing import ModuleName, ServiceStub
 from snet.sdk.utils.utils import (RESOURCES_PATH, add_to_path,
                                   find_file_by_keyword)
+from snet.sdk.training.training_v2 import TrainingV2
 
 
 class _ClientCallDetails(
@@ -76,6 +77,7 @@ class ServiceClient:
         self.payment_channel_state_service_client = self._generate_payment_channel_state_service_client()
         self.payment_channels = []
         self.last_read_block: int = 0
+        self.__training = TrainingV2(self) if self.check_training() else None
 
     def call_rpc(self, rpc_name: str, message_class: str, **kwargs) -> Any:
         rpc_method = getattr(self.service, rpc_name)
@@ -91,7 +93,7 @@ class ServiceClient:
             "disable_blockchain_operations",
             False
         )
-        if disable_blockchain_operations is False:
+        if not disable_blockchain_operations:
             grpc_channel = self.grpc_channel
         stub_instance = service_stub(grpc_channel)
         return stub_instance
@@ -209,8 +211,9 @@ class ServiceClient:
             defunct_hash_message(message), self.account.signer_private_key
         ).signature)
 
-    def generate_training_signature(self, text: str, address: ChecksumAddress,
+    def generate_training_signature(self, text: str, address: str,
                                     block_number: BlockNumber) -> HexBytes:
+        address = web3.Web3.to_checksum_address(address)
         message = web3.Web3.solidity_keccak(
             ["string", "address", "uint256"],
             [text, address, block_number]
@@ -231,6 +234,16 @@ class ServiceClient:
                 self.service_metadata.get_all_endpoints_for_group(
                     self.group["group_name"]
                 )[0])
+
+    def check_training(self) -> bool:
+        # TODO: add implementation
+        pass
+
+    @property
+    def training(self) -> TrainingV2:
+        if self.__training is None:
+            raise Exception("The service does not support training.")
+        return self.__training
 
     def get_concurrency_flag(self) -> bool:
         return self.options.get('concurrency', True)
