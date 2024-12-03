@@ -8,7 +8,7 @@ import training_v2_pb2 as training__v2__pb2
 
 
 class DaemonStub(object):
-    """Эти методы имплементируют только демон, сервис провайдер должен игнорировать их
+    """These methods are implemented only by daemon, service provider should ignore them
     """
 
     def __init__(self, channel):
@@ -80,7 +80,7 @@ class DaemonStub(object):
 
 
 class DaemonServicer(object):
-    """Эти методы имплементируют только демон, сервис провайдер должен игнорировать их
+    """These methods are implemented only by daemon, service provider should ignore them
     """
 
     def create_model(self, request, context):
@@ -112,7 +112,7 @@ class DaemonServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def train_model_price(self, request, context):
-        """free, одна подпись для методов train_model_price & train_model
+        """free, one signature for train_model_price & train_model methods
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -127,15 +127,15 @@ class DaemonServicer(object):
 
     def delete_model(self, request, context):
         """free
-        После удаления модели status становится DELETED в etcd
+        After deleting model the status will be DELETED in ETCD
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def get_training_metadata(self, request, context):
-        """уникальные методы by daemon
-        одна подпись для всех геттеров
+        """unique methods by daemon
+        one signature for all getters
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -237,7 +237,7 @@ def add_DaemonServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Daemon(object):
-    """Эти методы имплементируют только демон, сервис провайдер должен игнорировать их
+    """These methods are implemented only by daemon, service provider should ignore them
     """
 
     @staticmethod

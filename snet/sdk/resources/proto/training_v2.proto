@@ -1,13 +1,13 @@
 syntax = "proto3";
-import "google/protobuf/descriptor.proto";  // нужно для работы индикаторов
+import "google/protobuf/descriptor.proto";  // need for indicators
 package trainingV2;
 option go_package = "../training";
 
-// Методы которые должен имплементировать сервис провайдер
+// The methods below are implemented by service provider
 service Model {
 
   // free
-  // можно прокинуть адрес создателя модели 
+  // You can forward the address of the model creator.
   rpc create_model(NewModel) returns (ModelID) {}
 
   // free
@@ -19,7 +19,7 @@ service Model {
   // paid
   rpc validate_model(ValidateRequest) returns (StatusResponse) {}
 
-  // free, одна подпись для методов train_model_price & train_model
+  // free, one signature for train_model_price & train_model methods
   rpc train_model_price(ModelID) returns (PriceInBaseUnit) {}
 
   // paid
@@ -46,14 +46,14 @@ message ModelResponse {
   // List of all the addresses that will have access to this model
   repeated string address_list = 8;
 
-  // доступ к модели даем только на использование и просмотр
+  // We provide access to the model only for use and viewing
   bool is_public = 9;
 
   string training_data_link = 10;
 }
 
-// Используется как input на запросы: new_model
-// Использовать ли эти поля - выбор за сервис провайдером, главное вернуть model_id
+// Used as input for requests: new_model
+// Whether to use these fields is up to the service provider, the main thing is to return the model_id
 message NewModel {
   string name = 1;
   string description = 2;
@@ -66,19 +66,19 @@ message NewModel {
   // set this to true if you want your model to be used by other AI consumers
   bool is_public = 6;
 
-  // Эти параметры будет прокидывать демон
+  // These parameters will be passed by the daemon
   string organization_id = 7;
   string service_id = 8;
   string group_id = 9;
 }
 
-// Эту структуру нужно использовать сервис провайдеру
+// This structure needs to be used by the service provider.
 message ModelID {
   string model_id = 1;
 }
 
-// Эту структуру нужно использовать сервис провайдеру
-// Используется в методе train_model_price для получения цены трейнинга/валидации
+// This structure needs to be used by the service provider.
+// Used in the train_model_price method to get the training/validation price
 message PriceInBaseUnit {
   uint64 price = 1; // cogs, weis, afet, aasi etc
 }

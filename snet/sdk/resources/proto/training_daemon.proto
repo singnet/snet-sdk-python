@@ -1,7 +1,7 @@
 syntax = "proto3";
 package training_daemon;
-import "google/protobuf/descriptor.proto";  // нужно для работы индикаторов
-import "google/protobuf/struct.proto";   // нужно для google.protobuf.ListValue
+import "google/protobuf/descriptor.proto";  // need for indicators
+import "google/protobuf/struct.proto";   // need for google.protobuf.ListValue
 import "training_v2.proto";
 option go_package = "../training";
 import "google/protobuf/empty.proto";
@@ -51,7 +51,7 @@ message ModelsResponse {
   repeated trainingV2.ModelResponse list_of_models = 1;
 }
 
-// Эти методы имплементируют только демон, сервис провайдер должен игнорировать их
+// These methods are implemented only by daemon, service provider should ignore them
 service Daemon {
   // free
   rpc create_model(NewModelRequest) returns (trainingV2.ModelResponse) {}
@@ -65,18 +65,18 @@ service Daemon {
   // paid
   rpc validate_model(ValidateRequest) returns (trainingV2.StatusResponse) {}
 
-  // free, одна подпись для методов train_model_price & train_model
+  // free, one signature for train_model_price & train_model methods
   rpc train_model_price(CommonRequest) returns (trainingV2.PriceInBaseUnit) {}
 
   // paid
   rpc train_model(CommonRequest) returns (trainingV2.StatusResponse) {}
 
   // free
-  // После удаления модели status становится DELETED в etcd
+  // After deleting model the status will be DELETED in ETCD
   rpc delete_model(CommonRequest) returns (trainingV2.StatusResponse) {}
 
-  // уникальные методы by daemon
-  // одна подпись для всех геттеров
+  // unique methods by daemon
+  // one signature for all getters
   rpc get_training_metadata(google.protobuf.Empty) returns (TrainingMetadata) {}
 
   rpc get_all_models(AllModelsRequest) returns (ModelsResponse) {}
@@ -96,7 +96,7 @@ message DatasetRequirementsRequest{
 
 message AllModelsRequest{
   AuthorizationDetails authorization = 1;
-  // фильтры
+  // filters
   trainingV2.Status status = 2;
   bool is_public = 3;
   string name = 4; // поиск по названию
@@ -107,7 +107,7 @@ message AllModelsRequest{
 message TrainingMetadata {
   bool trainingEnabled = 1;
   bool trainingInProto = 2;
-  // ключ - grpc_service_name, значение - массив grpc_method_name
+  // key - grpc_service_name, value - массив grpc_method_name
   map<string, google.protobuf.ListValue> trainingMethods = 3;
 }
 

@@ -6,7 +6,7 @@ import training_v2_pb2 as training__v2__pb2
 
 
 class ModelStub(object):
-    """Методы которые должен имплементировать сервис провайдер
+    """The methods below are implemented by service provider
     """
 
     def __init__(self, channel):
@@ -58,12 +58,12 @@ class ModelStub(object):
 
 
 class ModelServicer(object):
-    """Методы которые должен имплементировать сервис провайдер
+    """The methods below are implemented by service provider
     """
 
     def create_model(self, request, context):
         """free
-        можно прокинуть адрес создателя модели 
+        You can forward the address of the model creator.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -91,7 +91,7 @@ class ModelServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def train_model_price(self, request, context):
-        """free, одна подпись для методов train_model_price & train_model
+        """free, one signature for train_model_price & train_model methods
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -170,7 +170,7 @@ def add_ModelServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Model(object):
-    """Методы которые должен имплементировать сервис провайдер
+    """The methods below are implemented by service provider
     """
 
     @staticmethod

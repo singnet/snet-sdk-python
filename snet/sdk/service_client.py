@@ -241,7 +241,7 @@ class ServiceClient:
 
     @property
     def training(self) -> TrainingV2:
-        if self.__training is None:
+        if self.__training.is_enabled:
             raise Exception("The service does not support training.")
         return self.__training
 

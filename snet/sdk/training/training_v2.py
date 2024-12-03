@@ -1,10 +1,5 @@
 import enum
-from http.client import responses
-from os import PathLike
 from pathlib import PurePath, Path
-from typing import NewType
-
-from jsonrpcclient import request
 
 from snet.sdk.service_client import ServiceClient
 
@@ -41,9 +36,7 @@ class ModelStatus(enum.Enum):
 class TrainingV2:
     def __init__(self, service_client: ServiceClient):
         self.service_client = service_client
-        # TODO: store model_id and prices
-
-    # TODO: implement whole process in one method
+        self.is_enabled = self._check_training()
 
     """FREE METHODS TO CALL"""
 
@@ -54,10 +47,12 @@ class TrainingV2:
                      addresses_with_access: list[str]=None):
         if addresses_with_access is None:
             addresses_with_access = []
+
+        service_name, method_name = self._check_method_name(method_name)
         new_model = training.NewModel(name=model_name,
                                       description=model_description,
                                       grpc_method_name=method_name,
-                                      grpc_service_name="service", # TODO: get from service_client
+                                      grpc_service_name=service_name,
                                       is_public=is_public_accessible,
                                       address_list=addresses_with_access,
                                       organization_id=self.service_client.org_id,
@@ -68,7 +63,6 @@ class TrainingV2:
                                                                model=new_model)
         response = self._call_method("create_model",
                                      request_data=create_model_request)
-        # TODO: process response
         return response
 
     def validate_model_price(self, model_id: int):
@@ -80,7 +74,6 @@ class TrainingV2:
         )
         response = self._call_method("validate_model_price",
                                      request_data=validate_model_price_request)
-        # TODO: process response
         return response
 
     def train_model_price(self, model_id: int):
@@ -89,7 +82,6 @@ class TrainingV2:
                                                        model_id=model_id)
         response = self._call_method("train_model_price",
                                      request_data=common_request)
-        # TODO: process response
         return response
 
     def delete_model(self, model_id: int):
@@ -98,12 +90,10 @@ class TrainingV2:
                                                        model_id=model_id)
         response = self._call_method("delete_model",
                                      request_data=common_request)
-        # TODO: process response
         return response
 
     def get_training_metadata(self):
         response = self._call_method("get_training_metadata")
-        # TODO: process response
         return response
 
     def get_all_models(self, status: ModelStatus=None,
@@ -122,7 +112,6 @@ class TrainingV2:
         )
         response = self._call_method("get_all_models",
                                      request_data=all_models_request)
-        # TODO: process response
         return response
 
     def get_model(self, model_id: int):
@@ -131,7 +120,6 @@ class TrainingV2:
                                                        model_id=model_id)
         response = self._call_method("get_model",
                                      request_data=common_request)
-        # TODO: process response
         return response
 
     def update_model(self, model_id: int,
@@ -149,44 +137,40 @@ class TrainingV2:
         )
         response = self._call_method("update_model",
                                      request_data=update_model_request)
-        # TODO: process response
         return response
 
     def get_dataset_requirements(self, method_name: str):
+        service_name, method_name = self._check_method_name(method_name)
         requirements_request = training_daemon.DatasetRequirementsRequest(
             grpc_method_name=method_name,
-            grpc_service_name="service" # TODO: get from service_client
+            grpc_service_name=service_name
         )
         response = self._call_method("get_dataset_requirements",
                                      request_data=requirements_request)
-        # TODO: process response
         return response
 
     """PAID METHODS TO CALL"""
 
     def upload_and_validate(self, model_id: int, zip_path: str | Path | PurePath):
         data = []
-        with open(zip_path, 'rb') as f: # TODO: handle exceptions with file
-            data_part = f.read(256)
-            while data_part:
-                data.append(data_part)
+        f = open(zip_path, 'rb') # TODO: handle exceptions with file
 
         auth_details = self._get_auth_details(ModelMethodMessage.UploadAndValidate)
 
-        upload_and_validate_request = []
-        for data_part in data:
-            upload_and_validate_request.append(
-                training_daemon.UploadAndValidateRequest(
+        def request_iter(file):
+            batch = file.read(256)
+            while batch:
+                yield training_daemon.UploadAndValidateRequest(
                     authorization=auth_details,
                     model_id=model_id,
-                    data=data_part)
-            )
-        upload_and_validate_request = iter(upload_and_validate_request)
+                    data=batch
+                )
+                batch = file.read(256)
 
         response = self._call_method("upload_and_validate",
-                                     request_data=upload_and_validate_request,
+                                     request_data=request_iter(f),
                                      paid=True)
-        # TODO: process response
+        f.close()
         return response
 
     def train_model(self, model_id: int):
@@ -196,7 +180,6 @@ class TrainingV2:
         response = self._call_method("train_model",
                                      request_data=common_request,
                                      paid=True)
-        # TODO: process response
         return response
 
     """PRIVATE METHODS"""
@@ -212,8 +195,9 @@ class TrainingV2:
                 response = getattr(stub, method_name)(request_data)
             return response
         except Exception as e:
-            print("Exception: ", e)
-            return e
+            # print("Exception: ", e)
+            # TODO: parse exception
+            raise e
 
     def _get_training_stub(self, paid=False):
         if paid:
@@ -235,4 +219,16 @@ class TrainingV2:
             message=method_msg.value
         )
         return auth_details
+
+    def _check_method_name(self, method_name: str) -> tuple[str, str]:
+        services_methods, _ = self.service_client.get_services_and_messages_info()
+        for service, methods in services_methods.items():
+            for method in methods:
+                if method[0] == method_name:
+                    return service, method[0]
+        raise Exception(f"Method {method_name} not found!")
+
+    def _check_training(self) -> bool:
+        pass
+
 
