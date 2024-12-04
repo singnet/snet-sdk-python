@@ -92,6 +92,7 @@ service Daemon {
 message DatasetRequirementsRequest{
   string grpc_method_name = 1;
   string grpc_service_name = 2;
+  string model_id = 3;
 }
 
 message AllModelsRequest{

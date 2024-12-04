@@ -77,7 +77,7 @@ class ServiceClient:
         self.payment_channel_state_service_client = self._generate_payment_channel_state_service_client()
         self.payment_channels = []
         self.last_read_block: int = 0
-        self.__training = TrainingV2(self) if self.check_training() else None
+        self.__training = TrainingV2(self)
 
     def call_rpc(self, rpc_name: str, message_class: str, **kwargs) -> Any:
         rpc_method = getattr(self.service, rpc_name)
@@ -118,6 +118,9 @@ class ServiceClient:
                                        grpc.ssl_channel_credentials(root_certificates=certificate))
         else:
             raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
+
+    def get_grpc_channel_for_training(self) -> grpc.Channel:
+        pass
 
     def _get_service_call_metadata(self) -> list[tuple]:
         metadata: list = self.payment_strategy.get_payment_metadata(self)
@@ -234,10 +237,6 @@ class ServiceClient:
                 self.service_metadata.get_all_endpoints_for_group(
                     self.group["group_name"]
                 )[0])
-
-    def check_training(self) -> bool:
-        # TODO: add implementation
-        pass
 
     @property
     def training(self) -> TrainingV2:
