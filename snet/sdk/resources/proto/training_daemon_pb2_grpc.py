@@ -8,7 +8,7 @@ import training_v2_pb2 as training__v2__pb2
 
 
 class DaemonStub(object):
-    """These methods are implemented only by daemon, service provider should ignore them
+    """These methods are implemented only by the daemon; the service provider should ignore them
     """
 
     def __init__(self, channel):
@@ -24,7 +24,7 @@ class DaemonStub(object):
                 )
         self.validate_model_price = channel.unary_unary(
                 '/training_daemon.Daemon/validate_model_price',
-                request_serializer=training__daemon__pb2.ValidateRequest.SerializeToString,
+                request_serializer=training__daemon__pb2.AuthValidateRequest.SerializeToString,
                 response_deserializer=training__v2__pb2.PriceInBaseUnit.FromString,
                 )
         self.upload_and_validate = channel.stream_unary(
@@ -34,7 +34,7 @@ class DaemonStub(object):
                 )
         self.validate_model = channel.unary_unary(
                 '/training_daemon.Daemon/validate_model',
-                request_serializer=training__daemon__pb2.ValidateRequest.SerializeToString,
+                request_serializer=training__daemon__pb2.AuthValidateRequest.SerializeToString,
                 response_deserializer=training__v2__pb2.StatusResponse.FromString,
                 )
         self.train_model_price = channel.unary_unary(
@@ -52,11 +52,6 @@ class DaemonStub(object):
                 request_serializer=training__daemon__pb2.CommonRequest.SerializeToString,
                 response_deserializer=training__v2__pb2.StatusResponse.FromString,
                 )
-        self.get_training_metadata = channel.unary_unary(
-                '/training_daemon.Daemon/get_training_metadata',
-                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-                response_deserializer=training__daemon__pb2.TrainingMetadata.FromString,
-                )
         self.get_all_models = channel.unary_unary(
                 '/training_daemon.Daemon/get_all_models',
                 request_serializer=training__daemon__pb2.AllModelsRequest.SerializeToString,
@@ -72,70 +67,67 @@ class DaemonStub(object):
                 request_serializer=training__daemon__pb2.UpdateModelRequest.SerializeToString,
                 response_deserializer=training__v2__pb2.ModelResponse.FromString,
                 )
-        self.get_dataset_requirements = channel.unary_unary(
-                '/training_daemon.Daemon/get_dataset_requirements',
-                request_serializer=training__daemon__pb2.DatasetRequirementsRequest.SerializeToString,
-                response_deserializer=training__daemon__pb2.DatasetRequirements.FromString,
+        self.get_training_metadata = channel.unary_unary(
+                '/training_daemon.Daemon/get_training_metadata',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=training__daemon__pb2.TrainingMetadata.FromString,
+                )
+        self.get_method_metadata = channel.unary_unary(
+                '/training_daemon.Daemon/get_method_metadata',
+                request_serializer=training__daemon__pb2.MethodMetadataRequest.SerializeToString,
+                response_deserializer=training__daemon__pb2.MethodMetadata.FromString,
                 )
 
 
 class DaemonServicer(object):
-    """These methods are implemented only by daemon, service provider should ignore them
+    """These methods are implemented only by the daemon; the service provider should ignore them
     """
 
     def create_model(self, request, context):
-        """free
+        """Free
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def validate_model_price(self, request, context):
-        """free
+        """Free
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def upload_and_validate(self, request_iterator, context):
-        """paid
+        """Paid
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def validate_model(self, request, context):
-        """paid
+        """Paid
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def train_model_price(self, request, context):
-        """free, one signature for train_model_price & train_model methods
+        """Free, one signature for both train_model_price & train_model methods
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def train_model(self, request, context):
-        """paid
+        """Paid
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def delete_model(self, request, context):
-        """free
-        After deleting model the status will be DELETED in ETCD
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def get_training_metadata(self, request, context):
-        """unique methods by daemon
-        one signature for all getters
+        """Free
+        After deleting the model, the status becomes DELETED in etcd
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -159,8 +151,16 @@ class DaemonServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def get_dataset_requirements(self, request, context):
-        """free & without auth
+    def get_training_metadata(self, request, context):
+        """Unique methods by daemon
+        One signature for all getters
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def get_method_metadata(self, request, context):
+        """Free & without authorization
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -176,7 +176,7 @@ def add_DaemonServicer_to_server(servicer, server):
             ),
             'validate_model_price': grpc.unary_unary_rpc_method_handler(
                     servicer.validate_model_price,
-                    request_deserializer=training__daemon__pb2.ValidateRequest.FromString,
+                    request_deserializer=training__daemon__pb2.AuthValidateRequest.FromString,
                     response_serializer=training__v2__pb2.PriceInBaseUnit.SerializeToString,
             ),
             'upload_and_validate': grpc.stream_unary_rpc_method_handler(
@@ -186,7 +186,7 @@ def add_DaemonServicer_to_server(servicer, server):
             ),
             'validate_model': grpc.unary_unary_rpc_method_handler(
                     servicer.validate_model,
-                    request_deserializer=training__daemon__pb2.ValidateRequest.FromString,
+                    request_deserializer=training__daemon__pb2.AuthValidateRequest.FromString,
                     response_serializer=training__v2__pb2.StatusResponse.SerializeToString,
             ),
             'train_model_price': grpc.unary_unary_rpc_method_handler(
@@ -204,11 +204,6 @@ def add_DaemonServicer_to_server(servicer, server):
                     request_deserializer=training__daemon__pb2.CommonRequest.FromString,
                     response_serializer=training__v2__pb2.StatusResponse.SerializeToString,
             ),
-            'get_training_metadata': grpc.unary_unary_rpc_method_handler(
-                    servicer.get_training_metadata,
-                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                    response_serializer=training__daemon__pb2.TrainingMetadata.SerializeToString,
-            ),
             'get_all_models': grpc.unary_unary_rpc_method_handler(
                     servicer.get_all_models,
                     request_deserializer=training__daemon__pb2.AllModelsRequest.FromString,
@@ -224,10 +219,15 @@ def add_DaemonServicer_to_server(servicer, server):
                     request_deserializer=training__daemon__pb2.UpdateModelRequest.FromString,
                     response_serializer=training__v2__pb2.ModelResponse.SerializeToString,
             ),
-            'get_dataset_requirements': grpc.unary_unary_rpc_method_handler(
-                    servicer.get_dataset_requirements,
-                    request_deserializer=training__daemon__pb2.DatasetRequirementsRequest.FromString,
-                    response_serializer=training__daemon__pb2.DatasetRequirements.SerializeToString,
+            'get_training_metadata': grpc.unary_unary_rpc_method_handler(
+                    servicer.get_training_metadata,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=training__daemon__pb2.TrainingMetadata.SerializeToString,
+            ),
+            'get_method_metadata': grpc.unary_unary_rpc_method_handler(
+                    servicer.get_method_metadata,
+                    request_deserializer=training__daemon__pb2.MethodMetadataRequest.FromString,
+                    response_serializer=training__daemon__pb2.MethodMetadata.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -237,7 +237,7 @@ def add_DaemonServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Daemon(object):
-    """These methods are implemented only by daemon, service provider should ignore them
+    """These methods are implemented only by the daemon; the service provider should ignore them
     """
 
     @staticmethod
@@ -269,7 +269,7 @@ class Daemon(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/validate_model_price',
-            training__daemon__pb2.ValidateRequest.SerializeToString,
+            training__daemon__pb2.AuthValidateRequest.SerializeToString,
             training__v2__pb2.PriceInBaseUnit.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -303,7 +303,7 @@ class Daemon(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/validate_model',
-            training__daemon__pb2.ValidateRequest.SerializeToString,
+            training__daemon__pb2.AuthValidateRequest.SerializeToString,
             training__v2__pb2.StatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -360,23 +360,6 @@ class Daemon(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def get_training_metadata(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/get_training_metadata',
-            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            training__daemon__pb2.TrainingMetadata.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
     def get_all_models(request,
             target,
             options=(),
@@ -428,7 +411,7 @@ class Daemon(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def get_dataset_requirements(request,
+    def get_training_metadata(request,
             target,
             options=(),
             channel_credentials=None,
@@ -438,8 +421,25 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/get_dataset_requirements',
-            training__daemon__pb2.DatasetRequirementsRequest.SerializeToString,
-            training__daemon__pb2.DatasetRequirements.FromString,
+        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/get_training_metadata',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            training__daemon__pb2.TrainingMetadata.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def get_method_metadata(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/get_method_metadata',
+            training__daemon__pb2.MethodMetadataRequest.SerializeToString,
+            training__daemon__pb2.MethodMetadata.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

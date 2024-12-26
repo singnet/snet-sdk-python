@@ -26,10 +26,10 @@ from snet.sdk.config import Config
 from snet.sdk.client_lib_generator import ClientLibGenerator
 from snet.sdk.mpe.mpe_contract import MPEContract
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
-from snet.sdk.payment_strategies import default_payment_strategy as strategy
+from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy as PaymentStrategy
 from snet.sdk.service_client import ServiceClient
 from snet.sdk.storage_provider.storage_provider import StorageProvider
-from snet.sdk.typing import ModuleName, ServiceStub
+from snet.sdk.custom_typing import ModuleName, ServiceStub
 from snet.sdk.utils.utils import (bytes32_to_str, find_file_by_keyword,
                                   type_converter)
 
@@ -109,17 +109,18 @@ class SnetSDK:
         if force_update:
             self.lib_generator.generate_client_library()
         else:
-            self.lib_generator.create_service_client_libraries_path()
             path_to_pb_files = self.lib_generator.protodir
             pb_2_file_name = find_file_by_keyword(path_to_pb_files,
-                                                  keyword="pb2.py")
+                                                  keyword="pb2.py",
+                                                  exclude=["training"])
             pb_2_grpc_file_name = find_file_by_keyword(path_to_pb_files,
-                                                       keyword="pb2_grpc.py")
+                                                       keyword="pb2_grpc.py",
+                                                       exclude=["training"])
             if not pb_2_file_name or not pb_2_grpc_file_name:
                 self.lib_generator.generate_client_library()
 
         if payment_strategy is None:
-            payment_strategy = strategy.DefaultPaymentStrategy(
+            payment_strategy = PaymentStrategy(
                 concurrent_calls=concurrent_calls
             )
 
@@ -148,7 +149,8 @@ class SnetSDK:
                                         options, self.mpe_contract,
                                         self.account, self.web3, pb2_module,
                                         self.payment_channel_provider,
-                                        self.lib_generator.protodir)
+                                        self.lib_generator.protodir,
+                                        self.lib_generator.training_added())
         return _service_client
 
     def get_service_stub(self) -> ServiceStub:
@@ -167,7 +169,9 @@ class SnetSDK:
 
     def get_module_by_keyword(self, keyword: str) -> ModuleName:
         path_to_pb_files = self.lib_generator.protodir
-        file_name = find_file_by_keyword(path_to_pb_files, keyword)
+        file_name = find_file_by_keyword(path_to_pb_files,
+                                         keyword,
+                                         exclude=["training"])
         module_name = os.path.splitext(file_name)[0]
         return ModuleName(module_name)
 

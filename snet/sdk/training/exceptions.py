@@ -7,10 +7,15 @@ class WrongDatasetException(Exception):
             exception_msg += f"\t{check}\n"
         super().__init__(exception_msg)
 
+
 class WrongMethodException(Exception):
     def __init__(self, method_name: str):
         super().__init__(f"Method with name {method_name} not found!")
 
+
+class NoTrainingException(Exception):
+    def __init__(self, org_id: str, service_id: str):
+        super().__init__(f"Training is not implemented for the service with org_id={org_id} and service_id={service_id}!")
 
 
 

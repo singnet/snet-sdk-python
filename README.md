@@ -265,6 +265,12 @@ print(messages)
 # {'Numbers': [('float', 'a'), ('float', 'b')], 'Result': [('float', 'value')]}
 ```
 
+## Training
+
+With the SDK, you can also train models and use them when calling the service.
+
+
+
 ---
 
 ###### 1 This method uses a call to a paid smart contract function.

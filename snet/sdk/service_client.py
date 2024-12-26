@@ -1,5 +1,4 @@
 import base64
-import collections
 import importlib
 import re
 import os
@@ -18,21 +17,15 @@ from snet.sdk.account import Account
 from snet.sdk.mpe.mpe_contract import MPEContract
 from snet.sdk.mpe.payment_channel import PaymentChannel
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
-# from snet.sdk.payment_strategies import default_payment_strategy as strategy
+from snet.sdk.payment_strategies import default_payment_strategy as strategy
 from snet.sdk.resources.root_certificate import certificate
 from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
-from snet.sdk.typing import ModuleName, ServiceStub
+from snet.sdk.custom_typing import ModuleName, ServiceStub
 from snet.sdk.utils.utils import (RESOURCES_PATH, add_to_path,
                                   find_file_by_keyword)
 from snet.sdk.training.training_v2 import TrainingV2
-
-
-class _ClientCallDetails(
-    collections.namedtuple(
-        '_ClientCallDetails',
-        ('method', 'timeout', 'metadata', 'credentials')),
-    grpc.ClientCallDetails):
-    pass
+from snet.sdk.training.exceptions import NoTrainingException
+from snet.sdk.utils.call_utils import create_intercept_call_func
 
 
 class ServiceClient:
@@ -50,7 +43,8 @@ class ServiceClient:
         sdk_web3: web3.Web3,
         pb2_module: ModuleName,
         payment_channel_provider: PaymentChannelProvider,
-        path_to_pb_files: Path
+        path_to_pb_files: Path,
+        training_added: bool = False
     ):
         self.org_id = org_id
         self.service_id = service_id
@@ -69,15 +63,16 @@ class ServiceClient:
 
         self.expiry_threshold: int = self.group["payment"]["payment_expiration_threshold"]
         self.__base_grpc_channel = self._get_grpc_channel()
+        _intercept_call_func = create_intercept_call_func(self._get_service_call_metadata, self)
         self.grpc_channel = grpc.intercept_channel(
             self.__base_grpc_channel,
-            generic_client_interceptor.create(self._intercept_call)
+            generic_client_interceptor.create(_intercept_call_func)
         )
         self.service = self._generate_grpc_stub(service_stub)
         self.payment_channel_state_service_client = self._generate_payment_channel_state_service_client()
         self.payment_channels = []
         self.last_read_block: int = 0
-        self.__training = TrainingV2(self)
+        self.__training = TrainingV2(self, training_added)
 
     def call_rpc(self, rpc_name: str, message_class: str, **kwargs) -> Any:
         rpc_method = getattr(self.service, rpc_name)
@@ -119,23 +114,9 @@ class ServiceClient:
         else:
             raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
 
-    def get_grpc_channel_for_training(self) -> grpc.Channel:
-        pass
-
     def _get_service_call_metadata(self) -> list[tuple]:
         metadata: list = self.payment_strategy.get_payment_metadata(self)
         return metadata
-
-    def _intercept_call(self, client_call_details, request_iterator, request_streaming,
-                        response_streaming):
-        metadata = []
-        if client_call_details.metadata is not None:
-            metadata = list(client_call_details.metadata)
-        metadata.extend(self._get_service_call_metadata())
-        client_call_details = _ClientCallDetails(
-            client_call_details.method, client_call_details.timeout, metadata,
-            client_call_details.credentials)
-        return client_call_details, request_iterator, None
 
     def _filter_existing_channels_from_new_payment_channels(
         self,
@@ -240,8 +221,8 @@ class ServiceClient:
 
     @property
     def training(self) -> TrainingV2:
-        if self.__training.is_enabled:
-            raise Exception("The service does not support training.")
+        if not self.__training.is_enabled:
+            raise NoTrainingException(self.org_id, self.service_id)
         return self.__training
 
     def get_concurrency_flag(self) -> bool:
@@ -258,7 +239,7 @@ class ServiceClient:
     def get_services_and_messages_info(self) -> tuple[dict, dict]:
         # Get proto file filepath and open it
         proto_file_name = find_file_by_keyword(directory=self.path_to_pb_files,
-                                               keyword=".proto")
+                                               keyword=".proto", exclude=["training"])
         proto_filepath = os.path.join(self.path_to_pb_files, proto_file_name)
         with open(proto_filepath, 'r') as file:
             proto_content = file.read()

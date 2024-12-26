@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from snet.sdk.storage_provider.storage_provider import StorageProvider
@@ -13,18 +14,19 @@ class ClientLibGenerator:
         self.language: str = "python"
         self.protodir: Path = (protodir if protodir else
                                Path.home().joinpath(".snet"))
+        self.generate_directories_by_params()
 
     def generate_client_library(self) -> None:
         try:
-            self.generate_directories_by_params()
             self.receive_proto_files()
-            compile_proto(entry_path=self.protodir,
-                          codegen_dir=self.protodir,
-                          target_language=self.language)
-
-            print(f'client libraries for service with id "{self.service_id}" '
-                  f'in org with id "{self.org_id}" '
-                  f'generated at {self.protodir}')
+            compilation_result = compile_proto(entry_path=self.protodir,
+                                               codegen_dir=self.protodir,
+                                               target_language=self.language,
+                                               add_training=self.training_added())
+            if compilation_result:
+                print(f'client libraries for service with id "{self.service_id}" '
+                      f'in org with id "{self.org_id}" '
+                      f'generated at {self.protodir}')
         except Exception as e:
             print(str(e))
 
@@ -55,3 +57,17 @@ class ClientLibGenerator:
             )
         else:
             raise Exception("Directory for storing proto files not found")
+
+    # def check_training_proto_and_copy(self):
+    #     source_path = RESOURCES_PATH.joinpath("proto", "training_v2.proto")
+    #     target_path = self.protodir.joinpath("training_v2.proto")
+    #     if not target_path.exists():
+    #         shutil.copy2(source_path, target_path)
+
+    def training_added(self) -> bool:
+        files = os.listdir(self.protodir)
+        with open(self.protodir.joinpath(files[0]), "r") as f:
+            proto_text = f.read()
+        if 'import "training_v2.proto";' in proto_text:
+            return True
+        return False

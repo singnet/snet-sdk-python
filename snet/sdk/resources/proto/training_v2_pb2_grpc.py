@@ -6,7 +6,7 @@ import training_v2_pb2 as training__v2__pb2
 
 
 class ModelStub(object):
-    """The methods below are implemented by service provider
+    """Methods that the service provider must implement
     """
 
     def __init__(self, channel):
@@ -58,62 +58,62 @@ class ModelStub(object):
 
 
 class ModelServicer(object):
-    """The methods below are implemented by service provider
+    """Methods that the service provider must implement
     """
 
     def create_model(self, request, context):
-        """free
-        You can forward the address of the model creator.
+        """Free
+        Can pass the address of the model creator
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def validate_model_price(self, request, context):
-        """free
+        """Free
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def upload_and_validate(self, request_iterator, context):
-        """paid
+        """Paid
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def validate_model(self, request, context):
-        """paid
+        """Paid
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def train_model_price(self, request, context):
-        """free, one signature for train_model_price & train_model methods
+        """Free, one signature for both train_model_price & train_model methods
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def train_model(self, request, context):
-        """paid
+        """Paid
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def delete_model(self, request, context):
-        """free
-        После удаления модели status становится DELETED в etcd
+        """Free
+        After model deletion, the status becomes DELETED in etcd
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def get_model_status(self, request, context):
-        """free
+        """Free
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -170,7 +170,7 @@ def add_ModelServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Model(object):
-    """The methods below are implemented by service provider
+    """Methods that the service provider must implement
     """
 
     @staticmethod
