@@ -29,13 +29,7 @@ message AuthValidateRequest {
 
 message UploadAndValidateRequest {
   AuthorizationDetails authorization = 1;
-  string model_id = 2;
-  bytes data = 3;
-  string file_name = 4;
-  uint64 file_size = 5;
-  uint64 batch_size = 6;
-  uint64 batch_number = 7;
-  uint64 batch_count = 8;
+  trainingV2.UploadInput upload_input = 2;
 }
 
 message CommonRequest {

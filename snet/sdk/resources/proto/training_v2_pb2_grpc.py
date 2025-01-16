@@ -27,7 +27,7 @@ class ModelStub(object):
                 )
         self.upload_and_validate = channel.stream_unary(
                 '/trainingV2.Model/upload_and_validate',
-                request_serializer=training__v2__pb2.DataToUpload.SerializeToString,
+                request_serializer=training__v2__pb2.UploadInput.SerializeToString,
                 response_deserializer=training__v2__pb2.StatusResponse.FromString,
                 )
         self.validate_model = channel.unary_unary(
@@ -134,7 +134,7 @@ def add_ModelServicer_to_server(servicer, server):
             ),
             'upload_and_validate': grpc.stream_unary_rpc_method_handler(
                     servicer.upload_and_validate,
-                    request_deserializer=training__v2__pb2.DataToUpload.FromString,
+                    request_deserializer=training__v2__pb2.UploadInput.FromString,
                     response_serializer=training__v2__pb2.StatusResponse.SerializeToString,
             ),
             'validate_model': grpc.unary_unary_rpc_method_handler(
@@ -219,7 +219,7 @@ class Model(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_unary(request_iterator, target, '/trainingV2.Model/upload_and_validate',
-            training__v2__pb2.DataToUpload.SerializeToString,
+            training__v2__pb2.UploadInput.SerializeToString,
             training__v2__pb2.StatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

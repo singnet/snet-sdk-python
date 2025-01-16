@@ -8,9 +8,16 @@ import importlib
 
 from snet.sdk import generic_client_interceptor
 from snet.sdk.payment_strategies.dynamic_price_payment_strategy import DynamicPricePaymentStrategy
+from snet.sdk.training.responses import TrainingMetadata
 from snet.sdk.utils.call_utils import create_intercept_call_func
 from snet.sdk.utils.utils import add_to_path, RESOURCES_PATH
 from snet.sdk.training.exceptions import WrongDatasetException, WrongMethodException
+from snet.sdk.training.responses import (
+    ModelStatus,
+    Model,
+    TrainingMetadata,
+    MethodMetadata
+)
 
 
 class ModelMethodMessage(enum.Enum):
@@ -26,16 +33,6 @@ class ModelMethodMessage(enum.Enum):
     UploadAndValidate = "__UploadAndValidate"
     ValidateModel = "__ValidateModel"
     TrainModel = "__TrainModel"
-
-
-class ModelStatus(enum.Enum):
-    CREATED = "CREATED"
-    VALIDATING = "VALIDATING"
-    VALIDATED = "VALIDATED"
-    TRAINING = "TRAINING"
-    READY_TO_USE = "READY_TO_USE"
-    ERRORED = "ERRORED"
-    DELETED = "DELETED"
 
 
 class TrainingV2:
@@ -55,7 +52,7 @@ class TrainingV2:
                      model_name: str,
                      model_description: str="",
                      is_public_accessible: bool=False,
-                     addresses_with_access: list[str]=None) -> Any:
+                     addresses_with_access: list[str]=None) -> Model:
         if addresses_with_access is None:
             addresses_with_access = []
 
@@ -74,9 +71,19 @@ class TrainingV2:
                                                                model=new_model)
         response = self._call_method("create_model",
                                      request_data=create_model_request)
-        return response
+        model = Model(model_id=response.model_id,
+                      status=ModelStatus(response.status),
+                      updated_date=response.updated_date,
+                      name=response.name,
+                      description=response.description,
+                      grpc_method_name=response.grpc_method_name,
+                      grpc_service_name=response.grpc_service_name,
+                      address_list=response.address_list,
+                      is_public=response.is_public,
+                      training_data_link=response.training_data_link)
+        return model
 
-    def validate_model_price(self, model_id: str) -> Any:
+    def validate_model_price(self, model_id: str) -> int:
         auth_details = self._get_auth_details(ModelMethodMessage.ValidateModelPrice)
         validate_model_price_request = self.training_daemon.AuthValidateRequest(
             authorization=auth_details,
@@ -85,41 +92,38 @@ class TrainingV2:
         )
         response = self._call_method("validate_model_price",
                                      request_data=validate_model_price_request)
-        return response
+        return response.price
 
-    def train_model_price(self, model_id: str) -> Any:
+    def train_model_price(self, model_id: str) -> int:
         auth_details = self._get_auth_details(ModelMethodMessage.TrainModelPrice)
         common_request = self.training_daemon.CommonRequest(authorization=auth_details,
                                                        model_id=model_id)
         response = self._call_method("train_model_price",
                                      request_data=common_request)
-        return response
+        return response.price
 
-    def delete_model(self, model_id: str) -> Any:
+    def delete_model(self, model_id: str) -> ModelStatus:
         auth_details = self._get_auth_details(ModelMethodMessage.DeleteModel)
         common_request = self.training_daemon.CommonRequest(authorization=auth_details,
                                                        model_id=model_id)
         response = self._call_method("delete_model",
                                      request_data=common_request)
-        return response
+        return ModelStatus(response.status)
 
-    def get_training_metadata(self):
+    def get_training_metadata(self) -> TrainingMetadata:
         empty_request = self.training_daemon.google_dot_protobuf_dot_empty__pb2.Empty()
         response = self._call_method("get_training_metadata",
                                      request_data=empty_request)
 
-        services_methods = dict(response.trainingMethods)
-        res_dict = {}
-        for k, v in services_methods.items():
-            res_dict[k] = []
-            for value in v.values:
-                res_dict[k].append(value.string_value)
+        training_metadata = TrainingMetadata(training_enabled=response.trainingEnabled,
+                                             training_in_proto=response.trainingInProto,
+                                             training_methods=response.trainingMethods)
 
-        return res_dict
+        return training_metadata
 
     def get_all_models(self, status: ModelStatus=None,
                        is_public: bool=False,
-                       ) -> Any:
+                       ) -> list[Model]:
         if status:
             status = getattr(self.training.Status, status.value)
         auth_details = self._get_auth_details(ModelMethodMessage.GetAllModels)
@@ -132,34 +136,41 @@ class TrainingV2:
         )
         response = self._call_method("get_all_models",
                                      request_data=all_models_request)
-        return response
+        models = []
+        for model in response.list_of_models:
+            models.append(Model(model_id=model.model_id,
+                                status=ModelStatus(model.status),
+                                updated_date=model.updated_date,
+                                name=model.name,
+                                description=model.description,
+                                grpc_method_name=model.grpc_method_name,
+                                grpc_service_name=model.grpc_service_name,
+                                address_list=model.address_list,
+                                is_public=model.is_public,
+                                training_data_link=model.training_data_link))
 
-    def get_model(self, model_id: str) -> Any:
+        return models
+
+    def get_model(self, model_id: str) -> Model:
         auth_details = self._get_auth_details(ModelMethodMessage.GetModel)
         common_request = self.training_daemon.CommonRequest(authorization=auth_details,
                                                        model_id=model_id)
         response = self._call_method("get_model",
                                      request_data=common_request)
-        return response
+        model = Model(model_id=response.model_id,
+                      status=ModelStatus(response.status),
+                      updated_date=response.updated_date,
+                      name=response.name,
+                      description=response.description,
+                      grpc_method_name=response.grpc_method_name,
+                      grpc_service_name=response.grpc_service_name,
+                      address_list=response.address_list,
+                      is_public=response.is_public,
+                      training_data_link=response.training_data_link)
 
-    def update_model(self, model_id: str,
-                     model_name: str="",
-                     description: str="",
-                     addresses_with_access: list[str]=None) -> Any:
-        if addresses_with_access is None:
-            addresses_with_access = []
-        auth_details = self._get_auth_details(ModelMethodMessage.UpdateModel)
-        update_model_request = self.training_daemon.UpdateModelRequest(
-            authorization=auth_details,model_id=model_id,
-            model_name=model_name,
-            description=description,
-            address_list=addresses_with_access
-        )
-        response = self._call_method("update_model",
-                                     request_data=update_model_request)
-        return response
+        return model
 
-    def get_method_metadata(self, method_name: str, model_id: str= "") -> Any:
+    def get_method_metadata(self, method_name: str, model_id: str= "") -> MethodMetadata:
 
         if model_id:
             requirements_request = self.training_daemon.MethodMetadataRequest(
@@ -176,12 +187,38 @@ class TrainingV2:
             )
         response = self._call_method("get_method_metadata",
                                      request_data=requirements_request)
+
+        method_metadata = MethodMetadata(default_model_id = response.default_model_id,
+                                         max_models_per_user = response.max_models_per_user,
+                                         dataset_max_size_mb = response.dataset_max_size_mb,
+                                         dataset_max_count_files = response.dataset_max_count_files,
+                                         dataset_max_size_single_file_mb = response.dataset_max_size_single_file_mb,
+                                         dataset_files_type = response.dataset_files_type,
+                                         dataset_type = response.dataset_type,
+                                         dataset_description = response.dataset_description)
+        return method_metadata
+
+    def update_model(self, model_id: str,
+                     model_name: str="",
+                     description: str="",
+                     addresses_with_access: list[str]=None) -> Model:
+        if addresses_with_access is None:
+            addresses_with_access = []
+        auth_details = self._get_auth_details(ModelMethodMessage.UpdateModel)
+        update_model_request = self.training_daemon.UpdateModelRequest(
+            authorization=auth_details,model_id=model_id,
+            model_name=model_name,
+            description=description,
+            address_list=addresses_with_access
+        )
+        response = self._call_method("update_model",
+                                     request_data=update_model_request)
         return response
 
     """PAID METHODS TO CALL"""
 
     def upload_and_validate(self, model_id: str,
-                            zip_path: str | Path | PurePath, price: int) -> Any:
+                            zip_path: str | Path | PurePath, price: int) -> ModelStatus:
         f = open(zip_path, 'rb')
         file_size = os.path.getsize(zip_path)
 
@@ -200,15 +237,18 @@ class TrainingV2:
             batch = file.read(batch_size)
             batch_number = 1
             while batch:
+                upload_input = self.training.UploadInput(
+                    model_id = model_id,
+                    data = batch,
+                    file_name = file_name,
+                    file_size = file_size,
+                    batch_size = batch_size,
+                    batch_number = batch_number,
+                    batch_count = batch_count
+                )
                 yield self.training_daemon.UploadAndValidateRequest(
                     authorization=auth_details,
-                    model_id=model_id,
-                    data=batch,
-                    file_name=file_name,
-                    file_size=file_size,
-                    batch_size=batch_size,
-                    batch_number=batch_number,
-                    batch_count=batch_count
+                    upload_input=upload_input
                 )
                 batch = file.read(batch_size)
                 batch_number += 1
@@ -217,11 +257,12 @@ class TrainingV2:
 
         response = self._call_method("upload_and_validate",
                                      request_data=request_iter(f),
-                                     paid=False) # TODO: change to paid
+                                     paid=True) # TODO: change to paid
         f.close()
-        return response
 
-    def train_model(self, model_id: str, price: int) -> Any:
+        return ModelStatus(response.status)
+
+    def train_model(self, model_id: str, price: int) -> ModelStatus:
         auth_details = self._get_auth_details(ModelMethodMessage.TrainModel)
         common_request = self.training_daemon.CommonRequest(authorization=auth_details,
                                                        model_id=model_id)
@@ -229,8 +270,9 @@ class TrainingV2:
 
         response = self._call_method("train_model",
                                      request_data=common_request,
-                                     paid=False) # TODO: change to paid
-        return response
+                                     paid=True) # TODO: change to paid
+
+        return ModelStatus(response.status)
 
     """PRIVATE METHODS"""
 
@@ -242,8 +284,7 @@ class TrainingV2:
             response = getattr(stub, method_name)(request_data)
             return response
         except Exception as e:
-            # TODO: parse exception
-            raise e
+            print(e)
 
     def _get_training_stub(self, paid=False) -> Any:
         grpc_channel = self.service_client.get_grpc_base_channel()
@@ -275,13 +316,13 @@ class TrainingV2:
 
     def _check_training(self) -> bool:
         try:
-            metadata_response = self.get_training_metadata()
+            service_methods = self.get_training_metadata().training_methods
         except grpc.RpcError as e:
             return False
-        if len(metadata_response.keys()) == 0:
+        if len(service_methods.keys()) == 0:
             return False
         n_methods = 0
-        for service, methods in metadata_response.items():
+        for service, methods in service_methods.items():
             n_methods += len(methods)
         if n_methods == 0:
             return False
