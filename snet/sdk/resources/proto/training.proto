@@ -28,7 +28,6 @@ message ModelDetails {
 
   //set this to true if you want your model to be used by other AI consumers
   bool is_publicly_accessible = 14;
-
 }
 
 message AuthorizationDetails {
@@ -91,12 +90,11 @@ message UpdateModelRequest {
 message ModelDetailsResponse {
   Status status = 1;
   ModelDetails model_details = 2;
-
 }
 
 service Model {
 
-  // The AI developer needs to Implement this service and Daemon will call these
+  // The AI developer needs to Implement this service (do not copy this in your service proto) and Daemon will call these
   // There will be no cost borne by the consumer in calling these methods,
   // Pricing will apply when you actually call the training methods defined.
   // AI consumer will call all these methods
@@ -104,7 +102,8 @@ service Model {
   rpc delete_model(UpdateModelRequest) returns (ModelDetailsResponse) {}
   rpc get_model_status(ModelDetailsRequest) returns (ModelDetailsResponse) {}
 
-  // Daemon will implement , however the AI developer should skip implementing these and just provide dummy code.
+
+  // Daemon will implement, however the AI developer should skip implementing these and just provide dummy code.
   rpc update_model_access(UpdateModelRequest) returns (ModelDetailsResponse) {}
   rpc get_all_models(AccessibleModelsRequest) returns (AccessibleModelsResponse) {}
 

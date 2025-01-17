@@ -201,7 +201,7 @@ class ServiceClient:
     def get_services_and_messages_info(self):
         # Get proto file filepath and open it
         path_to_pb_files = self.get_path_to_pb_files(self.org_id, self.service_id)
-        proto_file_name = find_file_by_keyword(path_to_pb_files, keyword=".proto")
+        proto_file_name = find_file_by_keyword(path_to_pb_files, keyword=".proto", exclude=['training', 'pricing'])
         proto_filepath = os.path.join(path_to_pb_files, proto_file_name)
         with open(proto_filepath, 'r') as file:
             proto_content = file.read()

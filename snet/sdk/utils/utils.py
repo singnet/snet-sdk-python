@@ -142,10 +142,12 @@ class add_to_path:
             pass
 
 
-def find_file_by_keyword(directory, keyword):
+def find_file_by_keyword(directory, keyword, exclude=None):
+    if exclude is None:
+        exclude = []
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if keyword in file:
+            if keyword in file and all(e not in file for e in exclude):
                 return file
 
 

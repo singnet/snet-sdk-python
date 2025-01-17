@@ -45,7 +45,7 @@ class ModelServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def create_model(self, request, context):
-        """The AI developer needs to Implement this service and Daemon will call these
+        """The AI developer needs to Implement this service (do not copy this in your service proto) and Daemon will call these
         There will be no cost borne by the consumer in calling these methods,
         Pricing will apply when you actually call the training methods defined.
         AI consumer will call all these methods
@@ -67,7 +67,7 @@ class ModelServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def update_model_access(self, request, context):
-        """Daemon will implement , however the AI developer should skip implementing these and just provide dummy code.
+        """Daemon will implement, however the AI developer should skip implementing these and just provide dummy code.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
