@@ -146,9 +146,7 @@ class SnetSDK:
     def get_module_by_keyword(self, org_id: str, service_id: str, keyword: str) -> ModuleName:
         path_to_pb_files = self.get_path_to_pb_files(org_id, service_id)
         file_name = find_file_by_keyword(path_to_pb_files, keyword, exclude=['training', 'pricing'])
-        # print(f"File name: {file_name}")
         module_name = os.path.splitext(file_name)[0]
-        # print(f"Module name: {module_name}")
         return ModuleName(module_name)
 
     def get_service_metadata(self, org_id, service_id):
