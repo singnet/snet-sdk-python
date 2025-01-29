@@ -9,6 +9,7 @@ import tarfile
 import io
 
 import web3
+from eth_typing import BlockNumber
 from grpc_tools.protoc import main as protoc
 
 from snet import sdk
@@ -127,6 +128,10 @@ def normalize_private_key(private_key):
 
 def get_address_from_private(private_key):
     return web3.Account.from_key(private_key).address
+
+
+def get_current_block_number() -> BlockNumber:
+    return web3.Web3().eth.block_number
 
 
 class add_to_path:

@@ -7,32 +7,21 @@ import grpc
 import importlib
 
 from snet.sdk import generic_client_interceptor
-from snet.sdk.payment_strategies.dynamic_price_payment_strategy import DynamicPricePaymentStrategy
-from snet.sdk.training.responses import TrainingMetadata
+from snet.sdk.payment_strategies.training_payment_strategy import TrainingPaymentStrategy
 from snet.sdk.utils.call_utils import create_intercept_call_func
 from snet.sdk.utils.utils import add_to_path, RESOURCES_PATH
-from snet.sdk.training.exceptions import WrongDatasetException, WrongMethodException
+from snet.sdk.training.exceptions import (
+    WrongDatasetException,
+    WrongMethodException,
+    GRPCException
+)
 from snet.sdk.training.responses import (
     ModelStatus,
     Model,
     TrainingMetadata,
-    MethodMetadata
+    MethodMetadata,
+    ModelMethodMessage
 )
-
-
-class ModelMethodMessage(enum.Enum):
-    CreateModel = "__CreateModel"
-    ValidateModelPrice = "__ValidateModelPrice"
-    TrainModelPrice = "__TrainModelPrice"
-    DeleteModel = "__DeleteModel"
-    GetTrainingMetadata = "__GetTrainingMetadata"
-    GetAllModels = "__GetAllModels"
-    GetModel = "__GetModel"
-    UpdateModel = "__UpdateModel"
-    GetDatasetRequirements = "__GetDatasetRequirements"
-    UploadAndValidate = "__UploadAndValidate"
-    ValidateModel = "__ValidateModel"
-    TrainModel = "__TrainModel"
 
 
 class TrainingV2:
@@ -44,7 +33,7 @@ class TrainingV2:
             
         self.service_client = service_client
         self.is_enabled = training_added and self._check_training()
-        self.payment_strategy = DynamicPricePaymentStrategy()
+        self.payment_strategy = TrainingPaymentStrategy()
 
     """FREE METHODS TO CALL"""
 
@@ -229,7 +218,7 @@ class TrainingV2:
         if file_size % batch_size != 0:
             batch_count += 1
 
-        # self._check_dataset(model_id, zip_path)
+        self._check_dataset(model_id, zip_path)
 
         auth_details = self._get_auth_details(ModelMethodMessage.UploadAndValidate)
 
@@ -254,6 +243,7 @@ class TrainingV2:
                 batch_number += 1
 
         self.payment_strategy.set_price(price)
+        self.payment_strategy.set_model_id(model_id)
 
         response = self._call_method("upload_and_validate",
                                      request_data=request_iter(f),
@@ -267,6 +257,7 @@ class TrainingV2:
         common_request = self.training_daemon.CommonRequest(authorization=auth_details,
                                                        model_id=model_id)
         self.payment_strategy.set_price(price)
+        self.payment_strategy.set_model_id(model_id)
 
         response = self._call_method("train_model",
                                      request_data=common_request,
@@ -283,8 +274,8 @@ class TrainingV2:
             stub = self._get_training_stub(paid=paid)
             response = getattr(stub, method_name)(request_data)
             return response
-        except Exception as e:
-            print(e)
+        except grpc.RpcError as e:
+            raise GRPCException(e)
 
     def _get_training_stub(self, paid=False) -> Any:
         grpc_channel = self.service_client.get_grpc_base_channel()
@@ -317,7 +308,7 @@ class TrainingV2:
     def _check_training(self) -> bool:
         try:
             service_methods = self.get_training_metadata().training_methods
-        except grpc.RpcError as e:
+        except GRPCException as e:
             return False
         if len(service_methods.keys()) == 0:
             return False
@@ -350,6 +341,8 @@ class TrainingV2:
 
         for file_info in files_list:
             _, extension = os.path.splitext(file_info.filename)
+            extension = extension[1:] if extension.startswith('.') else extension
+            print(extension)
             if extension not in file_types:
                 failed_checks.append(f"Wrong file type: `{extension}` in file: "
                                      f"`{file_info.filename}`. Allowed file types: "

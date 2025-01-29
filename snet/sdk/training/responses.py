@@ -2,6 +2,21 @@ from enum import Enum
 from typing import Any
 
 
+class ModelMethodMessage(Enum):
+    CreateModel = "__CreateModel"
+    ValidateModelPrice = "__ValidateModelPrice"
+    TrainModelPrice = "__TrainModelPrice"
+    DeleteModel = "__DeleteModel"
+    GetTrainingMetadata = "__GetTrainingMetadata"
+    GetAllModels = "__GetAllModels"
+    GetModel = "__GetModel"
+    UpdateModel = "__UpdateModel"
+    GetDatasetRequirements = "__GetDatasetRequirements"
+    UploadAndValidate = "__UploadAndValidate"
+    ValidateModel = "__ValidateModel"
+    TrainModel = "__TrainModel"
+
+
 class ModelStatus(Enum):
     CREATED = 0
     VALIDATING = 1

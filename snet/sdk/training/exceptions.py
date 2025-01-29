@@ -1,3 +1,5 @@
+from grpc import RpcError
+
 
 class WrongDatasetException(Exception):
     def __init__(self, errors: list[str]):
@@ -17,6 +19,10 @@ class NoTrainingException(Exception):
     def __init__(self, org_id: str, service_id: str):
         super().__init__(f"Training is not implemented for the service with org_id={org_id} and service_id={service_id}!")
 
+
+class GRPCException(RpcError):
+    def __init__(self, error: RpcError):
+        super().__init__(f"An error occurred during the grps call: {error}.")
 
 
 
