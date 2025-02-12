@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import descriptor_pb2 as google_dot_protobuf_dot_descriptor__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0etraining.proto\x12\x08training\x1a google/protobuf/descriptor.proto\"\xf6\x01\n\rModelResponse\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12 \n\x06status\x18\x02 \x01(\x0e\x32\x10.training.Status\x12\x14\n\x0cupdated_date\x18\x03 \x01(\t\x12\x0c\n\x04name\x18\x04 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\x12\x18\n\x10grpc_method_name\x18\x06 \x01(\t\x12\x19\n\x11grpc_service_name\x18\x07 \x01(\t\x12\x14\n\x0c\x61\x64\x64ress_list\x18\x08 \x03(\t\x12\x11\n\tis_public\x18\t \x01(\x08\x12\x1a\n\x12training_data_link\x18\n \x01(\t\"\xca\x01\n\x08NewModel\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x18\n\x10grpc_method_name\x18\x03 \x01(\t\x12\x19\n\x11grpc_service_name\x18\x04 \x01(\t\x12\x14\n\x0c\x61\x64\x64ress_list\x18\x05 \x03(\t\x12\x11\n\tis_public\x18\x06 \x01(\x08\x12\x17\n\x0forganization_id\x18\x07 \x01(\t\x12\x12\n\nservice_id\x18\x08 \x01(\t\x12\x10\n\x08group_id\x18\t \x01(\t\"\x1b\n\x07ModelID\x12\x10\n\x08model_id\x18\x01 \x01(\t\" \n\x0fPriceInBaseUnit\x12\r\n\x05price\x18\x01 \x01(\x04\"2\n\x0eStatusResponse\x12 \n\x06status\x18\x01 \x01(\x0e\x32\x10.training.Status\"\x92\x01\n\x0bUploadInput\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x11\n\tfile_name\x18\x03 \x01(\t\x12\x11\n\tfile_size\x18\x04 \x01(\x04\x12\x12\n\nbatch_size\x18\x05 \x01(\x04\x12\x14\n\x0c\x62\x61tch_number\x18\x06 \x01(\x04\x12\x13\n\x0b\x62\x61tch_count\x18\x07 \x01(\x04\"?\n\x0fValidateRequest\x12\x10\n\x08model_id\x18\x02 \x01(\t\x12\x1a\n\x12training_data_link\x18\x03 \x01(\t*n\n\x06Status\x12\x0b\n\x07\x43REATED\x10\x00\x12\x0e\n\nVALIDATING\x10\x01\x12\r\n\tVALIDATED\x10\x02\x12\x0c\n\x08TRAINING\x10\x03\x12\x10\n\x0cREADY_TO_USE\x10\x04\x12\x0b\n\x07\x45RRORED\x10\x05\x12\x0b\n\x07\x44\x45LETED\x10\x06\x32\xaa\x04\n\x05Model\x12\x37\n\x0c\x63reate_model\x12\x12.training.NewModel\x1a\x11.training.ModelID\"\x00\x12N\n\x14validate_model_price\x12\x19.training.ValidateRequest\x1a\x19.training.PriceInBaseUnit\"\x00\x12J\n\x13upload_and_validate\x12\x15.training.UploadInput\x1a\x18.training.StatusResponse\"\x00(\x01\x12G\n\x0evalidate_model\x12\x19.training.ValidateRequest\x1a\x18.training.StatusResponse\"\x00\x12\x43\n\x11train_model_price\x12\x11.training.ModelID\x1a\x19.training.PriceInBaseUnit\"\x00\x12<\n\x0btrain_model\x12\x11.training.ModelID\x1a\x18.training.StatusResponse\"\x00\x12=\n\x0c\x64\x65lete_model\x12\x11.training.ModelID\x1a\x18.training.StatusResponse\"\x00\x12\x41\n\x10get_model_status\x12\x11.training.ModelID\x1a\x18.training.StatusResponse\"\x00::\n\x10\x64\x65\x66\x61ult_model_id\x12\x1e.google.protobuf.MethodOptions\x18\xd1\x86\x03 \x01(\t:=\n\x13max_models_per_user\x12\x1e.google.protobuf.MethodOptions\x18\xd2\x86\x03 \x01(\x04:=\n\x13\x64\x61taset_max_size_mb\x12\x1e.google.protobuf.MethodOptions\x18\xd3\x86\x03 \x01(\x04:A\n\x17\x64\x61taset_max_count_files\x12\x1e.google.protobuf.MethodOptions\x18\xd4\x86\x03 \x01(\x04:I\n\x1f\x64\x61taset_max_size_single_file_mb\x12\x1e.google.protobuf.MethodOptions\x18\xd5\x86\x03 \x01(\x04:<\n\x12\x64\x61taset_files_type\x12\x1e.google.protobuf.MethodOptions\x18\xd6\x86\x03 \x01(\t:6\n\x0c\x64\x61taset_type\x12\x1e.google.protobuf.MethodOptions\x18\xd7\x86\x03 \x01(\t:=\n\x13\x64\x61taset_description\x12\x1e.google.protobuf.MethodOptions\x18\xd8\x86\x03 \x01(\tB,Z*github.com/singnet/snet-daemon/v5/trainingb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0etraining.proto\x12\x08training\x1a google/protobuf/descriptor.proto\"\xc4\x02\n\rModelResponse\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12 \n\x06status\x18\x02 \x01(\x0e\x32\x10.training.Status\x12\x14\n\x0c\x63reated_date\x18\x03 \x01(\t\x12\x14\n\x0cupdated_date\x18\x04 \x01(\t\x12\x0c\n\x04name\x18\x05 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x06 \x01(\t\x12\x18\n\x10grpc_method_name\x18\x07 \x01(\t\x12\x19\n\x11grpc_service_name\x18\x08 \x01(\t\x12\x14\n\x0c\x61\x64\x64ress_list\x18\t \x03(\t\x12\x11\n\tis_public\x18\n \x01(\x08\x12\x1a\n\x12training_data_link\x18\x0b \x01(\t\x12\x1a\n\x12\x63reated_by_address\x18\x0c \x01(\t\x12\x1a\n\x12updated_by_address\x18\r \x01(\t\"\xca\x01\n\x08NewModel\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x18\n\x10grpc_method_name\x18\x03 \x01(\t\x12\x19\n\x11grpc_service_name\x18\x04 \x01(\t\x12\x14\n\x0c\x61\x64\x64ress_list\x18\x05 \x03(\t\x12\x11\n\tis_public\x18\x06 \x01(\x08\x12\x17\n\x0forganization_id\x18\x07 \x01(\t\x12\x12\n\nservice_id\x18\x08 \x01(\t\x12\x10\n\x08group_id\x18\t \x01(\t\"\x1b\n\x07ModelID\x12\x10\n\x08model_id\x18\x01 \x01(\t\" \n\x0fPriceInBaseUnit\x12\r\n\x05price\x18\x01 \x01(\x04\"2\n\x0eStatusResponse\x12 \n\x06status\x18\x01 \x01(\x0e\x32\x10.training.Status\"\x92\x01\n\x0bUploadInput\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x11\n\tfile_name\x18\x03 \x01(\t\x12\x11\n\tfile_size\x18\x04 \x01(\x04\x12\x12\n\nbatch_size\x18\x05 \x01(\x04\x12\x14\n\x0c\x62\x61tch_number\x18\x06 \x01(\x04\x12\x13\n\x0b\x62\x61tch_count\x18\x07 \x01(\x04\"?\n\x0fValidateRequest\x12\x10\n\x08model_id\x18\x02 \x01(\t\x12\x1a\n\x12training_data_link\x18\x03 \x01(\t*n\n\x06Status\x12\x0b\n\x07\x43REATED\x10\x00\x12\x0e\n\nVALIDATING\x10\x01\x12\r\n\tVALIDATED\x10\x02\x12\x0c\n\x08TRAINING\x10\x03\x12\x10\n\x0cREADY_TO_USE\x10\x04\x12\x0b\n\x07\x45RRORED\x10\x05\x12\x0b\n\x07\x44\x45LETED\x10\x06\x32\xaa\x04\n\x05Model\x12\x37\n\x0c\x63reate_model\x12\x12.training.NewModel\x1a\x11.training.ModelID\"\x00\x12N\n\x14validate_model_price\x12\x19.training.ValidateRequest\x1a\x19.training.PriceInBaseUnit\"\x00\x12J\n\x13upload_and_validate\x12\x15.training.UploadInput\x1a\x18.training.StatusResponse\"\x00(\x01\x12G\n\x0evalidate_model\x12\x19.training.ValidateRequest\x1a\x18.training.StatusResponse\"\x00\x12\x43\n\x11train_model_price\x12\x11.training.ModelID\x1a\x19.training.PriceInBaseUnit\"\x00\x12<\n\x0btrain_model\x12\x11.training.ModelID\x1a\x18.training.StatusResponse\"\x00\x12=\n\x0c\x64\x65lete_model\x12\x11.training.ModelID\x1a\x18.training.StatusResponse\"\x00\x12\x41\n\x10get_model_status\x12\x11.training.ModelID\x1a\x18.training.StatusResponse\"\x00::\n\x10\x64\x65\x66\x61ult_model_id\x12\x1e.google.protobuf.MethodOptions\x18\xd1\x86\x03 \x01(\t:=\n\x13max_models_per_user\x12\x1e.google.protobuf.MethodOptions\x18\xd2\x86\x03 \x01(\x04:=\n\x13\x64\x61taset_max_size_mb\x12\x1e.google.protobuf.MethodOptions\x18\xd3\x86\x03 \x01(\x04:A\n\x17\x64\x61taset_max_count_files\x12\x1e.google.protobuf.MethodOptions\x18\xd4\x86\x03 \x01(\x04:I\n\x1f\x64\x61taset_max_size_single_file_mb\x12\x1e.google.protobuf.MethodOptions\x18\xd5\x86\x03 \x01(\x04:<\n\x12\x64\x61taset_files_type\x12\x1e.google.protobuf.MethodOptions\x18\xd6\x86\x03 \x01(\t:6\n\x0c\x64\x61taset_type\x12\x1e.google.protobuf.MethodOptions\x18\xd7\x86\x03 \x01(\t:=\n\x13\x64\x61taset_description\x12\x1e.google.protobuf.MethodOptions\x18\xd8\x86\x03 \x01(\tB,Z*github.com/singnet/snet-daemon/v5/trainingb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,22 +22,22 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'training_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z*github.com/singnet/snet-daemon/v5/training'
-  _globals['_STATUS']._serialized_start=845
-  _globals['_STATUS']._serialized_end=955
+  _globals['_STATUS']._serialized_start=923
+  _globals['_STATUS']._serialized_end=1033
   _globals['_MODELRESPONSE']._serialized_start=63
-  _globals['_MODELRESPONSE']._serialized_end=309
-  _globals['_NEWMODEL']._serialized_start=312
-  _globals['_NEWMODEL']._serialized_end=514
-  _globals['_MODELID']._serialized_start=516
-  _globals['_MODELID']._serialized_end=543
-  _globals['_PRICEINBASEUNIT']._serialized_start=545
-  _globals['_PRICEINBASEUNIT']._serialized_end=577
-  _globals['_STATUSRESPONSE']._serialized_start=579
-  _globals['_STATUSRESPONSE']._serialized_end=629
-  _globals['_UPLOADINPUT']._serialized_start=632
-  _globals['_UPLOADINPUT']._serialized_end=778
-  _globals['_VALIDATEREQUEST']._serialized_start=780
-  _globals['_VALIDATEREQUEST']._serialized_end=843
-  _globals['_MODEL']._serialized_start=958
-  _globals['_MODEL']._serialized_end=1512
+  _globals['_MODELRESPONSE']._serialized_end=387
+  _globals['_NEWMODEL']._serialized_start=390
+  _globals['_NEWMODEL']._serialized_end=592
+  _globals['_MODELID']._serialized_start=594
+  _globals['_MODELID']._serialized_end=621
+  _globals['_PRICEINBASEUNIT']._serialized_start=623
+  _globals['_PRICEINBASEUNIT']._serialized_end=655
+  _globals['_STATUSRESPONSE']._serialized_start=657
+  _globals['_STATUSRESPONSE']._serialized_end=707
+  _globals['_UPLOADINPUT']._serialized_start=710
+  _globals['_UPLOADINPUT']._serialized_end=856
+  _globals['_VALIDATEREQUEST']._serialized_start=858
+  _globals['_VALIDATEREQUEST']._serialized_end=921
+  _globals['_MODEL']._serialized_start=1036
+  _globals['_MODEL']._serialized_end=1590
 # @@protoc_insertion_point(module_scope)

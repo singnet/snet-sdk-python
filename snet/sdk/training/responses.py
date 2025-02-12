@@ -42,6 +42,7 @@ class Model:
     def __init__(self,
                  model_id: str,
                  status: ModelStatus,
+                 created_date: str,
                  updated_date: str,
                  name: str,
                  description: str,
@@ -49,10 +50,13 @@ class Model:
                  grpc_service_name : str,
                  address_list: list[str],
                  is_public: bool,
-                 training_data_link: str):
+                 training_data_link: str,
+                 created_by_address: str,
+                 updated_by_address: str):
 
         self.__model_id = model_id
         self.__status = status
+        self.__created_date = created_date
         self.__updated_date = updated_date
         self.__name = name
         self.__description = description
@@ -61,6 +65,8 @@ class Model:
         self.__address_list = address_list
         self.__is_public = is_public
         self.__training_data_link = training_data_link
+        self.__created_by_address = created_by_address
+        self.__updated_by_address = updated_by_address
 
     def __str__(self):
         return to_string(self)

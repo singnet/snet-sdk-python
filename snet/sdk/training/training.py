@@ -62,6 +62,7 @@ class Training:
                                      request_data=create_model_request)
         model = Model(model_id=response.model_id,
                       status=ModelStatus(response.status),
+                      created_date=response.created_date,
                       updated_date=response.updated_date,
                       name=response.name,
                       description=response.description,
@@ -69,7 +70,9 @@ class Training:
                       grpc_service_name=response.grpc_service_name,
                       address_list=response.address_list,
                       is_public=response.is_public,
-                      training_data_link=response.training_data_link)
+                      training_data_link=response.training_data_link,
+                      created_by_address=response.created_by_address,
+                      updated_by_address=response.updated_by_address)
         return model
 
     def validate_model_price(self, model_id: str) -> int:
@@ -122,7 +125,7 @@ class Training:
         all_models_request = self.training_daemon.AllModelsRequest(
             authorization=auth_details,
             statuses=statuses,
-            is_public=None,
+            is_public=is_public,
             grpc_method_name=grpc_method_name,
             grpc_service_name=grpc_service_name,
             name=model_name,
@@ -136,6 +139,7 @@ class Training:
         for model in response.list_of_models:
             models.append(Model(model_id=model.model_id,
                                 status=ModelStatus(model.status),
+                                created_date=model.created_date,
                                 updated_date=model.updated_date,
                                 name=model.name,
                                 description=model.description,
@@ -143,7 +147,9 @@ class Training:
                                 grpc_service_name=model.grpc_service_name,
                                 address_list=model.address_list,
                                 is_public=model.is_public,
-                                training_data_link=model.training_data_link))
+                                training_data_link=model.training_data_link,
+                                created_by_address=model.created_by_address,
+                                updated_by_address=model.updated_by_address))
 
         return models
 
@@ -155,6 +161,7 @@ class Training:
                                      request_data=common_request)
         model = Model(model_id=response.model_id,
                       status=ModelStatus(response.status),
+                      created_date=response.created_date,
                       updated_date=response.updated_date,
                       name=response.name,
                       description=response.description,
@@ -162,7 +169,9 @@ class Training:
                       grpc_service_name=response.grpc_service_name,
                       address_list=response.address_list,
                       is_public=response.is_public,
-                      training_data_link=response.training_data_link)
+                      training_data_link=response.training_data_link,
+                      created_by_address=response.created_by_address,
+                      updated_by_address=response.updated_by_address)
 
         return model
 
