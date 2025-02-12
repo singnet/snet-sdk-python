@@ -79,7 +79,9 @@ def compile_proto(
             compiler_args.extend([str(p) for p in entry_path.glob("**/*.proto")])
 
         if add_training:
-            compiler_args.append(str(training_include.joinpath("training_v2.proto")))
+            compiler_args.append(str(training_include.joinpath("training.proto")))
+
+        print(compiler_args)
 
         if not compiler(compiler_args):
             return True

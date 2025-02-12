@@ -6,7 +6,8 @@ import training_pb2 as training__pb2
 
 
 class ModelStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """Methods that the service provider must implement
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -16,65 +17,104 @@ class ModelStub(object):
         """
         self.create_model = channel.unary_unary(
                 '/training.Model/create_model',
-                request_serializer=training__pb2.CreateModelRequest.SerializeToString,
-                response_deserializer=training__pb2.ModelDetailsResponse.FromString,
+                request_serializer=training__pb2.NewModel.SerializeToString,
+                response_deserializer=training__pb2.ModelID.FromString,
+                )
+        self.validate_model_price = channel.unary_unary(
+                '/training.Model/validate_model_price',
+                request_serializer=training__pb2.ValidateRequest.SerializeToString,
+                response_deserializer=training__pb2.PriceInBaseUnit.FromString,
+                )
+        self.upload_and_validate = channel.stream_unary(
+                '/training.Model/upload_and_validate',
+                request_serializer=training__pb2.UploadInput.SerializeToString,
+                response_deserializer=training__pb2.StatusResponse.FromString,
+                )
+        self.validate_model = channel.unary_unary(
+                '/training.Model/validate_model',
+                request_serializer=training__pb2.ValidateRequest.SerializeToString,
+                response_deserializer=training__pb2.StatusResponse.FromString,
+                )
+        self.train_model_price = channel.unary_unary(
+                '/training.Model/train_model_price',
+                request_serializer=training__pb2.ModelID.SerializeToString,
+                response_deserializer=training__pb2.PriceInBaseUnit.FromString,
+                )
+        self.train_model = channel.unary_unary(
+                '/training.Model/train_model',
+                request_serializer=training__pb2.ModelID.SerializeToString,
+                response_deserializer=training__pb2.StatusResponse.FromString,
                 )
         self.delete_model = channel.unary_unary(
                 '/training.Model/delete_model',
-                request_serializer=training__pb2.UpdateModelRequest.SerializeToString,
-                response_deserializer=training__pb2.ModelDetailsResponse.FromString,
+                request_serializer=training__pb2.ModelID.SerializeToString,
+                response_deserializer=training__pb2.StatusResponse.FromString,
                 )
         self.get_model_status = channel.unary_unary(
                 '/training.Model/get_model_status',
-                request_serializer=training__pb2.ModelDetailsRequest.SerializeToString,
-                response_deserializer=training__pb2.ModelDetailsResponse.FromString,
-                )
-        self.update_model_access = channel.unary_unary(
-                '/training.Model/update_model_access',
-                request_serializer=training__pb2.UpdateModelRequest.SerializeToString,
-                response_deserializer=training__pb2.ModelDetailsResponse.FromString,
-                )
-        self.get_all_models = channel.unary_unary(
-                '/training.Model/get_all_models',
-                request_serializer=training__pb2.AccessibleModelsRequest.SerializeToString,
-                response_deserializer=training__pb2.AccessibleModelsResponse.FromString,
+                request_serializer=training__pb2.ModelID.SerializeToString,
+                response_deserializer=training__pb2.StatusResponse.FromString,
                 )
 
 
 class ModelServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """Methods that the service provider must implement
+    """
 
     def create_model(self, request, context):
-        """The AI developer needs to Implement this service and Daemon will call these
-        There will be no cost borne by the consumer in calling these methods,
-        Pricing will apply when you actually call the training methods defined.
-        AI consumer will call all these methods
+        """Free
+        Can pass the address of the model creator
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def validate_model_price(self, request, context):
+        """Free
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def upload_and_validate(self, request_iterator, context):
+        """Paid
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def validate_model(self, request, context):
+        """Paid
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def train_model_price(self, request, context):
+        """Free, one signature for both train_model_price & train_model methods
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def train_model(self, request, context):
+        """Paid
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def delete_model(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def get_model_status(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def update_model_access(self, request, context):
-        """Daemon will implement , however the AI developer should skip implementing these and just provide dummy code.
+        """Free
+        After model deletion, the status becomes DELETED in etcd
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def get_all_models(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+    def get_model_status(self, request, context):
+        """Free
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -84,28 +124,43 @@ def add_ModelServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'create_model': grpc.unary_unary_rpc_method_handler(
                     servicer.create_model,
-                    request_deserializer=training__pb2.CreateModelRequest.FromString,
-                    response_serializer=training__pb2.ModelDetailsResponse.SerializeToString,
+                    request_deserializer=training__pb2.NewModel.FromString,
+                    response_serializer=training__pb2.ModelID.SerializeToString,
+            ),
+            'validate_model_price': grpc.unary_unary_rpc_method_handler(
+                    servicer.validate_model_price,
+                    request_deserializer=training__pb2.ValidateRequest.FromString,
+                    response_serializer=training__pb2.PriceInBaseUnit.SerializeToString,
+            ),
+            'upload_and_validate': grpc.stream_unary_rpc_method_handler(
+                    servicer.upload_and_validate,
+                    request_deserializer=training__pb2.UploadInput.FromString,
+                    response_serializer=training__pb2.StatusResponse.SerializeToString,
+            ),
+            'validate_model': grpc.unary_unary_rpc_method_handler(
+                    servicer.validate_model,
+                    request_deserializer=training__pb2.ValidateRequest.FromString,
+                    response_serializer=training__pb2.StatusResponse.SerializeToString,
+            ),
+            'train_model_price': grpc.unary_unary_rpc_method_handler(
+                    servicer.train_model_price,
+                    request_deserializer=training__pb2.ModelID.FromString,
+                    response_serializer=training__pb2.PriceInBaseUnit.SerializeToString,
+            ),
+            'train_model': grpc.unary_unary_rpc_method_handler(
+                    servicer.train_model,
+                    request_deserializer=training__pb2.ModelID.FromString,
+                    response_serializer=training__pb2.StatusResponse.SerializeToString,
             ),
             'delete_model': grpc.unary_unary_rpc_method_handler(
                     servicer.delete_model,
-                    request_deserializer=training__pb2.UpdateModelRequest.FromString,
-                    response_serializer=training__pb2.ModelDetailsResponse.SerializeToString,
+                    request_deserializer=training__pb2.ModelID.FromString,
+                    response_serializer=training__pb2.StatusResponse.SerializeToString,
             ),
             'get_model_status': grpc.unary_unary_rpc_method_handler(
                     servicer.get_model_status,
-                    request_deserializer=training__pb2.ModelDetailsRequest.FromString,
-                    response_serializer=training__pb2.ModelDetailsResponse.SerializeToString,
-            ),
-            'update_model_access': grpc.unary_unary_rpc_method_handler(
-                    servicer.update_model_access,
-                    request_deserializer=training__pb2.UpdateModelRequest.FromString,
-                    response_serializer=training__pb2.ModelDetailsResponse.SerializeToString,
-            ),
-            'get_all_models': grpc.unary_unary_rpc_method_handler(
-                    servicer.get_all_models,
-                    request_deserializer=training__pb2.AccessibleModelsRequest.FromString,
-                    response_serializer=training__pb2.AccessibleModelsResponse.SerializeToString,
+                    request_deserializer=training__pb2.ModelID.FromString,
+                    response_serializer=training__pb2.StatusResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -115,7 +170,8 @@ def add_ModelServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Model(object):
-    """Missing associated documentation comment in .proto file."""
+    """Methods that the service provider must implement
+    """
 
     @staticmethod
     def create_model(request,
@@ -129,8 +185,93 @@ class Model(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/training.Model/create_model',
-            training__pb2.CreateModelRequest.SerializeToString,
-            training__pb2.ModelDetailsResponse.FromString,
+            training__pb2.NewModel.SerializeToString,
+            training__pb2.ModelID.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def validate_model_price(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/training.Model/validate_model_price',
+            training__pb2.ValidateRequest.SerializeToString,
+            training__pb2.PriceInBaseUnit.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def upload_and_validate(request_iterator,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.stream_unary(request_iterator, target, '/training.Model/upload_and_validate',
+            training__pb2.UploadInput.SerializeToString,
+            training__pb2.StatusResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def validate_model(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/training.Model/validate_model',
+            training__pb2.ValidateRequest.SerializeToString,
+            training__pb2.StatusResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def train_model_price(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/training.Model/train_model_price',
+            training__pb2.ModelID.SerializeToString,
+            training__pb2.PriceInBaseUnit.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def train_model(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/training.Model/train_model',
+            training__pb2.ModelID.SerializeToString,
+            training__pb2.StatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -146,8 +287,8 @@ class Model(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/training.Model/delete_model',
-            training__pb2.UpdateModelRequest.SerializeToString,
-            training__pb2.ModelDetailsResponse.FromString,
+            training__pb2.ModelID.SerializeToString,
+            training__pb2.StatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -163,41 +304,7 @@ class Model(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/training.Model/get_model_status',
-            training__pb2.ModelDetailsRequest.SerializeToString,
-            training__pb2.ModelDetailsResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def update_model_access(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training.Model/update_model_access',
-            training__pb2.UpdateModelRequest.SerializeToString,
-            training__pb2.ModelDetailsResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def get_all_models(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training.Model/get_all_models',
-            training__pb2.AccessibleModelsRequest.SerializeToString,
-            training__pb2.AccessibleModelsResponse.FromString,
+            training__pb2.ModelID.SerializeToString,
+            training__pb2.StatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

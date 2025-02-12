@@ -117,6 +117,7 @@ class SnetSDK:
                                                        keyword="pb2_grpc.py",
                                                        exclude=["training"])
             if not pb_2_file_name or not pb_2_grpc_file_name:
+                print("Generating client library...")
                 self.lib_generator.generate_client_library()
 
         if payment_strategy is None:
@@ -141,11 +142,11 @@ class SnetSDK:
         )
         group = self._get_service_group_details(service_metadata, group_name)
 
-        service_stub = self.get_service_stub()
+        service_stubs = self.get_service_stub()
 
         pb2_module = self.get_module_by_keyword(keyword="pb2.py")
         _service_client = ServiceClient(org_id, service_id, service_metadata,
-                                        group, service_stub, payment_strategy,
+                                        group, service_stubs, payment_strategy,
                                         options, self.mpe_contract,
                                         self.account, self.web3, pb2_module,
                                         self.payment_channel_provider,
@@ -153,17 +154,22 @@ class SnetSDK:
                                         self.lib_generator.training_added())
         return _service_client
 
-    def get_service_stub(self) -> ServiceStub:
+    def get_service_stub(self) -> list[ServiceStub]:
         path_to_pb_files = str(self.lib_generator.protodir)
         module_name = self.get_module_by_keyword(keyword="pb2_grpc.py")
         sys.path.append(path_to_pb_files)
         try:
             grpc_file = importlib.import_module(module_name)
             properties_and_methods_of_grpc_file = dir(grpc_file)
-            class_stub = [elem for elem in properties_and_methods_of_grpc_file
-                          if 'Stub' in elem][0]
-            service_stub = getattr(grpc_file, class_stub)
-            return ServiceStub(service_stub)
+            print()
+            print(*properties_and_methods_of_grpc_file)
+            service_stubs = []
+            for elem in properties_and_methods_of_grpc_file:
+                if 'Stub' in elem:
+                    service_stubs.append(getattr(grpc_file, elem))
+                    print(*dir(getattr(grpc_file, elem)))
+            return [ServiceStub(service_stub) for service_stub in service_stubs]
+
         except Exception as e:
             raise Exception(f"Error importing module: {e}")
 

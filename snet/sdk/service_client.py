@@ -23,7 +23,7 @@ from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
 from snet.sdk.custom_typing import ModuleName, ServiceStub
 from snet.sdk.utils.utils import (RESOURCES_PATH, add_to_path,
                                   find_file_by_keyword)
-from snet.sdk.training.training_v2 import TrainingV2
+from snet.sdk.training.training import Training
 from snet.sdk.training.exceptions import NoTrainingException
 from snet.sdk.utils.call_utils import create_intercept_call_func
 
@@ -35,7 +35,7 @@ class ServiceClient:
         service_id: str,
         service_metadata: MPEServiceMetadata,
         group: dict,
-        service_stub: ServiceStub,
+        service_stubs: list[ServiceStub],
         payment_strategy,
         options: dict,
         mpe_contract: MPEContract,
@@ -63,24 +63,35 @@ class ServiceClient:
 
         self.expiry_threshold: int = self.group["payment"]["payment_expiration_threshold"]
         self.__base_grpc_channel = self._get_grpc_channel()
-        _intercept_call_func = create_intercept_call_func(self._get_service_call_metadata, self)
+        _intercept_call_func = create_intercept_call_func(self.payment_strategy.get_payment_metadata, self)
         self.grpc_channel = grpc.intercept_channel(
             self.__base_grpc_channel,
             generic_client_interceptor.create(_intercept_call_func)
         )
-        self.service = self._generate_grpc_stub(service_stub)
+        self.service_stubs = service_stubs
         self.payment_channel_state_service_client = self._generate_payment_channel_state_service_client()
         self.payment_channels = []
         self.last_read_block: int = 0
-        self.__training = TrainingV2(self, training_added)
+        self.__training = Training(self, training_added)
 
     def call_rpc(self, rpc_name: str, message_class: str, **kwargs) -> Any:
-        rpc_method = getattr(self.service, rpc_name)
+        service = self._get_service_stub(rpc_name)
+        if "model_id" in kwargs:
+            kwargs["model_id"] = self._get_training_model_id(kwargs["model_id"])
+        rpc_method = getattr(service, rpc_name)
         request = getattr(self.pb2_module, message_class)(**kwargs)
         return rpc_method(request)
 
     def _get_payment_expiration_threshold_for_group(self):
         pass
+
+    def _get_service_stub(self, rpc_name: str) -> Any:
+        for service_stub in self.service_stubs:
+            grpc_stub = self._generate_grpc_stub(service_stub)
+            if hasattr(grpc_stub, rpc_name):
+                print("yes")
+                return grpc_stub
+        raise Exception(f"Service stub for {rpc_name} not found")
 
     def _generate_grpc_stub(self, service_stub: ServiceStub) -> Any:
         grpc_channel = self.__base_grpc_channel
@@ -113,10 +124,6 @@ class ServiceClient:
                                        grpc.ssl_channel_credentials(root_certificates=certificate))
         else:
             raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
-
-    def _get_service_call_metadata(self) -> list[tuple]:
-        metadata: list = self.payment_strategy.get_payment_metadata(self)
-        return metadata
 
     def _filter_existing_channels_from_new_payment_channels(
         self,
@@ -220,10 +227,13 @@ class ServiceClient:
                 )[0])
 
     @property
-    def training(self) -> TrainingV2:
+    def training(self) -> Training:
         if not self.__training.is_enabled:
             raise NoTrainingException(self.org_id, self.service_id)
         return self.__training
+
+    def _get_training_model_id(self, model_id: str) -> Any:
+        return self.training.get_model_id_object(model_id)
 
     def get_concurrency_flag(self) -> bool:
         return self.options.get('concurrency', True)

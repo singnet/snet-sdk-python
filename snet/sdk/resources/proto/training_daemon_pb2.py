@@ -13,44 +13,44 @@ _sym_db = _symbol_database.Default()
 
 from google.protobuf import descriptor_pb2 as google_dot_protobuf_dot_descriptor__pb2
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
-import training_v2_pb2 as training__v2__pb2
+import training_pb2 as training__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15training_daemon.proto\x12\x0ftraining_daemon\x1a google/protobuf/descriptor.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x11training_v2.proto\x1a\x1bgoogle/protobuf/empty.proto\"i\n\x14\x41uthorizationDetails\x12\x15\n\rcurrent_block\x18\x01 \x01(\x04\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x12\x16\n\x0esigner_address\x18\x04 \x01(\t\"t\n\x0fNewModelRequest\x12<\n\rauthorization\x18\x01 \x01(\x0b\x32%.training_daemon.AuthorizationDetails\x12#\n\x05model\x18\x02 \x01(\x0b\x32\x14.trainingV2.NewModel\"\x81\x01\n\x13\x41uthValidateRequest\x12<\n\rauthorization\x18\x01 \x01(\x0b\x32%.training_daemon.AuthorizationDetails\x12\x10\n\x08model_id\x18\x02 \x01(\t\x12\x1a\n\x12training_data_link\x18\x03 \x01(\t\"\x87\x01\n\x18UploadAndValidateRequest\x12<\n\rauthorization\x18\x01 \x01(\x0b\x32%.training_daemon.AuthorizationDetails\x12-\n\x0cupload_input\x18\x02 \x01(\x0b\x32\x17.trainingV2.UploadInput\"_\n\rCommonRequest\x12<\n\rauthorization\x18\x01 \x01(\x0b\x32%.training_daemon.AuthorizationDetails\x12\x10\n\x08model_id\x18\x02 \x01(\t\"\xa3\x01\n\x12UpdateModelRequest\x12<\n\rauthorization\x18\x01 \x01(\x0b\x32%.training_daemon.AuthorizationDetails\x12\x10\n\x08model_id\x18\x02 \x01(\t\x12\x12\n\nmodel_name\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x14\n\x0c\x61\x64\x64ress_list\x18\x05 \x03(\t\"C\n\x0eModelsResponse\x12\x31\n\x0elist_of_models\x18\x01 \x03(\x0b\x32\x19.trainingV2.ModelResponse\"^\n\x15MethodMetadataRequest\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12\x18\n\x10grpc_method_name\x18\x02 \x01(\t\x12\x19\n\x11grpc_service_name\x18\x03 \x01(\t\"\xb6\x01\n\x10\x41llModelsRequest\x12<\n\rauthorization\x18\x01 \x01(\x0b\x32%.training_daemon.AuthorizationDetails\x12\"\n\x06status\x18\x02 \x01(\x0e\x32\x12.trainingV2.Status\x12\x11\n\tis_public\x18\x03 \x01(\x08\x12\x0c\n\x04name\x18\x04 \x01(\t\x12\x11\n\tpage_size\x18\x05 \x01(\x04\x12\x0c\n\x04page\x18\x06 \x01(\x04\"\xe9\x01\n\x10TrainingMetadata\x12\x17\n\x0ftrainingEnabled\x18\x01 \x01(\x08\x12\x17\n\x0ftrainingInProto\x18\x02 \x01(\x08\x12O\n\x0ftrainingMethods\x18\x03 \x03(\x0b\x32\x36.training_daemon.TrainingMetadata.TrainingMethodsEntry\x1aR\n\x14TrainingMethodsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12)\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.ListValue:\x02\x38\x01\"\x8d\x02\n\x0eMethodMetadata\x12\x1a\n\x10\x64\x65\x66\x61ult_model_id\x18\xd1\x86\x03 \x01(\t\x12\x1d\n\x13max_models_per_user\x18\xd2\x86\x03 \x01(\x04\x12\x1d\n\x13\x64\x61taset_max_size_mb\x18\xd3\x86\x03 \x01(\x04\x12!\n\x17\x64\x61taset_max_count_files\x18\xd4\x86\x03 \x01(\x04\x12)\n\x1f\x64\x61taset_max_size_single_file_mb\x18\xd5\x86\x03 \x01(\x04\x12\x1c\n\x12\x64\x61taset_files_type\x18\xd6\x86\x03 \x01(\t\x12\x16\n\x0c\x64\x61taset_type\x18\xd7\x86\x03 \x01(\t\x12\x1d\n\x13\x64\x61taset_description\x18\xd8\x86\x03 \x01(\t2\x87\x08\n\x06\x44\x61\x65mon\x12M\n\x0c\x63reate_model\x12 .training_daemon.NewModelRequest\x1a\x19.trainingV2.ModelResponse\"\x00\x12[\n\x14validate_model_price\x12$.training_daemon.AuthValidateRequest\x1a\x1b.trainingV2.PriceInBaseUnit\"\x00\x12`\n\x13upload_and_validate\x12).training_daemon.UploadAndValidateRequest\x1a\x1a.trainingV2.StatusResponse\"\x00(\x01\x12T\n\x0evalidate_model\x12$.training_daemon.AuthValidateRequest\x1a\x1a.trainingV2.StatusResponse\"\x00\x12R\n\x11train_model_price\x12\x1e.training_daemon.CommonRequest\x1a\x1b.trainingV2.PriceInBaseUnit\"\x00\x12K\n\x0btrain_model\x12\x1e.training_daemon.CommonRequest\x1a\x1a.trainingV2.StatusResponse\"\x00\x12L\n\x0c\x64\x65lete_model\x12\x1e.training_daemon.CommonRequest\x1a\x1a.trainingV2.StatusResponse\"\x00\x12V\n\x0eget_all_models\x12!.training_daemon.AllModelsRequest\x1a\x1f.training_daemon.ModelsResponse\"\x00\x12H\n\tget_model\x12\x1e.training_daemon.CommonRequest\x1a\x19.trainingV2.ModelResponse\"\x00\x12P\n\x0cupdate_model\x12#.training_daemon.UpdateModelRequest\x1a\x19.trainingV2.ModelResponse\"\x00\x12T\n\x15get_training_metadata\x12\x16.google.protobuf.Empty\x1a!.training_daemon.TrainingMetadata\"\x00\x12`\n\x13get_method_metadata\x12&.training_daemon.MethodMetadataRequest\x1a\x1f.training_daemon.MethodMetadata\"\x00\x42\rZ\x0b../trainingb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15training_daemon.proto\x12\x08training\x1a google/protobuf/descriptor.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x0etraining.proto\x1a\x1bgoogle/protobuf/empty.proto\"i\n\x14\x41uthorizationDetails\x12\x15\n\rcurrent_block\x18\x01 \x01(\x04\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x11\n\tsignature\x18\x03 \x01(\x0c\x12\x16\n\x0esigner_address\x18\x04 \x01(\t\"k\n\x0fNewModelRequest\x12\x35\n\rauthorization\x18\x01 \x01(\x0b\x32\x1e.training.AuthorizationDetails\x12!\n\x05model\x18\x02 \x01(\x0b\x32\x12.training.NewModel\"z\n\x13\x41uthValidateRequest\x12\x35\n\rauthorization\x18\x01 \x01(\x0b\x32\x1e.training.AuthorizationDetails\x12\x10\n\x08model_id\x18\x02 \x01(\t\x12\x1a\n\x12training_data_link\x18\x03 \x01(\t\"~\n\x18UploadAndValidateRequest\x12\x35\n\rauthorization\x18\x01 \x01(\x0b\x32\x1e.training.AuthorizationDetails\x12+\n\x0cupload_input\x18\x02 \x01(\x0b\x32\x15.training.UploadInput\"X\n\rCommonRequest\x12\x35\n\rauthorization\x18\x01 \x01(\x0b\x32\x1e.training.AuthorizationDetails\x12\x10\n\x08model_id\x18\x02 \x01(\t\"\x9c\x01\n\x12UpdateModelRequest\x12\x35\n\rauthorization\x18\x01 \x01(\x0b\x32\x1e.training.AuthorizationDetails\x12\x10\n\x08model_id\x18\x02 \x01(\t\x12\x12\n\nmodel_name\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x14\n\x0c\x61\x64\x64ress_list\x18\x05 \x03(\t\"A\n\x0eModelsResponse\x12/\n\x0elist_of_models\x18\x01 \x03(\x0b\x32\x17.training.ModelResponse\"^\n\x15MethodMetadataRequest\x12\x10\n\x08model_id\x18\x01 \x01(\t\x12\x18\n\x10grpc_method_name\x18\x02 \x01(\t\x12\x19\n\x11grpc_service_name\x18\x03 \x01(\t\"\x93\x02\n\x10\x41llModelsRequest\x12\x35\n\rauthorization\x18\x01 \x01(\x0b\x32\x1e.training.AuthorizationDetails\x12\"\n\x08statuses\x18\x03 \x03(\x0e\x32\x10.training.Status\x12\x16\n\tis_public\x18\x04 \x01(\x08H\x00\x88\x01\x01\x12\x18\n\x10grpc_method_name\x18\x05 \x01(\t\x12\x19\n\x11grpc_service_name\x18\x06 \x01(\t\x12\x0c\n\x04name\x18\x07 \x01(\t\x12\x1a\n\x12\x63reated_by_address\x18\x08 \x01(\t\x12\x11\n\tpage_size\x18\t \x01(\x04\x12\x0c\n\x04page\x18\n \x01(\x04\x42\x0c\n\n_is_public\"\xe2\x01\n\x10TrainingMetadata\x12\x17\n\x0ftrainingEnabled\x18\x01 \x01(\x08\x12\x17\n\x0ftrainingInProto\x18\x02 \x01(\x08\x12H\n\x0ftrainingMethods\x18\x03 \x03(\x0b\x32/.training.TrainingMetadata.TrainingMethodsEntry\x1aR\n\x14TrainingMethodsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12)\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.ListValue:\x02\x38\x01\"\x8d\x02\n\x0eMethodMetadata\x12\x1a\n\x10\x64\x65\x66\x61ult_model_id\x18\xd1\x86\x03 \x01(\t\x12\x1d\n\x13max_models_per_user\x18\xd2\x86\x03 \x01(\x04\x12\x1d\n\x13\x64\x61taset_max_size_mb\x18\xd3\x86\x03 \x01(\x04\x12!\n\x17\x64\x61taset_max_count_files\x18\xd4\x86\x03 \x01(\x04\x12)\n\x1f\x64\x61taset_max_size_single_file_mb\x18\xd5\x86\x03 \x01(\x04\x12\x1c\n\x12\x64\x61taset_files_type\x18\xd6\x86\x03 \x01(\t\x12\x16\n\x0c\x64\x61taset_type\x18\xd7\x86\x03 \x01(\t\x12\x1d\n\x13\x64\x61taset_description\x18\xd8\x86\x03 \x01(\t2\x93\x07\n\x06\x44\x61\x65mon\x12\x44\n\x0c\x63reate_model\x12\x19.training.NewModelRequest\x1a\x17.training.ModelResponse\"\x00\x12R\n\x14validate_model_price\x12\x1d.training.AuthValidateRequest\x1a\x19.training.PriceInBaseUnit\"\x00\x12W\n\x13upload_and_validate\x12\".training.UploadAndValidateRequest\x1a\x18.training.StatusResponse\"\x00(\x01\x12K\n\x0evalidate_model\x12\x1d.training.AuthValidateRequest\x1a\x18.training.StatusResponse\"\x00\x12I\n\x11train_model_price\x12\x17.training.CommonRequest\x1a\x19.training.PriceInBaseUnit\"\x00\x12\x42\n\x0btrain_model\x12\x17.training.CommonRequest\x1a\x18.training.StatusResponse\"\x00\x12\x43\n\x0c\x64\x65lete_model\x12\x17.training.CommonRequest\x1a\x18.training.StatusResponse\"\x00\x12H\n\x0eget_all_models\x12\x1a.training.AllModelsRequest\x1a\x18.training.ModelsResponse\"\x00\x12?\n\tget_model\x12\x17.training.CommonRequest\x1a\x17.training.ModelResponse\"\x00\x12G\n\x0cupdate_model\x12\x1c.training.UpdateModelRequest\x1a\x17.training.ModelResponse\"\x00\x12M\n\x15get_training_metadata\x12\x16.google.protobuf.Empty\x1a\x1a.training.TrainingMetadata\"\x00\x12R\n\x13get_method_metadata\x12\x1f.training.MethodMetadataRequest\x1a\x18.training.MethodMetadata\"\x00\x42,Z*github.com/singnet/snet-daemon/v5/trainingb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'training_daemon_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z\013../training'
+  DESCRIPTOR._serialized_options = b'Z*github.com/singnet/snet-daemon/v5/training'
   _TRAININGMETADATA_TRAININGMETHODSENTRY._options = None
   _TRAININGMETADATA_TRAININGMETHODSENTRY._serialized_options = b'8\001'
-  _globals['_AUTHORIZATIONDETAILS']._serialized_start=154
-  _globals['_AUTHORIZATIONDETAILS']._serialized_end=259
-  _globals['_NEWMODELREQUEST']._serialized_start=261
-  _globals['_NEWMODELREQUEST']._serialized_end=377
-  _globals['_AUTHVALIDATEREQUEST']._serialized_start=380
-  _globals['_AUTHVALIDATEREQUEST']._serialized_end=509
-  _globals['_UPLOADANDVALIDATEREQUEST']._serialized_start=512
-  _globals['_UPLOADANDVALIDATEREQUEST']._serialized_end=647
-  _globals['_COMMONREQUEST']._serialized_start=649
-  _globals['_COMMONREQUEST']._serialized_end=744
-  _globals['_UPDATEMODELREQUEST']._serialized_start=747
-  _globals['_UPDATEMODELREQUEST']._serialized_end=910
-  _globals['_MODELSRESPONSE']._serialized_start=912
-  _globals['_MODELSRESPONSE']._serialized_end=979
-  _globals['_METHODMETADATAREQUEST']._serialized_start=981
-  _globals['_METHODMETADATAREQUEST']._serialized_end=1075
-  _globals['_ALLMODELSREQUEST']._serialized_start=1078
-  _globals['_ALLMODELSREQUEST']._serialized_end=1260
-  _globals['_TRAININGMETADATA']._serialized_start=1263
-  _globals['_TRAININGMETADATA']._serialized_end=1496
-  _globals['_TRAININGMETADATA_TRAININGMETHODSENTRY']._serialized_start=1414
-  _globals['_TRAININGMETADATA_TRAININGMETHODSENTRY']._serialized_end=1496
-  _globals['_METHODMETADATA']._serialized_start=1499
-  _globals['_METHODMETADATA']._serialized_end=1768
-  _globals['_DAEMON']._serialized_start=1771
-  _globals['_DAEMON']._serialized_end=2802
+  _globals['_AUTHORIZATIONDETAILS']._serialized_start=144
+  _globals['_AUTHORIZATIONDETAILS']._serialized_end=249
+  _globals['_NEWMODELREQUEST']._serialized_start=251
+  _globals['_NEWMODELREQUEST']._serialized_end=358
+  _globals['_AUTHVALIDATEREQUEST']._serialized_start=360
+  _globals['_AUTHVALIDATEREQUEST']._serialized_end=482
+  _globals['_UPLOADANDVALIDATEREQUEST']._serialized_start=484
+  _globals['_UPLOADANDVALIDATEREQUEST']._serialized_end=610
+  _globals['_COMMONREQUEST']._serialized_start=612
+  _globals['_COMMONREQUEST']._serialized_end=700
+  _globals['_UPDATEMODELREQUEST']._serialized_start=703
+  _globals['_UPDATEMODELREQUEST']._serialized_end=859
+  _globals['_MODELSRESPONSE']._serialized_start=861
+  _globals['_MODELSRESPONSE']._serialized_end=926
+  _globals['_METHODMETADATAREQUEST']._serialized_start=928
+  _globals['_METHODMETADATAREQUEST']._serialized_end=1022
+  _globals['_ALLMODELSREQUEST']._serialized_start=1025
+  _globals['_ALLMODELSREQUEST']._serialized_end=1300
+  _globals['_TRAININGMETADATA']._serialized_start=1303
+  _globals['_TRAININGMETADATA']._serialized_end=1529
+  _globals['_TRAININGMETADATA_TRAININGMETHODSENTRY']._serialized_start=1447
+  _globals['_TRAININGMETADATA_TRAININGMETHODSENTRY']._serialized_end=1529
+  _globals['_METHODMETADATA']._serialized_start=1532
+  _globals['_METHODMETADATA']._serialized_end=1801
+  _globals['_DAEMON']._serialized_start=1804
+  _globals['_DAEMON']._serialized_end=2719
 # @@protoc_insertion_point(module_scope)

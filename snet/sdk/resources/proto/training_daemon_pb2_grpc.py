@@ -4,7 +4,7 @@ import grpc
 
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 import training_daemon_pb2 as training__daemon__pb2
-import training_v2_pb2 as training__v2__pb2
+import training_pb2 as training__pb2
 
 
 class DaemonStub(object):
@@ -18,62 +18,62 @@ class DaemonStub(object):
             channel: A grpc.Channel.
         """
         self.create_model = channel.unary_unary(
-                '/training_daemon.Daemon/create_model',
+                '/training.Daemon/create_model',
                 request_serializer=training__daemon__pb2.NewModelRequest.SerializeToString,
-                response_deserializer=training__v2__pb2.ModelResponse.FromString,
+                response_deserializer=training__pb2.ModelResponse.FromString,
                 )
         self.validate_model_price = channel.unary_unary(
-                '/training_daemon.Daemon/validate_model_price',
+                '/training.Daemon/validate_model_price',
                 request_serializer=training__daemon__pb2.AuthValidateRequest.SerializeToString,
-                response_deserializer=training__v2__pb2.PriceInBaseUnit.FromString,
+                response_deserializer=training__pb2.PriceInBaseUnit.FromString,
                 )
         self.upload_and_validate = channel.stream_unary(
-                '/training_daemon.Daemon/upload_and_validate',
+                '/training.Daemon/upload_and_validate',
                 request_serializer=training__daemon__pb2.UploadAndValidateRequest.SerializeToString,
-                response_deserializer=training__v2__pb2.StatusResponse.FromString,
+                response_deserializer=training__pb2.StatusResponse.FromString,
                 )
         self.validate_model = channel.unary_unary(
-                '/training_daemon.Daemon/validate_model',
+                '/training.Daemon/validate_model',
                 request_serializer=training__daemon__pb2.AuthValidateRequest.SerializeToString,
-                response_deserializer=training__v2__pb2.StatusResponse.FromString,
+                response_deserializer=training__pb2.StatusResponse.FromString,
                 )
         self.train_model_price = channel.unary_unary(
-                '/training_daemon.Daemon/train_model_price',
+                '/training.Daemon/train_model_price',
                 request_serializer=training__daemon__pb2.CommonRequest.SerializeToString,
-                response_deserializer=training__v2__pb2.PriceInBaseUnit.FromString,
+                response_deserializer=training__pb2.PriceInBaseUnit.FromString,
                 )
         self.train_model = channel.unary_unary(
-                '/training_daemon.Daemon/train_model',
+                '/training.Daemon/train_model',
                 request_serializer=training__daemon__pb2.CommonRequest.SerializeToString,
-                response_deserializer=training__v2__pb2.StatusResponse.FromString,
+                response_deserializer=training__pb2.StatusResponse.FromString,
                 )
         self.delete_model = channel.unary_unary(
-                '/training_daemon.Daemon/delete_model',
+                '/training.Daemon/delete_model',
                 request_serializer=training__daemon__pb2.CommonRequest.SerializeToString,
-                response_deserializer=training__v2__pb2.StatusResponse.FromString,
+                response_deserializer=training__pb2.StatusResponse.FromString,
                 )
         self.get_all_models = channel.unary_unary(
-                '/training_daemon.Daemon/get_all_models',
+                '/training.Daemon/get_all_models',
                 request_serializer=training__daemon__pb2.AllModelsRequest.SerializeToString,
                 response_deserializer=training__daemon__pb2.ModelsResponse.FromString,
                 )
         self.get_model = channel.unary_unary(
-                '/training_daemon.Daemon/get_model',
+                '/training.Daemon/get_model',
                 request_serializer=training__daemon__pb2.CommonRequest.SerializeToString,
-                response_deserializer=training__v2__pb2.ModelResponse.FromString,
+                response_deserializer=training__pb2.ModelResponse.FromString,
                 )
         self.update_model = channel.unary_unary(
-                '/training_daemon.Daemon/update_model',
+                '/training.Daemon/update_model',
                 request_serializer=training__daemon__pb2.UpdateModelRequest.SerializeToString,
-                response_deserializer=training__v2__pb2.ModelResponse.FromString,
+                response_deserializer=training__pb2.ModelResponse.FromString,
                 )
         self.get_training_metadata = channel.unary_unary(
-                '/training_daemon.Daemon/get_training_metadata',
+                '/training.Daemon/get_training_metadata',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=training__daemon__pb2.TrainingMetadata.FromString,
                 )
         self.get_method_metadata = channel.unary_unary(
-                '/training_daemon.Daemon/get_method_metadata',
+                '/training.Daemon/get_method_metadata',
                 request_serializer=training__daemon__pb2.MethodMetadataRequest.SerializeToString,
                 response_deserializer=training__daemon__pb2.MethodMetadata.FromString,
                 )
@@ -172,37 +172,37 @@ def add_DaemonServicer_to_server(servicer, server):
             'create_model': grpc.unary_unary_rpc_method_handler(
                     servicer.create_model,
                     request_deserializer=training__daemon__pb2.NewModelRequest.FromString,
-                    response_serializer=training__v2__pb2.ModelResponse.SerializeToString,
+                    response_serializer=training__pb2.ModelResponse.SerializeToString,
             ),
             'validate_model_price': grpc.unary_unary_rpc_method_handler(
                     servicer.validate_model_price,
                     request_deserializer=training__daemon__pb2.AuthValidateRequest.FromString,
-                    response_serializer=training__v2__pb2.PriceInBaseUnit.SerializeToString,
+                    response_serializer=training__pb2.PriceInBaseUnit.SerializeToString,
             ),
             'upload_and_validate': grpc.stream_unary_rpc_method_handler(
                     servicer.upload_and_validate,
                     request_deserializer=training__daemon__pb2.UploadAndValidateRequest.FromString,
-                    response_serializer=training__v2__pb2.StatusResponse.SerializeToString,
+                    response_serializer=training__pb2.StatusResponse.SerializeToString,
             ),
             'validate_model': grpc.unary_unary_rpc_method_handler(
                     servicer.validate_model,
                     request_deserializer=training__daemon__pb2.AuthValidateRequest.FromString,
-                    response_serializer=training__v2__pb2.StatusResponse.SerializeToString,
+                    response_serializer=training__pb2.StatusResponse.SerializeToString,
             ),
             'train_model_price': grpc.unary_unary_rpc_method_handler(
                     servicer.train_model_price,
                     request_deserializer=training__daemon__pb2.CommonRequest.FromString,
-                    response_serializer=training__v2__pb2.PriceInBaseUnit.SerializeToString,
+                    response_serializer=training__pb2.PriceInBaseUnit.SerializeToString,
             ),
             'train_model': grpc.unary_unary_rpc_method_handler(
                     servicer.train_model,
                     request_deserializer=training__daemon__pb2.CommonRequest.FromString,
-                    response_serializer=training__v2__pb2.StatusResponse.SerializeToString,
+                    response_serializer=training__pb2.StatusResponse.SerializeToString,
             ),
             'delete_model': grpc.unary_unary_rpc_method_handler(
                     servicer.delete_model,
                     request_deserializer=training__daemon__pb2.CommonRequest.FromString,
-                    response_serializer=training__v2__pb2.StatusResponse.SerializeToString,
+                    response_serializer=training__pb2.StatusResponse.SerializeToString,
             ),
             'get_all_models': grpc.unary_unary_rpc_method_handler(
                     servicer.get_all_models,
@@ -212,12 +212,12 @@ def add_DaemonServicer_to_server(servicer, server):
             'get_model': grpc.unary_unary_rpc_method_handler(
                     servicer.get_model,
                     request_deserializer=training__daemon__pb2.CommonRequest.FromString,
-                    response_serializer=training__v2__pb2.ModelResponse.SerializeToString,
+                    response_serializer=training__pb2.ModelResponse.SerializeToString,
             ),
             'update_model': grpc.unary_unary_rpc_method_handler(
                     servicer.update_model,
                     request_deserializer=training__daemon__pb2.UpdateModelRequest.FromString,
-                    response_serializer=training__v2__pb2.ModelResponse.SerializeToString,
+                    response_serializer=training__pb2.ModelResponse.SerializeToString,
             ),
             'get_training_metadata': grpc.unary_unary_rpc_method_handler(
                     servicer.get_training_metadata,
@@ -231,7 +231,7 @@ def add_DaemonServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'training_daemon.Daemon', rpc_method_handlers)
+            'training.Daemon', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -251,9 +251,9 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/create_model',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/create_model',
             training__daemon__pb2.NewModelRequest.SerializeToString,
-            training__v2__pb2.ModelResponse.FromString,
+            training__pb2.ModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -268,9 +268,9 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/validate_model_price',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/validate_model_price',
             training__daemon__pb2.AuthValidateRequest.SerializeToString,
-            training__v2__pb2.PriceInBaseUnit.FromString,
+            training__pb2.PriceInBaseUnit.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -285,9 +285,9 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_unary(request_iterator, target, '/training_daemon.Daemon/upload_and_validate',
+        return grpc.experimental.stream_unary(request_iterator, target, '/training.Daemon/upload_and_validate',
             training__daemon__pb2.UploadAndValidateRequest.SerializeToString,
-            training__v2__pb2.StatusResponse.FromString,
+            training__pb2.StatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -302,9 +302,9 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/validate_model',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/validate_model',
             training__daemon__pb2.AuthValidateRequest.SerializeToString,
-            training__v2__pb2.StatusResponse.FromString,
+            training__pb2.StatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -319,9 +319,9 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/train_model_price',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/train_model_price',
             training__daemon__pb2.CommonRequest.SerializeToString,
-            training__v2__pb2.PriceInBaseUnit.FromString,
+            training__pb2.PriceInBaseUnit.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -336,9 +336,9 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/train_model',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/train_model',
             training__daemon__pb2.CommonRequest.SerializeToString,
-            training__v2__pb2.StatusResponse.FromString,
+            training__pb2.StatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -353,9 +353,9 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/delete_model',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/delete_model',
             training__daemon__pb2.CommonRequest.SerializeToString,
-            training__v2__pb2.StatusResponse.FromString,
+            training__pb2.StatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -370,7 +370,7 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/get_all_models',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/get_all_models',
             training__daemon__pb2.AllModelsRequest.SerializeToString,
             training__daemon__pb2.ModelsResponse.FromString,
             options, channel_credentials,
@@ -387,9 +387,9 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/get_model',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/get_model',
             training__daemon__pb2.CommonRequest.SerializeToString,
-            training__v2__pb2.ModelResponse.FromString,
+            training__pb2.ModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -404,9 +404,9 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/update_model',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/update_model',
             training__daemon__pb2.UpdateModelRequest.SerializeToString,
-            training__v2__pb2.ModelResponse.FromString,
+            training__pb2.ModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -421,7 +421,7 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/get_training_metadata',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/get_training_metadata',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             training__daemon__pb2.TrainingMetadata.FromString,
             options, channel_credentials,
@@ -438,7 +438,7 @@ class Daemon(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/training_daemon.Daemon/get_method_metadata',
+        return grpc.experimental.unary_unary(request, target, '/training.Daemon/get_method_metadata',
             training__daemon__pb2.MethodMetadataRequest.SerializeToString,
             training__daemon__pb2.MethodMetadata.FromString,
             options, channel_credentials,
