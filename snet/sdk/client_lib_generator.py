@@ -23,7 +23,6 @@ class ClientLibGenerator:
                                                codegen_dir=self.protodir,
                                                target_language=self.language,
                                                add_training=self.training_added())
-            print(f'compilation result: {compilation_result}')
             if compilation_result:
                 print(f'client libraries for service with id "{self.service_id}" '
                       f'in org with id "{self.org_id}" '

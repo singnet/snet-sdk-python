@@ -52,27 +52,16 @@ class Training:
                                       grpc_service_name=service_name,
                                       is_public=is_public_accessible,
                                       address_list=addresses_with_access,
-                                      organization_id=self.service_client.org_id,
-                                      service_id=self.service_client.service_id,
-                                      group_id=self.service_client.group["group_id"])
+                                      organization_id="",
+                                      service_id="",
+                                      group_id="")
         auth_details = self._get_auth_details(ModelMethodMessage.CreateModel)
         create_model_request = self.training_daemon.NewModelRequest(authorization=auth_details,
                                                                model=new_model)
         response = self._call_method("create_model",
                                      request_data=create_model_request)
-        model = Model(model_id=response.model_id,
-                      status=ModelStatus(response.status),
-                      created_date=response.created_date,
-                      updated_date=response.updated_date,
-                      name=response.name,
-                      description=response.description,
-                      grpc_method_name=response.grpc_method_name,
-                      grpc_service_name=response.grpc_service_name,
-                      address_list=response.address_list,
-                      is_public=response.is_public,
-                      training_data_link=response.training_data_link,
-                      created_by_address=response.created_by_address,
-                      updated_by_address=response.updated_by_address)
+        model = Model(response)
+
         return model
 
     def validate_model_price(self, model_id: str) -> int:
@@ -137,19 +126,7 @@ class Training:
                                      request_data=all_models_request)
         models = []
         for model in response.list_of_models:
-            models.append(Model(model_id=model.model_id,
-                                status=ModelStatus(model.status),
-                                created_date=model.created_date,
-                                updated_date=model.updated_date,
-                                name=model.name,
-                                description=model.description,
-                                grpc_method_name=model.grpc_method_name,
-                                grpc_service_name=model.grpc_service_name,
-                                address_list=model.address_list,
-                                is_public=model.is_public,
-                                training_data_link=model.training_data_link,
-                                created_by_address=model.created_by_address,
-                                updated_by_address=model.updated_by_address))
+            models.append(Model(model))
 
         return models
 
@@ -159,19 +136,7 @@ class Training:
                                                        model_id=model_id)
         response = self._call_method("get_model",
                                      request_data=common_request)
-        model = Model(model_id=response.model_id,
-                      status=ModelStatus(response.status),
-                      created_date=response.created_date,
-                      updated_date=response.updated_date,
-                      name=response.name,
-                      description=response.description,
-                      grpc_method_name=response.grpc_method_name,
-                      grpc_service_name=response.grpc_service_name,
-                      address_list=response.address_list,
-                      is_public=response.is_public,
-                      training_data_link=response.training_data_link,
-                      created_by_address=response.created_by_address,
-                      updated_by_address=response.updated_by_address)
+        model = Model(response)
 
         return model
 
@@ -193,6 +158,8 @@ class Training:
         response = self._call_method("get_method_metadata",
                                      request_data=requirements_request)
 
+        print(response)
+
         method_metadata = MethodMetadata(default_model_id = response.default_model_id,
                                          max_models_per_user = response.max_models_per_user,
                                          dataset_max_size_mb = response.dataset_max_size_mb,
@@ -204,11 +171,9 @@ class Training:
         return method_metadata
 
     def update_model(self, model_id: str,
-                     model_name: str="",
-                     description: str="",
+                     model_name: str=None,
+                     description: str=None,
                      addresses_with_access: list[str]=None) -> Model:
-        if addresses_with_access is None:
-            addresses_with_access = []
         auth_details = self._get_auth_details(ModelMethodMessage.UpdateModel)
         update_model_request = self.training_daemon.UpdateModelRequest(
             authorization=auth_details,model_id=model_id,
@@ -216,9 +181,12 @@ class Training:
             description=description,
             address_list=addresses_with_access
         )
+
         response = self._call_method("update_model",
                                      request_data=update_model_request)
-        return response
+        model = Model(response)
+
+        return model
 
     """PAID METHODS TO CALL"""
 
@@ -263,7 +231,7 @@ class Training:
 
         response = self._call_method("upload_and_validate",
                                      request_data=request_iter(f),
-                                     paid=True) # TODO: change to paid
+                                     paid=True)
         f.close()
 
         return ModelStatus(response.status)
@@ -277,7 +245,7 @@ class Training:
 
         response = self._call_method("train_model",
                                      request_data=common_request,
-                                     paid=True) # TODO: change to paid
+                                     paid=True)
 
         return ModelStatus(response.status)
 
@@ -325,13 +293,16 @@ class Training:
         try:
             service_methods = self.get_training_metadata().training_methods
         except GRPCException as e:
+            print(e)
             return False
         if len(service_methods.keys()) == 0:
+            print("No methods found")
             return False
         n_methods = 0
         for service, methods in service_methods.items():
             n_methods += len(methods)
         if n_methods == 0:
+            print("No methods found")
             return False
         else:
             return True
@@ -342,27 +313,29 @@ class Training:
         max_count_files = method_metadata.dataset_max_count_files
         max_size_mb_single = method_metadata.dataset_max_size_single_file_mb
         file_types = method_metadata.dataset_files_type
-        file_types = file_types.replace(' ', '').split(',')
+        file_types = [i for i in file_types.replace(' ', '').split(',')]
+        if file_types[0] == '':
+            file_types = []
 
         failed_checks = []
         zip_file = ZipFile(zip_path)
 
-        if os.path.getsize(zip_path) > max_size_mb * 1024 * 1024:
+        if os.path.getsize(zip_path) > max_size_mb * 1024 * 1024 > 0:
             failed_checks.append(f"Too big dataset size: "
                                  f"{os.path.getsize(zip_path)} > {max_size_mb} MB")
 
         files_list = zip_file.infolist()
-        if len(files_list) > max_count_files:
+        if len(files_list) > max_count_files > 0:
             failed_checks.append(f"Too many files: {len(files_list)} > {max_count_files}")
 
         for file_info in files_list:
             _, extension = os.path.splitext(file_info.filename)
             extension = extension[1:] if extension.startswith('.') else extension
-            if extension not in file_types:
+            if len(file_types) > 0 and extension not in file_types:
                 failed_checks.append(f"Wrong file type: `{extension}` in file: "
                                      f"`{file_info.filename}`. Allowed file types: "
                                      f"{', '.join(file_types)}")
-            if file_info.file_size > max_size_mb_single * 1024 * 1024:
+            if file_info.file_size > max_size_mb_single * 1024 * 1024 > 0:
                 failed_checks.append(f"Too big file `{file_info.filename}` size: "
                                      f"{file_info.file_size / 1024 / 1024} > "
                                      f"{max_size_mb_single} MB")

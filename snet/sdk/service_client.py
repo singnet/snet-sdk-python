@@ -89,7 +89,6 @@ class ServiceClient:
         for service_stub in self.service_stubs:
             grpc_stub = self._generate_grpc_stub(service_stub)
             if hasattr(grpc_stub, rpc_name):
-                print("yes")
                 return grpc_stub
         raise Exception(f"Service stub for {rpc_name} not found")
 

@@ -39,34 +39,20 @@ def to_string(obj: Any):
 
 
 class Model:
-    def __init__(self,
-                 model_id: str,
-                 status: ModelStatus,
-                 created_date: str,
-                 updated_date: str,
-                 name: str,
-                 description: str,
-                 grpc_method_name: str,
-                 grpc_service_name : str,
-                 address_list: list[str],
-                 is_public: bool,
-                 training_data_link: str,
-                 created_by_address: str,
-                 updated_by_address: str):
-
-        self.__model_id = model_id
-        self.__status = status
-        self.__created_date = created_date
-        self.__updated_date = updated_date
-        self.__name = name
-        self.__description = description
-        self.__grpc_method_name = grpc_method_name
-        self.__grpc_service_name = grpc_service_name
-        self.__address_list = address_list
-        self.__is_public = is_public
-        self.__training_data_link = training_data_link
-        self.__created_by_address = created_by_address
-        self.__updated_by_address = updated_by_address
+    def __init__(self, model_response):
+        self.__model_id = model_response.model_id
+        self.__status = ModelStatus(model_response.status)
+        self.__created_date = model_response.created_date
+        self.__updated_date = model_response.updated_date
+        self.__name = model_response.name
+        self.__description = model_response.description
+        self.__grpc_method_name = model_response.grpc_method_name
+        self.__grpc_service_name = model_response.grpc_service_name
+        self.__address_list = model_response.address_list
+        self.__is_public = model_response.is_public
+        self.__training_data_link = model_response.training_data_link
+        self.__created_by_address = model_response.created_by_address
+        self.__updated_by_address = model_response.updated_by_address
 
     def __str__(self):
         return to_string(self)
@@ -111,6 +97,18 @@ class Model:
     def training_data_link(self):
         return self.__training_data_link
 
+    @property
+    def created_date(self):
+        return self.__created_date
+
+    @property
+    def created_by_address(self):
+        return self.__created_by_address
+
+    @property
+    def updated_by_address(self):
+        return self.__updated_by_address
+
 class TrainingMetadata:
     def __init__(self,
                  training_enabled: bool,
@@ -121,11 +119,11 @@ class TrainingMetadata:
         self.__training_in_proto = training_in_proto
         self.__training_methods = {}
 
+        # print(training_methods)
         services_methods = dict(training_methods)
+        # print(services_methods)
         for k, v in services_methods.items():
-            self.__training_methods[k] = []
-            for value in v.values:
-                self.__training_methods[k].append(value.string_value)
+            self.__training_methods[k] = [value.string_value for value in v.values]
 
     def __str__(self):
         return to_string(self)

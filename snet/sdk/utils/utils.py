@@ -81,8 +81,6 @@ def compile_proto(
         if add_training:
             compiler_args.append(str(training_include.joinpath("training.proto")))
 
-        print(compiler_args)
-
         if not compiler(compiler_args):
             return True
         else:

@@ -161,13 +161,10 @@ class SnetSDK:
         try:
             grpc_file = importlib.import_module(module_name)
             properties_and_methods_of_grpc_file = dir(grpc_file)
-            print()
-            print(*properties_and_methods_of_grpc_file)
             service_stubs = []
             for elem in properties_and_methods_of_grpc_file:
                 if 'Stub' in elem:
                     service_stubs.append(getattr(grpc_file, elem))
-                    print(*dir(getattr(grpc_file, elem)))
             return [ServiceStub(service_stub) for service_stub in service_stubs]
 
         except Exception as e:
