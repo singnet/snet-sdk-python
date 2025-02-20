@@ -1,4 +1,3 @@
-import enum
 from pathlib import PurePath, Path
 import os
 from zipfile import ZipFile
@@ -13,7 +12,8 @@ from snet.sdk.utils.utils import add_to_path, RESOURCES_PATH
 from snet.sdk.training.exceptions import (
     WrongDatasetException,
     WrongMethodException,
-    GRPCException
+    GRPCException,
+    NoSuchModelException
 )
 from snet.sdk.training.responses import (
     ModelStatus,
@@ -71,24 +71,46 @@ class Training:
             model_id=model_id,
             training_data_link=""
         )
-        response = self._call_method("validate_model_price",
-                                     request_data=validate_model_price_request)
+
+        try:
+            response = self._call_method("validate_model_price",
+                                         request_data=validate_model_price_request)
+        except GRPCException as e:
+            if "unable to access model" in str(e):
+                raise NoSuchModelException(model_id)
+            else:
+                raise e
+
         return response.price
 
     def train_model_price(self, model_id: str) -> int:
         auth_details = self._get_auth_details(ModelMethodMessage.TrainModelPrice)
         common_request = self.training_daemon.CommonRequest(authorization=auth_details,
                                                        model_id=model_id)
-        response = self._call_method("train_model_price",
-                                     request_data=common_request)
+        try:
+            response = self._call_method("train_model_price",
+                                         request_data=common_request)
+        except GRPCException as e:
+            if "unable to access model" in str(e):
+                raise NoSuchModelException(model_id)
+            else:
+                raise e
+
         return response.price
 
     def delete_model(self, model_id: str) -> ModelStatus:
         auth_details = self._get_auth_details(ModelMethodMessage.DeleteModel)
         common_request = self.training_daemon.CommonRequest(authorization=auth_details,
                                                        model_id=model_id)
-        response = self._call_method("delete_model",
-                                     request_data=common_request)
+        try:
+            response = self._call_method("delete_model",
+                                         request_data=common_request)
+        except GRPCException as e:
+            if "unable to access model" in str(e):
+                raise NoSuchModelException(model_id)
+            else:
+                raise e
+
         return ModelStatus(response.status)
 
     def get_training_metadata(self) -> TrainingMetadata:
@@ -134,8 +156,14 @@ class Training:
         auth_details = self._get_auth_details(ModelMethodMessage.GetModel)
         common_request = self.training_daemon.CommonRequest(authorization=auth_details,
                                                        model_id=model_id)
-        response = self._call_method("get_model",
-                                     request_data=common_request)
+        try:
+            response = self._call_method("get_model",
+                                         request_data=common_request)
+        except GRPCException as e:
+            if "unable to access model" in str(e):
+                raise NoSuchModelException(model_id)
+            else:
+                raise e
         model = Model(response)
 
         return model
@@ -157,8 +185,6 @@ class Training:
             )
         response = self._call_method("get_method_metadata",
                                      request_data=requirements_request)
-
-        print(response)
 
         method_metadata = MethodMetadata(default_model_id = response.default_model_id,
                                          max_models_per_user = response.max_models_per_user,
@@ -182,8 +208,15 @@ class Training:
             address_list=addresses_with_access
         )
 
-        response = self._call_method("update_model",
-                                     request_data=update_model_request)
+        try:
+            response = self._call_method("update_model",
+                                         request_data=update_model_request)
+        except GRPCException as e:
+            if "unable to access model" in str(e):
+                raise NoSuchModelException(model_id)
+            else:
+                raise e
+
         model = Model(response)
 
         return model
@@ -229,10 +262,17 @@ class Training:
         self.payment_strategy.set_price(price)
         self.payment_strategy.set_model_id(model_id)
 
-        response = self._call_method("upload_and_validate",
-                                     request_data=request_iter(f),
-                                     paid=True)
-        f.close()
+        try:
+            response = self._call_method("upload_and_validate",
+                                         request_data=request_iter(f),
+                                         paid=True)
+        except GRPCException as e:
+            if "unable to access model" in str(e):
+                raise NoSuchModelException(model_id)
+            else:
+                raise e
+        finally:
+            f.close()
 
         return ModelStatus(response.status)
 
@@ -243,9 +283,15 @@ class Training:
         self.payment_strategy.set_price(price)
         self.payment_strategy.set_model_id(model_id)
 
-        response = self._call_method("train_model",
-                                     request_data=common_request,
-                                     paid=True)
+        try:
+            response = self._call_method("train_model",
+                                         request_data=common_request,
+                                         paid=True)
+        except GRPCException as e:
+            if "unable to access model" in str(e):
+                raise NoSuchModelException(model_id)
+            else:
+                raise e
 
         return ModelStatus(response.status)
 
@@ -293,16 +339,13 @@ class Training:
         try:
             service_methods = self.get_training_metadata().training_methods
         except GRPCException as e:
-            print(e)
             return False
         if len(service_methods.keys()) == 0:
-            print("No methods found")
             return False
         n_methods = 0
         for service, methods in service_methods.items():
             n_methods += len(methods)
         if n_methods == 0:
-            print("No methods found")
             return False
         else:
             return True
@@ -322,7 +365,7 @@ class Training:
 
         if os.path.getsize(zip_path) > max_size_mb * 1024 * 1024 > 0:
             failed_checks.append(f"Too big dataset size: "
-                                 f"{os.path.getsize(zip_path)} > {max_size_mb} MB")
+                                 f"{os.path.getsize(zip_path)//1024/1024} MB > {max_size_mb} MB")
 
         files_list = zip_file.infolist()
         if len(files_list) > max_count_files > 0:
@@ -337,7 +380,7 @@ class Training:
                                      f"{', '.join(file_types)}")
             if file_info.file_size > max_size_mb_single * 1024 * 1024 > 0:
                 failed_checks.append(f"Too big file `{file_info.filename}` size: "
-                                     f"{file_info.file_size / 1024 / 1024} > "
+                                     f"{file_info.file_size // 1024 / 1024} MB > "
                                      f"{max_size_mb_single} MB")
 
         if len(failed_checks) > 0:

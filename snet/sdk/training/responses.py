@@ -3,18 +3,18 @@ from typing import Any
 
 
 class ModelMethodMessage(Enum):
-    CreateModel = "__CreateModel"
-    ValidateModelPrice = "__ValidateModelPrice"
-    TrainModelPrice = "__TrainModelPrice"
-    DeleteModel = "__DeleteModel"
-    GetTrainingMetadata = "__GetTrainingMetadata"
-    GetAllModels = "__GetAllModels"
-    GetModel = "__GetModel"
-    UpdateModel = "__UpdateModel"
-    GetDatasetRequirements = "__GetDatasetRequirements"
-    UploadAndValidate = "__UploadAndValidate"
-    ValidateModel = "__ValidateModel"
-    TrainModel = "__TrainModel"
+    CreateModel = "create_model"
+    ValidateModelPrice = "validate_model_price"
+    TrainModelPrice = "train_model_price"
+    DeleteModel = "delete_model"
+    GetTrainingMetadata = "get_training_metadata"
+    GetAllModels = "get_all_models"
+    GetModel = "get_model"
+    UpdateModel = "update_model"
+    GetMethodMetadata = "get_method_metadata"
+    UploadAndValidate = "upload_and_validate"
+    ValidateModel = "validate_model"
+    TrainModel = "train_model"
 
 
 class ModelStatus(Enum):

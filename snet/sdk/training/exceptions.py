@@ -22,9 +22,10 @@ class NoTrainingException(Exception):
 
 class GRPCException(RpcError):
     def __init__(self, error: RpcError):
-        super().__init__(f"An error occurred during the grps call: {error}.")
+        super().__init__(f"An error occurred during the grpc call: {error}.")
 
 
-
-
+class NoSuchModelException(Exception):
+    def __init__(self, model_id: str):
+        super().__init__(f"Model with id {model_id} not found!")
 

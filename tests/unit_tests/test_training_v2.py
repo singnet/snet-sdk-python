@@ -13,7 +13,7 @@ class TestTrainingV2(unittest.TestCase):
         self.mock_service_client = MagicMock(spec=ServiceClient)
         self.training = Training(self.mock_service_client, training_added=True)
         self.file_path = os.path.join(os.path.dirname(__file__), "test_files.zip")
-        self.get_metadata_path = "snet.sdk.training.training_v2.TrainingV2.get_method_metadata"
+        self.get_metadata_path = "snet.sdk.training.training.Training.get_method_metadata"
 
     def test_check_dataset_positive(self):
         method_metadata = MethodMetadata("test",
