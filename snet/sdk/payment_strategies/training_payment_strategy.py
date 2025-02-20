@@ -9,12 +9,12 @@ class TrainingPaymentStrategy(PaidCallPaymentStrategy):
         self._call_price = -1
         self._train_model_id = ""
 
-    def get_price(self, service_client=None):
+    def get_price(self, service_client=None) -> int:
         if self._call_price == -1:
             raise Exception("Training call price not set")
         return self._call_price
 
-    def set_price(self, call_price: int):
+    def set_price(self, call_price: int) -> None:
         self._call_price = call_price
 
     def get_model_id(self):
@@ -23,7 +23,7 @@ class TrainingPaymentStrategy(PaidCallPaymentStrategy):
     def set_model_id(self, model_id: str):
         self._train_model_id = model_id
 
-    def get_payment_metadata(self, service_client):
+    def get_payment_metadata(self, service_client) -> list[tuple[str, str]]:
         channel = self.select_channel(service_client)
         amount = channel.state["last_signed_amount"] + int(self.get_price(service_client))
         message = web3.Web3.solidity_keccak(

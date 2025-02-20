@@ -7,7 +7,6 @@ Entities:
    - [\_\_init\_\_](#__init__)
    - [create_service_client](#create_service_client)
    - [get_service_stub](#get_service_stub)
-   - [get_path_to_pb_files](#get_path_to_pb_files)
    - [get_module_by_keyword](#get_module_by_keyword)
    - [get_service_metadata](#get_service_metadata)
    - [_get_first_group](#_get_first_group)
@@ -99,19 +98,6 @@ Retrieves the gRPC service stub for the given organization and service ID.
 ###### raises:
 
 - Exception: If an error occurs while importing a module.
-
-#### `get_path_to_pb_files`
-
-Returns the path to the directory containing the protobuf files for a given organization and service.
-
-###### args:
-
-- `org_id` (str): The ID of the organization.
-- `service_id` (str): The ID of the service.
-
-###### returns:
-
-- The path to the directory containing the protobuf files. (str)
 
 #### `get_module_by_keyword`
 

@@ -6,6 +6,10 @@ Entities:
 1. [ClientLibGenerator](#class-clientlibgenerator)
    - [\_\_init\_\_](#__init__)
    - [generate_client_library](#generate_client_library)
+   - [generate_directories_by_params](#generate_directories_by_params)
+   - [create_service_client_libraries_path](#create_service_client_libraries_path)
+   - [receive_proto_files](#receive_proto_files)
+   - [training_added](#training_added)
 
 ### Class `ClientLibGenerator`
 
@@ -36,6 +40,7 @@ Initializes a new instance of the class. Initializes the attributes by arguments
 - `metadata_provider` (StorageProvider): An instance of the `StorageProvider` class.
 - `org_id` (str): The organization ID of the service.
 - `service_id` (str): The service ID.
+- `protodir` (Path | None): The directory where the .proto files are located. Default is _None_.
 
 ###### returns:
 
@@ -51,3 +56,42 @@ Generates client library stub files based on specified organization and service 
 ###### returns:
 
 - _None_
+
+#### `generate_directories_by_params`
+
+Generates directories for client library in the `~/.snet` directory based on organization and 
+service ids using the `create_service_client_libraries_path` method.
+
+###### returns:
+
+- _None_
+
+#### `create_service_client_libraries_path`
+
+Creates a directory for client library in the `~/.snet` directory based on organization and 
+service ids.
+
+###### returns:
+
+- _None_
+
+#### `receive_proto_files`
+
+Receives .proto files from IPFS or FileCoin based on service metadata and extracts them to a 
+given directory.
+
+###### returns:
+
+- _None_
+
+###### raises:
+
+- Exception: if the directory for storing proto files is not found.
+
+#### `training_added`
+
+Checks whether training is used in the service .proto file.
+
+###### returns:
+
+- _True_ if training is used in the service .proto file, _False_ otherwise.

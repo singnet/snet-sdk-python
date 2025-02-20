@@ -56,13 +56,7 @@ class ClientLibGenerator:
                 self.protodir
             )
         else:
-            raise Exception("Directory for storing proto files not found")
-
-    # def check_training_proto_and_copy(self):
-    #     source_path = RESOURCES_PATH.joinpath("proto", "training_v2.proto")
-    #     target_path = self.protodir.joinpath("training_v2.proto")
-    #     if not target_path.exists():
-    #         shutil.copy2(source_path, target_path)
+            raise Exception("Directory for storing proto files is not found")
 
     def training_added(self) -> bool:
         files = os.listdir(self.protodir)

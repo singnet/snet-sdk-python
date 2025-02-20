@@ -6,10 +6,10 @@ Entities:
 1. [ServiceClient](#class-serviceclient)
    - [\_\_init\_\_](#__init__)
    - [call_rpc](#call_rpc)
+   - [_get_service_stub](#_get_service_stub)
    - [_generate_grpc_stub](#_generate_grpc_stub)
    - [get_grpc_base_channel](#get_grpc_base_channel)
    - [_get_grpc_channel](#_get_grpc_channel)
-   - [_get_service_call_metadata](#_get_service_call_metadata)
    - [_filter_existing_channels_from_new_payment_channels](#_filter_existing_channels_from_new_payment_channels)
    - [load_open_channels](#load_open_channels)
    - [get_current_block_number](#get_current_block_number)
@@ -23,10 +23,11 @@ Entities:
    - [generate_training_signature](#generate_training_signature)
    - [get_free_call_config](#get_free_call_config)
    - [get_service_details](#get_service_details)
+   - [training](#training)
+   - [_get_training_model_id](#_get_training_model_id)
    - [get_concurrency_flag](#get_concurrency_flag)
    - [get_concurrency_token_and_channel](#get_concurrency_token_and_channel)
    - [set_concurrency_token_and_channel](#set_concurrency_token_and_channel)
-   - [get_path_to_pb_files](#get_path_to_pb_files)
    - [get_services_and_messages_info](#get_services_and_messages_info)
    - [get_services_and_messages_info_as_pretty_string](#get_services_and_messages_info_as_pretty_string)
 
@@ -58,7 +59,7 @@ the `PaymentStrategy` inheritor classes.
 - `payment_channel_provider` (PaymentChannelProvider): An instance of the `PaymentChannelProvider` class for 
 working with channels and interacting with MPE.
 - `payment_channel_state_service_client` (Any): Stub for interacting with PaymentChannelStateService via gRPC.
-- `service` (Any): The gRPC service stub instance.
+- `service_stubs` (Any): The gRPC service stubs.
 - `pb2_module` (ModuleType): The imported protobuf module.
 - `payment_channels` (list[PaymentChannel]): The list of payment channels.
 - `last_read_block` (int): The last read block number.
@@ -66,6 +67,8 @@ working with channels and interacting with MPE.
 SingularityNetToken contracts.
 - `sdk_web3` (Web3): The `Web3` instance.
 - `mpe_address` (str): The MPE contract address.
+- `path_to_pb_files` (Path): The path to the protobuf files.
+- `__training` (Training): An instance of the `Training` class.
 
 #### methods
 
@@ -79,7 +82,7 @@ Initializes a new instance of the class.
 - `service_id` (str): The ID of the service.
 - `service_metadata` (MPEServiceMetadata): The metadata for the service.
 - `group` (dict): The payment group from the service metadata.
-- `service_stub` (ServiceStub): The gRPC service stub.
+- `service_stubs` (list[ServiceStub]): The gRPC service stubs.
 - `payment_strategy` (PaymentStrategy): The payment channel management strategy.
 - `options` (dict): Additional options for the service client.
 - `mpe_contract` (MPEContract): The MPE contract instance.
@@ -87,6 +90,8 @@ Initializes a new instance of the class.
 - `sdk_web3` (Web3): The `Web3` instance.
 - `pb2_module` (str | ModuleType): The module containing the gRPC message definitions.
 - `payment_channel_provider` (PaymentChannelProvider): The payment channel provider instance.
+- `path_to_pb_files` (Path): The path to the protobuf files.
+- `training_added` (bool): Whether training enabled on the service or not.
 
 ###### returns:
 
@@ -106,6 +111,18 @@ that are passed to the called method as arguments.
 ###### returns:
 
 - The response from the RPC method call. (Any)
+
+#### `_get_service_stub`
+
+Generates a gRPC stub instance for all the service stubs and returns one which matches the rpc name.
+
+###### args:
+
+- `rpc_name` (str): The name of the RPC method to call.
+
+###### returns:
+
+- service_stub (Any): The gRPC service stub.
 
 #### `_generate_grpc_stub`
 
@@ -147,16 +164,6 @@ a ValueError is raised with an error message.
 ###### raises:
 
 - ValueError: If the scheme in the service metadata is neither "http" nor "https".
-
-#### `_get_service_call_metadata`
-
-Retrieves the metadata required for making a service call using the payment strategy.
-
-###### returns:
-
-- Payment metadata. (list[tuple[str, Any]])
-
-<!-- TODO: implement method "_intercept_call"-->
 
 #### `_filter_existing_channels_from_new_payment_channels`
 
@@ -300,6 +307,30 @@ Retrieves the details of the service.
 - A tuple containing the organization ID, service ID, group ID, and the first endpoint for the group. 
 (tuple[str, str, str, str])
 
+#### `training`
+
+Property that returns the training object associated with the service.
+
+###### returns:
+
+- The training object associated with the service. (Training)
+
+###### raises:
+
+- NoTrainingException: If training is not implemented for the service.
+
+#### `_get_training_model_id`
+
+Converts model ID from `str` to stub object.
+
+###### args:
+
+- `model_id` (str): The model ID to convert.
+
+###### returns:
+
+- The stub object for the model ID. (Any)
+
 #### `get_concurrency_flag`
 
 Returns the value of the `concurrency` option from the `self.options` dict.
@@ -329,19 +360,6 @@ Sets the concurrency token and channel for the payment strategy.
 ###### returns:
 
 - _None_
-
-#### `get_path_to_pb_files`
-
-Returns the path to the directory containing the protobuf files for a given organization and service.
-
-###### args:
-
-- `org_id` (str): The ID of the organization.
-- `service_id` (str): The ID of the service.
-
-###### returns:
-
-- The path to the directory containing the protobuf files. (str)
 
 #### `get_services_and_messages_info`
 
