@@ -35,6 +35,9 @@ class Training:
         self.is_enabled = training_added and self._check_training()
         self.payment_strategy = TrainingPaymentStrategy()
 
+    def get_model_id_object(self, model_id: str) -> Any:
+        return self.training.ModelID(model_id=model_id)
+
     """FREE METHODS TO CALL"""
 
     def create_model(self, method_name: str,
@@ -394,7 +397,3 @@ class Training:
             generic_client_interceptor.create(intercept_call_func)
         )
         return grpc_channel
-
-    def get_model_id_object(self, model_id: str) -> Any:
-        return self.training.ModelID(model_id=model_id)
-

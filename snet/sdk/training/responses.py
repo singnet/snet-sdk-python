@@ -30,11 +30,8 @@ class ModelStatus(Enum):
 def to_string(obj: Any):
     res_str = ""
     for key, value in obj.__dict__.items():
-        # key = key.strip("_")
-        # key = key.replace("__", "_")
         key = key.split("__")[1].replace("_", " ")
         res_str += f"{key}: {value}\n"
-
     return res_str
 
 
@@ -64,6 +61,10 @@ class Model:
     @property
     def status(self):
         return self.__status
+
+    @property
+    def created_date(self):
+        return self.__created_date
 
     @property
     def updated_date(self):
@@ -98,16 +99,13 @@ class Model:
         return self.__training_data_link
 
     @property
-    def created_date(self):
-        return self.__created_date
-
-    @property
     def created_by_address(self):
         return self.__created_by_address
 
     @property
     def updated_by_address(self):
         return self.__updated_by_address
+
 
 class TrainingMetadata:
     def __init__(self,
@@ -119,9 +117,7 @@ class TrainingMetadata:
         self.__training_in_proto = training_in_proto
         self.__training_methods = {}
 
-        # print(training_methods)
         services_methods = dict(training_methods)
-        # print(services_methods)
         for k, v in services_methods.items():
             self.__training_methods[k] = [value.string_value for value in v.values]
 
