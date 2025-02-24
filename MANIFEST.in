@@ -1,3 +1,5 @@
+include snet/sdk/resources/*
+
 recursive-exclude * .git
 recursive-exclude * node_modules
 recursive-exclude * __pycache__
