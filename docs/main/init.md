@@ -7,7 +7,6 @@ Entities:
    - [\_\_init\_\_](#__init__)
    - [create_service_client](#create_service_client)
    - [get_service_stub](#get_service_stub)
-   - [get_path_to_pb_files](#get_path_to_pb_files)
    - [get_module_by_keyword](#get_module_by_keyword)
    - [get_service_metadata](#get_service_metadata)
    - [_get_first_group](#_get_first_group)
@@ -62,7 +61,7 @@ contract. Instantiates the Account object with the specified Web3 client, SDK co
 
 If `force_update` is True or if there are no gRPC stubs for the given service, the proto files are loaded 
 and compiled using the `generate_client_library()` method of the `ClientLibGenerator` class instance. 
-It then initializes `payment_channel_management_strategy` to `DefaultPaymentStrategy` if it is not specified. 
+It then initializes `payment_strategy` to `DefaultPaymentStrategy` if it is not specified. 
 It also sets the `options` dictionary with some default values. If `self._metadata_provider` is not specified 
 it is initialized by `IPFSMetadataProvider`. It also gets the service stub using the `self.get_service_stub` 
 method and the pb2 module using the `self.get_module_by_keyword` method. Finally, it creates a new instance 
@@ -73,7 +72,7 @@ of the `ServiceClient` class with all the required parameters, which is then ret
 - `org_id` (str): The ID of the organization.
 - `service_id` (str): The ID of the service.
 - `group_name` (str): The name of the payment group. Defaults to _None_.
-- `payment_channel_management_strategy` (PaymentStrategy): The payment channel management strategy. Defaults to _None_.
+- `payment_strategy` (PaymentStrategy): The payment channel management strategy. Defaults to _None_.
 - `free_call_auth_token_bin` (str): The free call authentication token in binary format. Defaults to _None_.
 - `free_call_token_expiry_block` (int): The block number when the free call token expires. Defaults to _None_.
 - `options` (dict): Additional options for the service client. Defaults to _None_.
@@ -99,19 +98,6 @@ Retrieves the gRPC service stub for the given organization and service ID.
 ###### raises:
 
 - Exception: If an error occurs while importing a module.
-
-#### `get_path_to_pb_files`
-
-Returns the path to the directory containing the protobuf files for a given organization and service.
-
-###### args:
-
-- `org_id` (str): The ID of the organization.
-- `service_id` (str): The ID of the service.
-
-###### returns:
-
-- The path to the directory containing the protobuf files. (str)
 
 #### `get_module_by_keyword`
 

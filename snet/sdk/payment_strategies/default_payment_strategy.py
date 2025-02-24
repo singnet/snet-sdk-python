@@ -7,7 +7,7 @@ from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
 
 class DefaultPaymentStrategy(PaymentStrategy):
 
-    def __init__(self, concurrent_calls=1):
+    def __init__(self, concurrent_calls: int = 1):
         self.concurrent_calls = concurrent_calls
         self.concurrencyManager = ConcurrencyManager(concurrent_calls)
         self.channel = None
