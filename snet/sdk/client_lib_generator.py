@@ -63,7 +63,7 @@ class ClientLibGenerator:
         for file in files:
             if ".proto" not in file:
                 continue
-            with open(self.protodir.joinpath(files[0]), "r") as f:
+            with open(self.protodir.joinpath(file), "r") as f:
                 proto_text = f.read()
             if 'import "training.proto";' in proto_text:
                 return True
