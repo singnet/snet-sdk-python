@@ -60,8 +60,11 @@ class ClientLibGenerator:
 
     def training_added(self) -> bool:
         files = os.listdir(self.protodir)
-        with open(self.protodir.joinpath(files[0]), "r") as f:
-            proto_text = f.read()
-        if 'import "training.proto";' in proto_text:
-            return True
+        for file in files:
+            if ".proto" not in file:
+                continue
+            with open(self.protodir.joinpath(files[0]), "r") as f:
+                proto_text = f.read()
+            if 'import "training.proto";' in proto_text:
+                return True
         return False
