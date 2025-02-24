@@ -1,4 +1,4 @@
-recursive-include snet/sdk/resources/*.proto
+recursive-include snet/sdk/resources *
 
 recursive-exclude * .git
 recursive-exclude * node_modules
