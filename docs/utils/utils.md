@@ -10,10 +10,11 @@ Entities:
 5. [is_valid_endpoint](#function-is_valid_endpoint)
 6. [normalize_private_key](#function-normalize_private_key)
 7. [get_address_from_private](#function-get_address_from_private)
-8. [add_to_path](#class-add_to_path)
-9. [find_file_by_keyword](#function-find_file_by_keyword)
-10. [bytesuri_to_hash](#function-bytesuri_to_hash)
-11. [safe_extract_proto](#function-safe_extract_proto)
+8. [get_current_block_number](#function-get_current_block_number)
+9. [add_to_path](#class-add_to_path)
+10. [find_file_by_keyword](#function-find_file_by_keyword)
+11. [bytesuri_to_hash](#function-bytesuri_to_hash)
+12. [safe_extract_proto](#function-safe_extract_proto)
 
 
 ### Function `safe_address_converter`
@@ -67,6 +68,7 @@ Generated files as well as .proto files are stored in the `~/.snet` directory.
 - `codegen_dir` (PurePath): The directory where the compiled code will be generated.
 - `proto_file` (str): The name of the .proto file to compile. Defaults to `None`.
 - `target_language` (str, optional): The target language for the compiled code. Defaults to "python".
+- `add_training` (bool): Whether to include training.proto in the compilation. Defaults to False.
 
 ###### returns:
 
@@ -116,6 +118,14 @@ Returns the wallet address from the private key.
 
 - The wallet address. (ChecksumAddress)
 
+### Function `get_current_block_number`
+
+Returns the current block number in Ethereum.
+
+###### returns:
+
+- The current block number. (BlockNumber (int))
+
 ### Class `add_to_path`
 
 `add_to_path` class is a _**context manager**_ that temporarily adds a given path to the system's `sys.path` list. 
@@ -135,6 +145,7 @@ Finds a file by keyword in the current directory and subdirectories.
 
 - `directory` (AnyStr | PathLike[AnyStr]): The directory to search in.
 - `keyword` (AnyStr): The keyword to search for.
+- `exclude` (List[AnyStr], optional): A list of strings to exclude from the search. Defaults to _None_.
 
 ###### returns:
 

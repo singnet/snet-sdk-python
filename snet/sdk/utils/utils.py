@@ -9,6 +9,7 @@ import tarfile
 import io
 
 import web3
+from eth_typing import BlockNumber
 from grpc_tools.protoc import main as protoc
 
 from snet import sdk
@@ -43,7 +44,13 @@ def bytes32_to_str(b):
     return b.rstrip(b"\0").decode("utf-8")
 
 
-def compile_proto(entry_path, codegen_dir, proto_file=None, target_language="python"):
+def compile_proto(
+    entry_path: Path,
+    codegen_dir: Path,
+    proto_file: str | None = None,
+    target_language: str = "python",
+    add_training: bool = False
+) -> bool:
     try:
         if not os.path.exists(codegen_dir):
             os.makedirs(codegen_dir)
@@ -54,30 +61,25 @@ def compile_proto(entry_path, codegen_dir, proto_file=None, target_language="pyt
             "-I{}".format(proto_include)
         ]
 
+        if add_training:
+            training_include = RESOURCES_PATH.joinpath("proto", "training")
+            compiler_args.append("-I{}".format(training_include))
+
         if target_language == "python":
             compiler_args.insert(0, "protoc")
             compiler_args.append("--python_out={}".format(codegen_dir))
             compiler_args.append("--grpc_python_out={}".format(codegen_dir))
             compiler = protoc
-        elif target_language == "nodejs":
-            protoc_node_compiler_path = Path(
-                RESOURCES_PATH.joinpath("node_modules").joinpath("grpc-tools").joinpath("bin").joinpath(
-                    "protoc.js")).absolute()
-            grpc_node_plugin_path = Path(
-                RESOURCES_PATH.joinpath("node_modules").joinpath("grpc-tools").joinpath("bin").joinpath(
-                    "grpc_node_plugin")).resolve()
-            if not os.path.isfile(protoc_node_compiler_path) or not os.path.isfile(grpc_node_plugin_path):
-                print("Missing required node.js protoc compiler. Retrieving from npm...")
-                subprocess.run(["npm", "install"], cwd=RESOURCES_PATH)
-            compiler_args.append("--js_out=import_style=commonjs,binary:{}".format(codegen_dir))
-            compiler_args.append("--grpc_out={}".format(codegen_dir))
-            compiler_args.append("--plugin=protoc-gen-grpc={}".format(grpc_node_plugin_path))
-            compiler = lambda args: subprocess.run([str(protoc_node_compiler_path)] + args)
+        else:
+            raise Exception("We only support python target language for proto compiling")
 
         if proto_file:
             compiler_args.append(str(proto_file))
         else:
             compiler_args.extend([str(p) for p in entry_path.glob("**/*.proto")])
+
+        if add_training:
+            compiler_args.append(str(training_include.joinpath("training.proto")))
 
         if not compiler(compiler_args):
             return True
@@ -128,6 +130,10 @@ def get_address_from_private(private_key):
     return web3.Account.from_key(private_key).address
 
 
+def get_current_block_number() -> BlockNumber:
+    return web3.Web3().eth.block_number
+
+
 class add_to_path:
     def __init__(self, path):
         self.path = path
@@ -142,10 +148,12 @@ class add_to_path:
             pass
 
 
-def find_file_by_keyword(directory, keyword):
+def find_file_by_keyword(directory, keyword, exclude=None):
+    if exclude is None:
+        exclude = []
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if keyword in file:
+            if keyword in file and all(e not in file for e in exclude):
                 return file
 
 
@@ -177,6 +185,6 @@ def safe_extract_proto(spec_tar, protodir):
             fullname = os.path.join(protodir, m.name)
             if os.path.exists(fullname):
                 os.remove(fullname)
-                print("%s removed." % fullname)
+                print(f"{fullname} removed.")
         # now it is safe to call extractall
-        f.extractall(protodir)
+        f.extractall(path=protodir)

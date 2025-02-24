@@ -26,7 +26,7 @@ is extended by: -
 
 #### description
 
-`TransactionError` is a custom exception class that is raised when an Ethereum transaction receipt has a status of 0. 
+`TransactionError` is a custom exception class that is raised when an Ethereum transaction receipt has a status of 0.
 This indicates that the transaction failed. Can provide a custom message. Optionally includes receipt
 
 #### attributes

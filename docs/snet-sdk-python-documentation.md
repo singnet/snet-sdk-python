@@ -32,11 +32,15 @@ A getting started guide for the SNET SDK for Python is available [here](https://
    3. [freecall_payment_strategy](payment_strategies/freecall_payment_strategy.md)
    4. [paidcall_payment_strategy](payment_strategies/paidcall_payment_strategy.md)
    5. [prepaid_payment_strategy](payment_strategies/prepaid_payment_strategy.md)
+   6. [training_payment_strategy](payment_strategies/training_payment_strategy.md)
 10. utils
     1. [utils](utils/utils.md)
     2. [ipfs_utils](utils/ipfs_utils.md)
+    3. [call_utils](utils/call_utils.md)
 11. training
     1. [training](training/training.md)
+    2. [responses](training/responses.md)
+    3. [exceptions](training/exceptions.md)
 
 
 

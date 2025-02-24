@@ -15,7 +15,7 @@ Entities:
 
 extends: `PaymentStrategy`
 
-is extended by: -
+is extended by: `TrainingPaymentStrategy`
 
 #### description
 
@@ -57,7 +57,7 @@ Returns the price of the service call using service client.
 
 #### `get_payment_metadata`
 
-Creates and returns the payment metadata for a service client with the field `snet-paument-type` equals to `escrow`.
+Creates and returns the payment metadata for a service client with the field `snet-payment-type` equals to `escrow`.
 
 ###### args:
 

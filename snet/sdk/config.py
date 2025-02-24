@@ -16,7 +16,8 @@ class Config:
             "private_key": private_key,
             "eth_rpc_endpoint": eth_rpc_endpoint,
             "wallet_index": wallet_index,
-            "ipfs_endpoint": ipfs_endpoint if ipfs_endpoint else "/dns/ipfs.singularitynet.io/tcp/80/",
+            "ipfs_endpoint": (ipfs_endpoint if ipfs_endpoint
+                              else "/dns/ipfs.singularitynet.io/tcp/80/"),
             "concurrency": concurrency,
             "force_update": force_update,
             "mpe_contract_address": mpe_contract_address,
@@ -34,4 +35,3 @@ class Config:
 
     def get_ipfs_endpoint(self):
         return self["ipfs_endpoint"]
-

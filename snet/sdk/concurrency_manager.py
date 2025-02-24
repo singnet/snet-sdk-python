@@ -3,18 +3,19 @@ import importlib
 import grpc
 import web3
 
+from snet.sdk.service_client import ServiceClient
 from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
 
 
 class ConcurrencyManager:
-    def __init__(self, concurrent_calls):
-        self.__concurrent_calls = concurrent_calls
-        self.__token = ''
-        self.__planned_amount = 0
-        self.__used_amount = 0
+    def __init__(self, concurrent_calls: int):
+        self.__concurrent_calls: int = concurrent_calls
+        self.__token: str = ''
+        self.__planned_amount: int = 0
+        self.__used_amount: int = 0
 
     @property
-    def concurrent_calls(self):
+    def concurrent_calls(self) -> int:
         return self.__concurrent_calls
 
     def get_token(self, service_client, channel, service_call_price):
@@ -24,7 +25,7 @@ class ConcurrencyManager:
             self.__token = self.__get_token(service_client, channel, service_call_price, new_token=True)
         return self.__token
 
-    def __get_token(self, service_client, channel, service_call_price, new_token=False):
+    def __get_token(self, service_client: ServiceClient, channel, service_call_price, new_token=False):
         if not new_token:
             amount = channel.state["last_signed_amount"]
             if amount != 0:
@@ -46,13 +47,13 @@ class ConcurrencyManager:
         self.__planned_amount = token_reply.planned_amount
         return token_reply.token
 
-    def __get_stub_for_get_token(self, service_client):
+    def __get_stub_for_get_token(self, service_client: ServiceClient):
         grpc_channel = service_client.get_grpc_base_channel()
         with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
             token_service_pb2_grpc = importlib.import_module("token_service_pb2_grpc")
         return token_service_pb2_grpc.TokenServiceStub(grpc_channel)
 
-    def __get_token_for_amount(self, service_client, channel, amount):
+    def __get_token_for_amount(self, service_client: ServiceClient, channel, amount):
         nonce = channel.state["nonce"]
         stub = self.__get_stub_for_get_token(service_client)
         with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
