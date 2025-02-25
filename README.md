@@ -7,9 +7,9 @@ SingularityNET SDK for Python
 
 The package is published in PyPI at the following link:
 
-|Package                                       |Description                                                          |
-|----------------------------------------------|---------------------------------------------------------------------|
-|[snet.sdk](https://pypi.org/project/snet.sdk/)|Integrate SingularityNET services seamlessly into Python applications|
+| Package                                        |Description                                                          |
+|------------------------------------------------|---------------------------------------------------------------------|
+| [snet-sdk](https://pypi.org/project/snet-sdk/) |Integrate SingularityNET services seamlessly into Python applications|
 
 ### Core concepts
 
@@ -198,6 +198,28 @@ payment_channel.extend_expiration(expiration=33333)
 payment_channel.extend_and_add_funds(amount=123456, expiration=33333)
 ```
 
+### Train call
+
+Some of the training methods, namely `upload_and_validate` and `train_model`, are paid as well as the regular service call. 
+Accordingly, you need to pay some AGIX to take advantage of the training. For this, as for a regular service call, 
+you need a payment channel with the required amount of funds on it and expiration (in Python SDK, the selection, 
+opening or adding funds to the channel is done automatically). 
+
+The only difference is that the price of a service call is a static number stored in the service metadata, whereas 
+the price of calling the methods above is determined each time through the service provider before calling 
+these methods. There are auxiliary methods `validate_model_price` and `train_model_price` respectively to determine 
+the price of calling paid methods.
+
+```python
+validate_price = service_client.training.validate_model_price(model_id)
+model_status = service_client.training.upload_and_validate(model_id, zip_path, validate_price)
+
+# -------------------------------------------------------------------------------
+
+train_price = service_client.training.train_model_price(model_id)
+model_status = service_client.training.train_model(model_id, train_price)
+```
+
 ## Other useful features
 
 #### Get the current block number
@@ -269,7 +291,84 @@ print(messages)
 
 With the SDK, you can also train models and use them when calling the service.
 
+### Base pipeline
 
+The sequence of basic actions is as follows:
+1) Create models
+2) Upload training dataset
+3) Train the model
+4) Call the service based on the new model
+
+##### `create_model`
+
+To create a new model you need to call the `create_model` method. It takes the following parameters:
+- `method_name` - name of the service method for which we want to create a new model 
+(use [get_training_metadata](#get-training-metadata) method to get the list of available methods)
+- `model_name` - name of the new model (you need to come up with this)
+- `model_description`- description of the new model (optional) 
+- `is_public_accessible` - whether the model is publicly accessible (optional, default: `False`)
+- `addresses_with_access` - list of addresses with access to the model (optional) (makes sense only if `is_public_accessible` is _False_)
+
+and returns a `Model` object with all the model information.
+
+```python
+new_model = service_client.training.create_model(method_name=grpc_method_name,
+                                                 model_name=model_name)
+model_id = new_model.model_id
+
+print(new_model.status) # ModelStatus.CREATED
+```
+
+##### `upload_and_validate`
+
+To upload the training dataset you need to call the `upload_and_validate` method. It takes the following parameters:
+- `model_id` - id of the model
+- `zip_path` - path to archive file with the training dataset
+- `validate_price` - price of validating the dataset
+
+and returns a `ModelStatus` object. 
+
+```python
+validate_price = service_client.training.validate_model_price(model_id)
+zip_path = "PATH_TO_YOUR_DATASET_FILE"  
+model_status = service_client.training.upload_and_validate(model_id, zip_path, validate_price)
+
+print(model_status) # ModelStatus.VALIDATING
+```
+
+> Note: Dataset validation usually takes some time, so you should wait for the `VALIDATED` status of the model 
+> (using the `get_model` or `get_all_models` methods) after sending the dataset for validation before proceeding 
+> further with the model.
+
+##### `train_model`
+
+To train the model on an uploaded dataset you need to call the `train_model` method. It takes the following parameters:
+- `model_id` - id of the model
+- `train_price` - price of training the model
+
+and returns a `ModelStatus` object.
+
+```python
+train_price = service_client.training.train_model_price(model_id)
+model_status = service_client.training.train_model(model_id, train_price)
+
+print(model_status) # ModelStatus.TRAINING
+```
+
+> Note: Model training usually takes some time, so you should wait for the `READY_TO_USE` status of the model 
+> (using the `get_model` or `get_all_models` methods) after calling the `train_model` method before proceeding 
+> further with the model.
+
+Finally, to call the service, you must call the `call_rpc` method of the `ServiceClient` instance with an 
+additional parameter `model_id` in a similar way:
+
+```python
+result = service_client.call_rpc(grpc_method_name, grpc_message_name, model_id=model_id, **parameters)
+```
+
+For more detailed description please refer to Developer Portal guides:
+- [Service Training via SDK]()
+- [Training in Python SDK]()
 
 ---
 
