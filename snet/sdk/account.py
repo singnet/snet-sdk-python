@@ -38,10 +38,10 @@ class Account:
         )
         if _token_contract_address is None:
             self.token_contract = get_contract_object(
-                self.web3, "SingularityNetToken")
+                self.web3, "FetchToken")
         else:
             self.token_contract = get_contract_object(
-                self.web3, "SingularityNetToken", _token_contract_address)
+                self.web3, "FetchToken", _token_contract_address)
 
         if config.get("private_key") is not None:
             self.private_key = normalize_private_key(config.get("private_key"))
