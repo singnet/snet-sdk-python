@@ -25,7 +25,7 @@ class PaymentChannelProvider(object):
 
     def update_cache(self):
         channels = []
-        last_read_block = self.deployment_block
+        last_read_block = self.deployment_block - 1
 
         if not self.channels_file.exists():
             print(f"Channels cache is empty. Caching may take some time when first accessing channels.\nCaching in progress...")
@@ -45,7 +45,7 @@ class PaymentChannelProvider(object):
         current_block_number = self.web3.eth.block_number
 
         if last_read_block < current_block_number:
-            new_channels = self._get_all_channels_from_blockchain_logs_to_dicts(last_read_block, current_block_number)
+            new_channels = self._get_all_channels_from_blockchain_logs_to_dicts(last_read_block + 1, current_block_number)
             channels = channels + new_channels
             last_read_block = current_block_number
 
