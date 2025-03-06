@@ -2,6 +2,7 @@ import json
 import subprocess
 import sys
 import importlib.resources
+from typing import Any, Literal
 from urllib.parse import urlparse
 from pathlib import Path, PurePath
 import os
@@ -16,30 +17,36 @@ from snet import sdk
 RESOURCES_PATH = PurePath(os.path.dirname(sdk.__file__)).joinpath("resources")
 
 
-def safe_address_converter(a):
+def safe_address_converter(a: Any) -> Any:
     if not web3.Web3.is_checksum_address(a):
-        raise Exception("%s is not is not a valid Ethereum checksum address" % a)
+        raise Exception(
+            "%s is not is not a valid Ethereum checksum address" % a
+        )
     return a
 
 
-def type_converter(t):
+def type_converter(t: Any) -> Any:
     if t.endswith("[]"):
-        return lambda x: list(map(type_converter(t.replace("[]", "")), json.loads(x)))
+        return lambda x: list(map(type_converter(t.replace("[]", "")),
+                                  json.loads(x)))
     else:
         if "int" in t:
             return lambda x: web3.Web3.to_int(text=x)
         elif "bytes32" in t:
-            return lambda x: web3.Web3.to_bytes(text=x).ljust(32, b"\0") if not x.startswith(
-                "0x") else web3.Web3.to_bytes(hexstr=x).ljust(32, b"\0")
+            return (lambda x: web3.Web3.to_bytes(text=x).ljust(32, b"\0") if
+                    not x.startswith("0x") else
+                    web3.Web3.to_bytes(hexstr=x).ljust(32, b"\0"))
         elif "byte" in t:
-            return lambda x: web3.Web3.to_bytes(text=x) if not x.startswith("0x") else web3.Web3.to_bytes(hexstr=x)
+            return (lambda x: web3.Web3.to_bytes(text=x) if
+                    not x.startswith("0x") else
+                    web3.Web3.to_bytes(hexstr=x))
         elif "address" in t:
             return safe_address_converter
         else:
             return str
 
 
-def bytes32_to_str(b):
+def bytes32_to_str(b: bytes) -> str:
     return b.rstrip(b"\0").decode("utf-8")
 
 
@@ -66,23 +73,35 @@ def compile_proto(
             compiler = protoc
         elif target_language == "nodejs":
             protoc_node_compiler_path = Path(
-                RESOURCES_PATH.joinpath("node_modules").joinpath("grpc-tools").joinpath("bin").joinpath(
-                    "protoc.js")).absolute()
+                RESOURCES_PATH
+                .joinpath("node_modules").joinpath("grpc-tools")
+                .joinpath("bin").joinpath("protoc.js")
+            ).absolute()
             grpc_node_plugin_path = Path(
-                RESOURCES_PATH.joinpath("node_modules").joinpath("grpc-tools").joinpath("bin").joinpath(
-                    "grpc_node_plugin")).resolve()
-            if not os.path.isfile(protoc_node_compiler_path) or not os.path.isfile(grpc_node_plugin_path):
-                print("Missing required node.js protoc compiler. Retrieving from npm...")
+                RESOURCES_PATH
+                .joinpath("node_modules").joinpath("grpc-tools")
+                .joinpath("bin").joinpath("grpc_node_plugin")
+            ).resolve()
+            if (not os.path.isfile(protoc_node_compiler_path) or
+                not os.path.isfile(grpc_node_plugin_path)):     # noqa E124
+                print("Missing required node.js protoc compiler. "
+                      "Retrieving from npm...")
                 subprocess.run(["npm", "install"], cwd=RESOURCES_PATH)
-            compiler_args.append("--js_out=import_style=commonjs,binary:{}".format(codegen_dir))
+            compiler_args.append("--js_out=import_style=commonjs,binary:{}"
+                                 .format(codegen_dir))
             compiler_args.append("--grpc_out={}".format(codegen_dir))
-            compiler_args.append("--plugin=protoc-gen-grpc={}".format(grpc_node_plugin_path))
-            compiler = lambda args: subprocess.run([str(protoc_node_compiler_path)] + args)
+            compiler_args.append("--plugin=protoc-gen-grpc={}"
+                                 .format(grpc_node_plugin_path))
+            compiler = lambda args: subprocess.run(     # noqa E731
+                [str(protoc_node_compiler_path)] + args
+            )
 
         if proto_file:
             compiler_args.append(str(proto_file))
         else:
-            compiler_args.extend([str(p) for p in entry_path.glob("**/*.proto")])
+            compiler_args.extend(
+                [str(p) for p in entry_path.glob("**/*.proto")]
+            )
 
         if not compiler(compiler_args):
             return True
@@ -94,10 +113,12 @@ def compile_proto(
         return False
 
 
-def is_valid_endpoint(url):
+def is_valid_endpoint(url: str | bytes) -> bool:
     """
-    Just ensures the url has a scheme (http/https), and a net location (IP or domain name).
-    Can make more advanced or do on-network tests if needed, but this is really just to catch obvious errors.
+    Just ensures the url has a scheme (http/https),
+    and a net location (IP or domain name).
+    Can make more advanced or do on-network tests if needed,
+    but this is really just to catch obvious errors.
     >>> is_valid_endpoint("https://34.216.72.29:6206")
     True
     >>> is_valid_endpoint("blahblah")
@@ -110,9 +131,12 @@ def is_valid_endpoint(url):
     True
     """
     try:
-        result = urlparse(url)
+        if isinstance(url, bytes):
+            result = urlparse(url.decode("utf-8"))
+        else:
+            result = urlparse(url)
         if result.port:
-            _port = int(result.port)
+            _port = int(result.port)    # noqa F841
         return (
                 all([result.scheme, result.netloc]) and
                 result.scheme in ['http', 'https']
@@ -121,7 +145,7 @@ def is_valid_endpoint(url):
         return False
 
 
-def normalize_private_key(private_key):
+def normalize_private_key(private_key: str) -> bytes:
     if private_key.startswith("0x"):
         private_key = bytes(bytearray.fromhex(private_key[2:]))
     else:
@@ -129,12 +153,12 @@ def normalize_private_key(private_key):
     return private_key
 
 
-def get_address_from_private(private_key):
+def get_address_from_private(private_key: Any) -> str:
     return web3.Account.from_key(private_key).address
 
 
 class add_to_path:
-    def __init__(self, path):
+    def __init__(self, path: str):
         self.path = path
 
     def __enter__(self):
@@ -147,14 +171,16 @@ class add_to_path:
             pass
 
 
-def find_file_by_keyword(directory, keyword):
+def find_file_by_keyword(directory: Any, keyword: str) -> str | None:
     for root, dirs, files in os.walk(directory):
         for file in files:
             if keyword in file:
                 return file
 
 
-def bytesuri_to_hash(s, to_decode=True):
+def bytesuri_to_hash(s, to_decode: bool = True) -> (
+        tuple[Literal['ipfs'], str] | tuple[Literal['filecoin'], str]
+):
     if to_decode:
         s = s.rstrip(b"\0").decode('ascii')
     if s.startswith("ipfs://"):
@@ -165,11 +191,11 @@ def bytesuri_to_hash(s, to_decode=True):
         raise Exception("We support only ipfs and filecoin uri in Registry")
 
 
-def safe_extract_proto(spec_tar, protodir):
+def safe_extract_proto(spec_tar: Any, protodir: Path) -> None:
     """
     Tar files might be dangerous (see https://bugs.python.org/issue21109,
-    and https://docs.python.org/3/library/tarfile.html, TarFile.extractall warning)
-    we extract only simple files
+    and https://docs.python.org/3/library/tarfile.html,
+    TarFile.extractall warning) we extract only simple files
     """
     with tarfile.open(fileobj=io.BytesIO(spec_tar)) as f:
         for m in f.getmembers():

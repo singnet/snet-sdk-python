@@ -360,7 +360,7 @@ class MPEServiceMetadata:
             if group["group_name"] == group_name:
                 group["daemon_addresses"] = []
 
-    def get_all_endpoints_for_group(self, group_name):
+    def get_all_endpoints_for_group(self, group_name: str) -> list:
         for group in self.m["groups"]:
             if group["group_name"] == group_name:
                 if "endpoints" in group:

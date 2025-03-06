@@ -52,23 +52,23 @@ class TestAccount(unittest.TestCase):
         # Test different gas price levels
         gas_price = 10000000000
         self.mock_web3.eth.gas_price = gas_price
-        gas_price = self.account._get_gas_price()
-        self.assertEqual(gas_price, int(gas_price + (gas_price * 1 / 3)))
+        result = self.account._get_gas_price()
+        self.assertEqual(result, int(gas_price + (gas_price * 1 / 3)))
 
         gas_price = 16000000000
         self.mock_web3.eth.gas_price = gas_price
-        gas_price = self.account._get_gas_price()
-        self.assertEqual(gas_price, int(gas_price + (gas_price * 1 / 5)))
+        result = self.account._get_gas_price()
+        self.assertEqual(result, int(gas_price + (gas_price * 1 / 5)))
 
         gas_price = 51200000000
         self.mock_web3.eth.gas_price = 51200000000
-        gas_price = self.account._get_gas_price()
-        self.assertEqual(gas_price, int(gas_price + 7000000000))
+        result = self.account._get_gas_price()
+        self.assertEqual(result, int(gas_price + 7000000000))
 
         gas_price = 150000000001
         self.mock_web3.eth.gas_price = 150000000001
-        gas_price = self.account._get_gas_price()
-        self.assertEqual(gas_price, int(gas_price + (gas_price * 1 / 10)))
+        result = self.account._get_gas_price()
+        self.assertEqual(result, int(gas_price + (gas_price * 1 / 10)))
 
     # @patch("snet.sdk.web3.Web3.to_hex", side_effect=lambda x: "mock_txn_hash")
     # def test_send_signed_transaction(self, mock_to_hex):
