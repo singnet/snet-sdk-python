@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from eth_typing import BlockNumber, ChecksumAddress
+from eth_typing import BlockNumber
 import grpc
 from hexbytes import HexBytes
 import web3

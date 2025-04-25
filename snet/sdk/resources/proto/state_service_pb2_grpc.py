@@ -103,6 +103,11 @@ class FreeCallStateServiceStub(object):
                 request_serializer=state__service__pb2.FreeCallStateRequest.SerializeToString,
                 response_deserializer=state__service__pb2.FreeCallStateReply.FromString,
                 )
+        self.GetFreeCallToken = channel.unary_unary(
+                '/escrow.FreeCallStateService/GetFreeCallToken',
+                request_serializer=state__service__pb2.GetFreeCallTokenRequest.SerializeToString,
+                response_deserializer=state__service__pb2.FreeCallToken.FromString,
+                )
 
 
 class FreeCallStateServiceServicer(object):
@@ -115,6 +120,12 @@ class FreeCallStateServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetFreeCallToken(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FreeCallStateServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -122,6 +133,11 @@ def add_FreeCallStateServiceServicer_to_server(servicer, server):
                     servicer.GetFreeCallsAvailable,
                     request_deserializer=state__service__pb2.FreeCallStateRequest.FromString,
                     response_serializer=state__service__pb2.FreeCallStateReply.SerializeToString,
+            ),
+            'GetFreeCallToken': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetFreeCallToken,
+                    request_deserializer=state__service__pb2.GetFreeCallTokenRequest.FromString,
+                    response_serializer=state__service__pb2.FreeCallToken.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -148,5 +164,22 @@ class FreeCallStateService(object):
         return grpc.experimental.unary_unary(request, target, '/escrow.FreeCallStateService/GetFreeCallsAvailable',
             state__service__pb2.FreeCallStateRequest.SerializeToString,
             state__service__pb2.FreeCallStateReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetFreeCallToken(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/escrow.FreeCallStateService/GetFreeCallToken',
+            state__service__pb2.GetFreeCallTokenRequest.SerializeToString,
+            state__service__pb2.FreeCallToken.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
