@@ -16,7 +16,7 @@ The package is published in PyPI at the following link:
 The SingularityNET SDK allows you to make calls to SingularityNET services programmatically from your application.
 To communicate between clients and services, SingularityNET uses [gRPC](https://grpc.io/).
 To handle payment of services, SingularityNET uses 
-[Ethereum state channels](https://dev.singularitynet.io/docs/ai-consumers/mpe/).
+[Ethereum state channels](https://dev.singularitynet.io/docs/products/DecentralizedAIPlatform/CoreConcepts/SmartContracts/mpe).
 The SingularityNET SDK abstracts and manages state channels with service providers on behalf of the user and 
 handles authentication with the SingularityNET services.
 
@@ -27,7 +27,7 @@ These instructions are for the development and use of the SingularityNET SDK for
 ### Usage
 
 To call a service on a SingularityNET platform, the user must be able to deposit funds (AGIX tokens) to the 
-[Multi-Party Escrow](https://dev.singularitynet.io/docs/concepts/multi-party-escrow/) Smart Contract.
+[Multi-Party Escrow](https://dev.singularitynet.io/docs/products/DecentralizedAIPlatform/CoreConcepts/SmartContracts/mpe) Smart Contract.
 To deposit these tokens or do any other transaction on the Ethereum blockchain.
 
 Once you have installed snet-sdk in your current environment, you can import it into your Python script and create an 
@@ -35,22 +35,31 @@ instance of the base sdk class:
 ```python
 from snet import sdk
 
-config = sdk.config.Config(private_key="YOUR_PRIVATE_KEY",
-                               eth_rpc_endpoint=f"https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
-                               concurrency=False,
-                               force_update=False)
+"""
+SDK configuration provided by the application provider.
+To run the application, replace 'private_key' and 'eth_rpc_endpoint' with your values.
+"""
+config = sdk.config.Config(
+    private_key="YOUR_PRIVATE_KEY",  # Replace with your Ethereum private key
+    eth_rpc_endpoint="https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_API_KEY",  # Replace with your Alchemy API key
+    concurrency=False, 
+    force_update=False 
+)
 
+# Initialize the SnetSDK instance
 snet_sdk = sdk.SnetSDK(config)
 ```
 
 The `config` parameter is an instance of the `Config` class.
-See [config.py](https://github.com/singnet/snet-sdk-python/blob/master/docs/main/config.md) 
+See [config.py](https://dev.singularitynet.io/docs/products/DecentralizedAIPlatform/SDK/PythonSDK/Documentation/config/) 
 for a reference.
 
-##### Config parameters description
+#### Config parameters description
 
 - `private_key`: Your wallet's private key that will be used to pay for calls. Is **required** in config;   
 - `eth_rpc_endpoint`: RPC endpoint that is used to access the Ethereum network. Is **required** in config;
+> To get your **Alchemy API Key**, follow [this guide](https://dev.singularitynet.io/docs/products/DecentralizedAIPlatform/Daemon/alchemy-api/).
+
 - `wallet_index`: The index of the wallet that will be used to pay for calls;
 - `ipfs_endpoint`: IPFS endpoint that is used to access IPFS;
 - `concurrency`: If set to True, will enable concurrency for the SDK;
@@ -197,6 +206,31 @@ payment_channel.extend_expiration(expiration=33333)
 
 payment_channel.extend_and_add_funds(amount=123456, expiration=33333)
 ```
+
+### Concurrent (Prepaid) call
+
+Concurrent (prepaid) calls allow you to prepay for a batch of service calls in advance. This off-chain strategy is ideal for scenarios requiring high throughput and low latency. Unlike regular paid calls, the payment is done once upfront, and the SDK automatically manages the channel during usage.
+
+To use concurrent prepaid calls, specify the `concurrent_calls` parameter when creating a service client:
+
+```python
+service_client = snet_sdk.create_service_client(
+    org_id="26072b8b6a0e448180f8c0e702ab6d2f",
+    service_id="Exampleservice",
+    group_name="default_group",
+    concurrent_calls=5  # Number of prepaid calls to allocate
+)
+```
+
+Then you can make service calls as usual, and the SDK will use the prepaid pool internally:
+
+```python
+for i in range(5):
+    response = service_client.call_rpc("add", "Numbers", a=1, b=2)
+    print(f"Concurrent call {i+1} result:", response)
+```
+
+This model is especially useful for batch inference or rapid sequential calls without incurring on-chain transaction costs for each invocation.
 
 ### Train call
 
