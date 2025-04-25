@@ -254,23 +254,6 @@ train_price = service_client.training.train_model_price(model_id)
 model_status = service_client.training.train_model(model_id, train_price)
 ```
 
-#### Extend expiration and add funds
-
-`open_channel()` as well as `deposit_and_open_channel()` returns the payment channel. You can use it to add funds to it
-and extend its expiration using the following methods: 
-`add_funds()`[[1]](#1-this-method-uses-a-call-to-a-paid-smart-contract-function), 
-`extend_expiration`[[1]](#1-this-method-uses-a-call-to-a-paid-smart-contract-function) 
-and `extend_and_add_funds()`[[1]](#1-this-method-uses-a-call-to-a-paid-smart-contract-function). 
-
-```python
-payment_channel = service_client.open_channel(amount=123456, expiration=33333)
-
-payment_channel.add_funds(amount=123456)
-payment_channel.extend_expiration(expiration=33333)
-
-payment_channel.extend_and_add_funds(amount=123456, expiration=33333)
-```
-
 ## Other useful features
 
 #### Get the current block number
