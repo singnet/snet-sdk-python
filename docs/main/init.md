@@ -73,8 +73,7 @@ of the `ServiceClient` class with all the required parameters, which is then ret
 - `service_id` (str): The ID of the service.
 - `group_name` (str): The name of the payment group. Defaults to _None_.
 - `payment_strategy` (PaymentStrategy): The payment channel management strategy. Defaults to _None_.
-- `free_call_auth_token_bin` (str): The free call authentication token in binary format. Defaults to _None_.
-- `free_call_token_expiry_block` (int): The block number when the free call token expires. Defaults to _None_.
+- `address` (str): Wallet address to use free calls. Defaults to _None_.
 - `options` (dict): Additional options for the service client. Defaults to _None_.
 - `concurrent_calls` (int): The number of concurrent calls allowed. Defaults to 1.
 

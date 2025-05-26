@@ -26,7 +26,7 @@ from snet.sdk.config import Config
 from snet.sdk.client_lib_generator import ClientLibGenerator
 from snet.sdk.mpe.mpe_contract import MPEContract
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
-from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy as PaymentStrategy
+from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy
 from snet.sdk.service_client import ServiceClient
 from snet.sdk.storage_provider.storage_provider import StorageProvider
 from snet.sdk.custom_typing import ModuleName, ServiceStub
@@ -93,9 +93,7 @@ class SnetSDK:
                               service_id: str,
                               group_name=None,
                               payment_strategy=None,
-                              free_call_auth_token_bin=None,
-                              free_call_token_expiry_block=None,
-                              email=None,
+                              address=None,
                               options=None,
                               concurrent_calls: int = 1):
 
@@ -121,20 +119,13 @@ class SnetSDK:
                 self.lib_generator.generate_client_library()
 
         if payment_strategy is None:
-            payment_strategy = PaymentStrategy(
+            payment_strategy = DefaultPaymentStrategy(
                 concurrent_calls=concurrent_calls
             )
 
         if options is None:
             options = dict()
-        options['free_call_auth_token-bin'] = (
-            bytes.fromhex(free_call_auth_token_bin) if
-            free_call_token_expiry_block else ""
-        )
-        options['free-call-token-expiry-block'] = (
-            free_call_token_expiry_block if free_call_token_expiry_block else 0
-        )
-        options['email'] = email if email else ""
+        options['user_address'] = address if address else ""
         options['concurrency'] = self._sdk_config.get("concurrency", True)
 
         service_metadata = self._metadata_provider.enhance_service_metadata(

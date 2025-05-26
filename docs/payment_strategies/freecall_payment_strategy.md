@@ -7,6 +7,8 @@ Entities:
    - [is_free_call_available](#is_free_call_available)
    - [get_payment_metadata](#get_payment_metadata)
    - [generate_signature](#generate_signature)
+   - [get_free_call_token_details](#get_free_call_token_details)
+   - [select_channel](#select_channel)
 
 ### Class `FreeCallPaymentStrategy`
 
@@ -17,7 +19,7 @@ is extended by: -
 #### description
 
 The `FreeCallPaymentStrategy` class is a concrete implementation of the `PaymentStrategy` interface.
-It allows you to use free calls (which can be received from the [Dapp](https://beta.singularitynet.io/)) to 
+It allows you to use free calls (which can be received from the daemon) to 
 call services. 
 
 #### methods
@@ -68,3 +70,31 @@ Generates a signature for the given service client using the provided free call 
 ###### raises:
 
 - Exception: If any of the required parameters for the free call strategy are missing.
+
+#### `get_free_call_token_details`
+
+Sends a request to the daemon and receives a free call token.
+
+###### args:
+
+- `service_client` (ServiceClient): The service client instance.
+
+###### returns:
+
+- A tuple containing the free call token and the token expiration block number. (tuple[str, int])
+
+###### raises:
+
+- Exception: If an error occurred while receiving the token.
+
+#### `select_channel`
+
+Creates a channel to the daemon.
+
+###### args:
+
+- `service_client` (ServiceClient): The service client object.
+
+###### returns:
+
+- The channel for the service calling.
