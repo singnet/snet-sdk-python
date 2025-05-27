@@ -1,5 +1,4 @@
 import json
-import subprocess
 import sys
 import importlib.resources
 from urllib.parse import urlparse

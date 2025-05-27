@@ -13,7 +13,7 @@ class FreeCallPaymentStrategy(PaymentStrategy):
 
     def is_free_call_available(self, service_client) -> bool:
         try:
-            self._user_address = service_client.options["user_address"]
+            self._user_address = service_client.account.signer_address
             self._free_call_token, self._token_expiry_date_block = self.get_free_call_token_details(service_client)
 
             if not self._free_call_token:
@@ -51,9 +51,8 @@ class FreeCallPaymentStrategy(PaymentStrategy):
     def get_payment_metadata(self, service_client) -> list:
         signature, current_block_number = self.generate_signature(service_client)
         metadata = [("snet-free-call-auth-token-bin", self._free_call_token),
-                    ("snet-free-call-token-expiry-block", str(self._token_expiry_date_block)),
                     ("snet-payment-type", "free-call"),
-                    ("snet-free-call-user-id", self._user_address),
+                    ("snet-free-call-user-address", self._user_address),
                     ("snet-current-block-number", str(current_block_number)),
                     ("snet-payment-channel-signature-bin", signature)]
 
@@ -96,8 +95,10 @@ class FreeCallPaymentStrategy(PaymentStrategy):
         with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
             state_service_pb2 = importlib.import_module("state_service_pb2")
 
-        request = state_service_pb2.GetFreeCallTokenRequest()
-        request.address = self._user_address
+        request = state_service_pb2.GetFreeCallTokenRequest(
+            address=self._user_address,
+
+        )
 
         with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
             state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
