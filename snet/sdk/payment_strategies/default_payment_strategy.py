@@ -7,13 +7,8 @@ from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
 
 class DefaultPaymentStrategy(PaymentStrategy):
 
-    def __init__(self, concurrent_calls: int = 1):
-        self.concurrent_calls = concurrent_calls
-        self.concurrencyManager = ConcurrencyManager(concurrent_calls)
+    def __init__(self):
         self.channel = None
-
-    def set_concurrency_token(self, token):
-        self.concurrencyManager.__token = token
 
     def set_channel(self, channel):
         self.channel = channel
@@ -25,7 +20,8 @@ class DefaultPaymentStrategy(PaymentStrategy):
             metadata = free_call_payment_strategy.get_payment_metadata(service_client)
         else:
             if service_client.get_concurrency_flag():
-                payment_strategy = PrePaidPaymentStrategy(self.concurrencyManager)
+                concurrent_calls = service_client.get_concurrent_calls()
+                payment_strategy = PrePaidPaymentStrategy(concurrent_calls)
                 metadata = payment_strategy.get_payment_metadata(service_client, self.channel)
             else:
                 payment_strategy = PaidCallPaymentStrategy()
@@ -37,5 +33,6 @@ class DefaultPaymentStrategy(PaymentStrategy):
         pass
 
     def get_concurrency_token_and_channel(self, service_client):
-        payment_strategy = PrePaidPaymentStrategy(self.concurrencyManager)
+        concurrent_calls = service_client.get_concurrent_calls()
+        payment_strategy = PrePaidPaymentStrategy(concurrent_calls)
         return payment_strategy.get_concurrency_token_and_channel(service_client)

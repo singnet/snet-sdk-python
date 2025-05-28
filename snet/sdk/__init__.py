@@ -103,6 +103,7 @@ class SnetSDK:
                               org_id: str,
                               service_id: str,
                               group_name: str=None,
+                              payment_strategy: PaymentStrategy = None,
                               payment_strategy_type: PaymentStrategyType=PaymentStrategyType.DEFAULT,
                               address=None,
                               options=None,
@@ -135,7 +136,8 @@ class SnetSDK:
         options['concurrency'] = self._sdk_config.get("concurrency", True)
         options['concurrent_calls'] = concurrent_calls
 
-
+        if payment_strategy is None:
+            payment_strategy = payment_strategy_type.value()
 
         service_metadata = self._metadata_provider.enhance_service_metadata(
             org_id, service_id
@@ -146,7 +148,8 @@ class SnetSDK:
 
         pb2_module = self.get_module_by_keyword(keyword="pb2.py")
         _service_client = ServiceClient(org_id, service_id, service_metadata,
-                                        group, service_stubs, payment_strategy_type.value(),
+                                        group, service_stubs,
+                                        payment_strategy,
                                         options, self.mpe_contract,
                                         self.account, self.web3, pb2_module,
                                         self.payment_channel_provider,

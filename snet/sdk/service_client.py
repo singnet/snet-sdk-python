@@ -240,6 +240,9 @@ class ServiceClient:
     def get_concurrency_token_and_channel(self) -> tuple[str, PaymentChannel]:
         return self.payment_strategy.get_concurrency_token_and_channel(self)
 
+    def get_concurrent_calls(self):
+        return self.options.get('concurrent_calls', 1)
+
     def set_concurrency_token_and_channel(self, token: str,
                                           channel: PaymentChannel) -> None:
         self.payment_strategy.concurrency_token = token
