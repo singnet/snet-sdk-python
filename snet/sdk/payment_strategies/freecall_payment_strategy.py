@@ -12,9 +12,8 @@ class FreeCallPaymentStrategy(PaymentStrategy):
         self._user_address = None
         self._free_call_token = None
         self._token_expiration_block = None
-        self._free_calls_available = None
 
-    def is_free_call_available(self, service_client) -> bool:
+    def get_free_calls_available(self, service_client) -> int:
         if not self._user_address:
             self._user_address = service_client.account.signer_address
 
@@ -31,7 +30,7 @@ class FreeCallPaymentStrategy(PaymentStrategy):
         with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
             state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
 
-        signature = self.generate_signature(service_client, current_block_number)
+        signature, _ = self.generate_signature(service_client, current_block_number)
         request = state_service_pb2.FreeCallStateRequest(
             address=self._user_address,
             free_call_token=self._free_call_token,
@@ -39,21 +38,19 @@ class FreeCallPaymentStrategy(PaymentStrategy):
             current_block=current_block_number
         )
 
-        channel = service_client._get_grpc_channel()
+        channel = service_client.get_grpc_base_channel()
         stub = state_service_pb2_grpc.FreeCallStateServiceStub(channel)
 
         try:
             response = stub.GetFreeCallsAvailable(request)
-            if response.free_calls_available > 0:
-                return True
-            return False
+            return response.free_calls_available
         except grpc.RpcError as e:
             if self._user_address:
                 print(f"Warning: {e.details()}")
-            return False
+            return 0
 
     def get_payment_metadata(self, service_client) -> list:
-        if self.is_free_call_available(service_client):
+        if self.get_free_calls_available(service_client) <= 0:
             raise Exception(f"Free calls limit for address {self._user_address} has expired. Please use another payment strategy")
         signature, current_block_number = self.generate_signature(service_client)
         metadata = [("snet-free-call-auth-token-bin", self._free_call_token),
@@ -96,7 +93,7 @@ class FreeCallPaymentStrategy(PaymentStrategy):
         with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
             state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
 
-        channel = service_client._get_grpc_channel()
+        channel = service_client.get_grpc_base_channel()
         stub = state_service_pb2_grpc.FreeCallStateServiceStub(channel)
         response = stub.GetFreeCallToken(request)
 

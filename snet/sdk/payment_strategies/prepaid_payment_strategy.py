@@ -4,13 +4,16 @@ from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
 
 class PrePaidPaymentStrategy(PaymentStrategy):
 
-    def __init__(self, concurrent_calls: int, block_offset: int = 240, call_allowance: int = 1):
+    def __init__(self, concurrent_calls: int=1, block_offset: int = 240, call_allowance: int = 1):
         self.concurrency_manager = ConcurrencyManager(concurrent_calls)
         self.block_offset = block_offset
         self.call_allowance = call_allowance
 
     def get_price(self, service_client):
         return service_client.get_price() * self.concurrency_manager.concurrent_calls
+
+    def set_concurrent_calls(self, concurrent_calls):
+        self.concurrency_manager.concurrent_calls = concurrent_calls
 
     def get_payment_metadata(self, service_client):
         channel = self.select_channel(service_client)
