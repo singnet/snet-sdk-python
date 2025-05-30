@@ -12,12 +12,12 @@ import web3
 from eth_account.messages import defunct_hash_message
 from rfc3986 import urlparse
 
-from snet.sdk import generic_client_interceptor
+from snet.sdk import generic_client_interceptor, FreeCallPaymentStrategy
 from snet.sdk.account import Account
 from snet.sdk.mpe.mpe_contract import MPEContract
 from snet.sdk.mpe.payment_channel import PaymentChannel
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
-from snet.sdk.payment_strategies import default_payment_strategy as strategy
+from snet.sdk.payment_strategies.prepaid_payment_strategy import PrePaidPaymentStrategy
 from snet.sdk.resources.root_certificate import certificate
 from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
 from snet.sdk.custom_typing import ModuleName, ServiceStub
@@ -51,6 +51,8 @@ class ServiceClient:
         self.service_metadata = service_metadata
         self.group = group
         self.payment_strategy = payment_strategy
+        if isinstance(payment_strategy, PrePaidPaymentStrategy):
+            self.payment_strategy.set_concurrent_calls(options["concurrent_calls"])
         self.options = options
         self.mpe_address = mpe_contract.contract.address
         self.account = account
@@ -240,6 +242,9 @@ class ServiceClient:
     def get_concurrency_token_and_channel(self) -> tuple[str, PaymentChannel]:
         return self.payment_strategy.get_concurrency_token_and_channel(self)
 
+    def get_concurrent_calls(self):
+        return self.options.get('concurrent_calls', 1)
+
     def set_concurrency_token_and_channel(self, token: str,
                                           channel: PaymentChannel) -> None:
         self.payment_strategy.concurrency_token = token
@@ -319,3 +324,10 @@ class ServiceClient:
             for field_type, field_name in fields:
                 string_output += f"  Field: {field_type} {field_name}\n"
         return string_output
+
+    def get_free_calls_available(self) -> int:
+        payment_strategy = self.payment_strategy
+        if not isinstance(payment_strategy, FreeCallPaymentStrategy):
+            payment_strategy = FreeCallPaymentStrategy()
+
+        return payment_strategy.get_free_calls_available(self)
