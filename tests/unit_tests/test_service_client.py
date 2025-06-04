@@ -140,7 +140,7 @@ class TestServiceClient(unittest.TestCase):
     def test_generate_signature(self):
         message = b"test_message"
         mock_signature = MagicMock()
-        self.client.sdk_web3.eth.account.signHash = MagicMock(
+        self.client.sdk_web3.eth.account._sign_hash = MagicMock(
             return_value=MagicMock(signature=mock_signature)
         )
         result = self.client.generate_signature(message)
@@ -153,7 +153,7 @@ class TestServiceClient(unittest.TestCase):
         block_number = "test_block_number"
         mock_solidity_keccak.return_value = b"test_message"
         mock_signature = MagicMock()
-        self.client.sdk_web3.eth.account.signHash = MagicMock(
+        self.client.sdk_web3.eth.account._sign_hash = MagicMock(
             return_value=MagicMock(signature=mock_signature)
         )
         result = self.client.generate_training_signature(text, address,

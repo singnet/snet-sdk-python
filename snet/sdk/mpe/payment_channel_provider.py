@@ -18,9 +18,10 @@ class PaymentChannelProvider(object):
 
         self.mpe_contract = mpe_contract
         self.event_topics = [self.web3.keccak(
-            text="ChannelOpen(uint256,uint256,address,address,address,bytes32,uint256,uint256)").hex()]
+            text="ChannelOpen(uint256,uint256,address,address,address,bytes32,uint256,uint256)")]
         self.deployment_block = get_contract_deployment_block(self.web3, "MultiPartyEscrow")
         self.mpe_address = mpe_contract.contract.address
+        print(self.mpe_address)
         self.channels_file = CHANNELS_DIR.joinpath(str(self.mpe_address), "channels.pickle")
 
     def update_cache(self):
@@ -78,7 +79,7 @@ class PaymentChannelProvider(object):
                                                   "topics": self.event_topics})
             from_block = to_block + 1
 
-        event_abi = self.mpe_contract.contract._find_matching_event_abi(event_name="ChannelOpen")
+        event_abi = self.mpe_contract.contract.events.ChannelOpen._get_event_abi()
 
         event_data_list = [get_event_data(codec, event_abi, l)["args"] for l in logs]
         channels_opened = list(map(self._event_data_args_to_dict, event_data_list))
