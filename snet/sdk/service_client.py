@@ -199,7 +199,7 @@ class ServiceClient:
         return self.group["pricing"][0]["price_in_cogs"]
 
     def generate_signature(self, message: bytes) -> bytes:
-        return bytes(self.sdk_web3.eth.account.signHash(
+        return bytes(self.sdk_web3.eth.account._sign_hash(
             defunct_hash_message(message), self.account.signer_private_key
         ).signature)
 
@@ -210,7 +210,7 @@ class ServiceClient:
             ["string", "address", "uint256"],
             [text, address, block_number]
         )
-        return self.sdk_web3.eth.account.signHash(
+        return self.sdk_web3.eth.account._sign_hash(
             defunct_hash_message(message), self.account.signer_private_key
         ).signature
 
