@@ -105,7 +105,6 @@ class SnetSDK:
                               group_name: str=None,
                               payment_strategy: PaymentStrategy = None,
                               payment_strategy_type: PaymentStrategyType=PaymentStrategyType.DEFAULT,
-                              address=None,
                               options=None,
                               concurrent_calls: int = 1):
 
@@ -132,7 +131,6 @@ class SnetSDK:
 
         if options is None:
             options = dict()
-        options['user_address'] = address if address else ""
         options['concurrency'] = self._sdk_config.get("concurrency", True)
         options['concurrent_calls'] = concurrent_calls
 

@@ -214,11 +214,6 @@ class ServiceClient:
             defunct_hash_message(message), self.account.signer_private_key
         ).signature
 
-    def get_free_call_config(self) -> tuple[str, str, int]:
-        return (self.options['email'],
-                self.options['free_call_auth_token-bin'],
-                self.options['free-call-token-expiry-block'])
-
     def get_service_details(self) -> tuple[str, str, str, str]:
         return (self.org_id,
                 self.service_id,
