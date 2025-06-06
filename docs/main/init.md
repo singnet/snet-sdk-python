@@ -3,7 +3,8 @@
 [Link](https://github.com/singnet/snet-sdk-python/blob/master/snet/sdk/__init__.py) to GitHub
 
 Entities:
-1. [SnetSDK](#class-snetsdk)
+1. [PaymentStrategyType](#class-paymentstrategytype)
+2. [SnetSDK](#class-snetsdk)
    - [\_\_init\_\_](#__init__)
    - [create_service_client](#create_service_client)
    - [get_service_stub](#get_service_stub)
@@ -14,6 +15,24 @@ Entities:
    - [_get_service_group_details](#_get_service_group_details)
    - [get_organization_list](#get_organization_list)
    - [get_services_list](#get_services_list)
+
+### Class `PaymentStrategyType`
+
+extends: `Enum`
+
+is extended by: -
+
+#### description
+
+This is an `enum` that represents the available payment strategies. It is used to determine which payment 
+strategy to use when initializing the SDK.
+
+#### members
+
+- `DEFAULT`
+- `FREE_CALL`
+- `PAID_CALL`
+- `PREPAID_CALL`
 
 ### Class `SnetSDK`
 
@@ -73,7 +92,8 @@ of the `ServiceClient` class with all the required parameters, which is then ret
 - `service_id` (str): The ID of the service.
 - `group_name` (str): The name of the payment group. Defaults to _None_.
 - `payment_strategy` (PaymentStrategy): The payment channel management strategy. Defaults to _None_.
-- `address` (str): Wallet address to use free calls. Defaults to _None_.
+- `payment_strategy_type` (PaymentStrategyType): The type of payment management strategy. 
+Defaults to `PaymentStrategyType.DEFAULT`.
 - `options` (dict): Additional options for the service client. Defaults to _None_.
 - `concurrent_calls` (int): The number of concurrent calls allowed. Defaults to 1.
 

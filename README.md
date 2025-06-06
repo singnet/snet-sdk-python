@@ -1,3 +1,4 @@
+from snet.sdk import PaymentStrategyType
 
 # snet-sdk-python
 
@@ -147,22 +148,52 @@ visit the [Payment](#payment) section.
 
 ## Payment
 
-### Free call 
+When creating a service client, you can select a payment strategy using the `payment_strategy_type` parameter:
 
-If you want to use the free calls you will need to pass this argument to the `create_service_client()` method:
+```python
+from snet.sdk import PaymentStrategyType
 
-```python    
-address = "YOUR_ETHEREUM_ADDRESS"
+payment_strategy_type = PaymentStrategyType.<NAME>
 ```
 
+These are four payment strategies:
+
+- `PaymentStrategyType.DEFAULT`
+- `PaymentStrategyType.FREE_CALL`
+- `PaymentStrategyType.PAID_CALL`
+- `PaymentStrategyType.PREPAID_CALL`
+
+The default payment strategy selects one of the other three each time the service is called, depending on the 
+availability of free calls, as well as the presence of parameters required for concurrent calls. While choosing 
+a specific payment strategy will not allow you to switch to another. This is especially convenient when you want 
+to use free calls without accidentally spending money.
+
+> Note: If you don't specify еру `payment_strategy_type` parameter, the default payment strategy will be used.
+
+### Free call 
+
+If you want to use the free calls you will need to choose `PaymentStrategyType.FREE_CALL` as the payment strategy type.
 Creating a service client with free calls included would look like this:
+
 ```python
 service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f", 
                                                 service_id="Exampleservice",
-                                                address="0xtest")
+                                                payment_strategy_type = PaymentStrategyType.FREE_CALL)
 ```
 
 ### Paid call
+
+If you want to use regular paid calls you will need to choose `PaymentStrategyType.PAID_CALL` as the payment strategy type.
+Creating a service client with paid calls would look like this:
+
+```python
+service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f", 
+                                                service_id="Exampleservice",
+                                                payment_strategy_type = PaymentStrategyType.PAID_CALL)
+```
+
+There is no need to call functions for interacting with payment channels, because they are automatically 
+managed by the SDK. But anyway you can use them if you want.
 
 #### Open channel with the specified amount of funds and expiration
 
@@ -203,15 +234,20 @@ payment_channel.extend_and_add_funds(amount=123456, expiration=33333)
 
 ### Concurrent (Prepaid) call
 
-Concurrent (prepaid) calls allow you to prepay for a batch of service calls in advance. This off-chain strategy is ideal for scenarios requiring high throughput and low latency. Unlike regular paid calls, the payment is done once upfront, and the SDK automatically manages the channel during usage.
+Concurrent (prepaid) calls allow you to prepay for a batch of service calls in advance. This off-chain strategy 
+is ideal for scenarios requiring high throughput and low latency. Unlike regular paid calls, the payment is done 
+once upfront, and the SDK automatically manages the channel during usage.
 
-To use concurrent prepaid calls, specify the `concurrent_calls` parameter when creating a service client:
+If you want to use prepaid calls you will need to choose `PaymentStrategyType.PREPAID_CALL` as the payment strategy type
+as well as pass the number of concurrent calls as the `concurrent_calls` parameter. Creating a service client with 
+prepaid calls would look like this:
 
 ```python
 service_client = snet_sdk.create_service_client(
     org_id="26072b8b6a0e448180f8c0e702ab6d2f",
     service_id="Exampleservice",
     group_name="default_group",
+    payment_strategy_type=PaymentStrategyType.PREPAID_CALL,
     concurrent_calls=5  # Number of prepaid calls to allocate
 )
 ```
