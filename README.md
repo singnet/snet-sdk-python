@@ -1,4 +1,3 @@
-from snet.sdk import PaymentStrategyType
 
 # snet-sdk-python
 
