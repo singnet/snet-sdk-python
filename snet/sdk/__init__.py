@@ -2,6 +2,7 @@ import importlib
 import os
 import sys
 import warnings
+from enum import Enum
 
 import google.protobuf.internal.api_implementation
 
@@ -26,16 +27,26 @@ from snet.sdk.config import Config
 from snet.sdk.client_lib_generator import ClientLibGenerator
 from snet.sdk.mpe.mpe_contract import MPEContract
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
-from snet.sdk.payment_strategies.default_payment_strategy import DefaultPaymentStrategy as PaymentStrategy
+from snet.sdk.payment_strategies.default_payment_strategy import *
 from snet.sdk.service_client import ServiceClient
 from snet.sdk.storage_provider.storage_provider import StorageProvider
 from snet.sdk.custom_typing import ModuleName, ServiceStub
-from snet.sdk.utils.utils import (bytes32_to_str, find_file_by_keyword,
-                                  type_converter)
+from snet.sdk.utils.utils import (
+    bytes32_to_str,
+    find_file_by_keyword,
+    type_converter
+)
 
 google.protobuf.internal.api_implementation.Type = lambda: 'python'
 _sym_db = _symbol_database.Default()
 _sym_db.RegisterMessage = lambda x: None
+
+
+class PaymentStrategyType(Enum):
+    PAID_CALL = PaidCallPaymentStrategy
+    FREE_CALL = FreeCallPaymentStrategy
+    PREPAID_CALL = PrePaidPaymentStrategy
+    DEFAULT = DefaultPaymentStrategy
 
 
 class SnetSDK:
@@ -91,11 +102,9 @@ class SnetSDK:
     def create_service_client(self,
                               org_id: str,
                               service_id: str,
-                              group_name=None,
-                              payment_strategy=None,
-                              free_call_auth_token_bin=None,
-                              free_call_token_expiry_block=None,
-                              email=None,
+                              group_name: str=None,
+                              payment_strategy: PaymentStrategy = None,
+                              payment_strategy_type: PaymentStrategyType=PaymentStrategyType.DEFAULT,
                               options=None,
                               concurrent_calls: int = 1):
 
@@ -120,22 +129,13 @@ class SnetSDK:
                 print("Generating client library...")
                 self.lib_generator.generate_client_library()
 
-        if payment_strategy is None:
-            payment_strategy = PaymentStrategy(
-                concurrent_calls=concurrent_calls
-            )
-
         if options is None:
             options = dict()
-        options['free_call_auth_token-bin'] = (
-            bytes.fromhex(free_call_auth_token_bin) if
-            free_call_token_expiry_block else ""
-        )
-        options['free-call-token-expiry-block'] = (
-            free_call_token_expiry_block if free_call_token_expiry_block else 0
-        )
-        options['email'] = email if email else ""
         options['concurrency'] = self._sdk_config.get("concurrency", True)
+        options['concurrent_calls'] = concurrent_calls
+
+        if payment_strategy is None:
+            payment_strategy = payment_strategy_type.value()
 
         service_metadata = self._metadata_provider.enhance_service_metadata(
             org_id, service_id
@@ -146,7 +146,8 @@ class SnetSDK:
 
         pb2_module = self.get_module_by_keyword(keyword="pb2.py")
         _service_client = ServiceClient(org_id, service_id, service_metadata,
-                                        group, service_stubs, payment_strategy,
+                                        group, service_stubs,
+                                        payment_strategy,
                                         options, self.mpe_contract,
                                         self.account, self.web3, pb2_module,
                                         self.payment_channel_provider,

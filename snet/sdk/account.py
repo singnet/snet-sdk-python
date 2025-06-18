@@ -84,7 +84,7 @@ class Account:
         signed_txn = self.web3.eth.account.sign_transaction(
             transaction, private_key=self.private_key)
         return self.web3.to_hex(
-            self.web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            self.web3.eth.send_raw_transaction(signed_txn.raw_transaction)
         )
 
     def send_transaction(self, contract_fn, *args):

@@ -1,88 +1,101 @@
 import importlib
-from urllib.parse import urlparse
 
 import grpc
 import web3
-from snet.sdk.resources.root_certificate import certificate
-from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
 
 from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
-
+from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
 
 class FreeCallPaymentStrategy(PaymentStrategy):
 
-    def is_free_call_available(self, service_client):
+    def __init__(self):
+        self._user_address = None
+        self._free_call_token = None
+        self._token_expiration_block = None
+
+    def get_free_calls_available(self, service_client) -> int:
+        if not self._user_address:
+            self._user_address = service_client.account.signer_address
+
+        current_block_number = service_client.get_current_block_number()
+
+        if (not self._free_call_token or
+                not self._token_expiration_block or
+                current_block_number > self._token_expiration_block):
+            self._free_call_token, self._token_expiration_block = self.get_free_call_token_details(service_client)
+
+        with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
+            state_service_pb2 = importlib.import_module("state_service_pb2")
+
+        with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
+            state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
+
+        signature, _ = self.generate_signature(service_client, current_block_number)
+        request = state_service_pb2.FreeCallStateRequest(
+            address=self._user_address,
+            free_call_token=self._free_call_token,
+            signature=signature,
+            current_block=current_block_number
+        )
+
+        channel = service_client.get_grpc_base_channel()
+        stub = state_service_pb2_grpc.FreeCallStateServiceStub(channel)
+
         try:
-            org_id, service_id, group_id, daemon_endpoint = service_client.get_service_details()
-            email, token_for_free_call, token_expiry_date_block = service_client.get_free_call_config()
-
-            if not token_for_free_call:
-                return False
-
-            signature, current_block_number = self.generate_signature(service_client)
-            with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
-                state_service_pb2 = importlib.import_module("state_service_pb2")
-
-            with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
-                state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
-
-            request = state_service_pb2.FreeCallStateRequest()
-            request.user_id = email
-            request.token_for_free_call = token_for_free_call
-            request.token_expiry_date_block = token_expiry_date_block
-            request.signature = signature
-            request.current_block = current_block_number
-
-            endpoint_object = urlparse(daemon_endpoint)
-            if endpoint_object.port is not None:
-                channel_endpoint = endpoint_object.hostname + ":" + str(endpoint_object.port)
-            else:
-                channel_endpoint = endpoint_object.hostname
-
-            if endpoint_object.scheme == "http":
-                channel = grpc.insecure_channel(channel_endpoint)
-            elif endpoint_object.scheme == "https":
-                channel = grpc.secure_channel(channel_endpoint, grpc.ssl_channel_credentials(root_certificates=certificate))
-            else:
-                raise ValueError('Unsupported scheme in service metadata ("{}")'.format(endpoint_object.scheme))
-
-            stub = state_service_pb2_grpc.FreeCallStateServiceStub(channel)
             response = stub.GetFreeCallsAvailable(request)
-            if response.free_calls_available > 0:
-                return True
-            return False
-        except Exception as e:
-            return False
+            return response.free_calls_available
+        except grpc.RpcError as e:
+            if self._user_address:
+                print(f"Warning: {e.details()}")
+            return 0
 
-    def get_payment_metadata(self, service_client):
-        email, token_for_free_call, token_expiry_date_block = service_client.get_free_call_config()
+    def get_payment_metadata(self, service_client) -> list:
+        if self.get_free_calls_available(service_client) <= 0:
+            raise Exception(f"Free calls limit for address {self._user_address} has expired. Please use another payment strategy")
         signature, current_block_number = self.generate_signature(service_client)
-        metadata = [("snet-free-call-auth-token-bin", token_for_free_call),
-                    ("snet-free-call-token-expiry-block", str(token_expiry_date_block)),
+        metadata = [("snet-free-call-auth-token-bin", self._free_call_token),
                     ("snet-payment-type", "free-call"),
-                    ("snet-free-call-user-id", email),
+                    ("snet-free-call-user-address", self._user_address),
                     ("snet-current-block-number", str(current_block_number)),
                     ("snet-payment-channel-signature-bin", signature)]
 
         return metadata
 
-    def select_channel(self, service_client):
-        pass
+    def generate_signature(self, service_client, current_block_number=None, with_token=True) -> tuple[bytes, int]:
+        if not current_block_number:
+            current_block_number = service_client.get_current_block_number()
+        org_id, service_id, group_id, _ = service_client.get_service_details()
 
-    def generate_signature(self, service_client):
-        org_id, service_id, group_id, daemon_endpoint = service_client.get_service_details()
-        email, token_for_free_call, token_expiry_date_block = service_client.get_free_call_config()
+        message_types = ["string", "string", "string", "string", "string", "uint256", "bytes32"]
+        message_values = ["__prefix_free_trial", self._user_address, org_id, service_id, group_id,
+                          current_block_number, self._free_call_token]
 
-        if token_expiry_date_block == 0 or len(email) == 0 or len(token_for_free_call) == 0:
-            raise Exception(
-                "You are using default 'FreeCallPaymentStrategy' to use this strategy you need to pass "
-                "'free_call_auth_token-bin','email','free-call-token-expiry-block' in config")
+        if not with_token:
+            message_types = message_types[:-1]
+            message_values = message_values[:-1]
 
-        current_block_number = service_client.get_current_block_number()
-
-        message = web3.Web3.solidity_keccak(
-            ["string", "string", "string", "string", "string", "uint256", "bytes32"],
-            ["__prefix_free_trial", email, org_id, service_id, group_id, current_block_number,
-             token_for_free_call]
-        )
+        message = web3.Web3.solidity_keccak(message_types, message_values)
         return service_client.generate_signature(message), current_block_number
+
+    def get_free_call_token_details(self, service_client, current_block_number=None) -> tuple[bytes, int]:
+
+        signature, current_block_number = self.generate_signature(service_client, current_block_number, with_token=False)
+
+        with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
+            state_service_pb2 = importlib.import_module("state_service_pb2")
+
+        request = state_service_pb2.GetFreeCallTokenRequest(
+            address=self._user_address,
+            signature=signature,
+            current_block=current_block_number
+        )
+
+        with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
+            state_service_pb2_grpc = importlib.import_module("state_service_pb2_grpc")
+
+        channel = service_client.get_grpc_base_channel()
+        stub = state_service_pb2_grpc.FreeCallStateServiceStub(channel)
+        response = stub.GetFreeCallToken(request)
+
+        return response.token, response.token_expiration_block
+        

@@ -52,7 +52,7 @@ class PaymentChannel:
                 self.channel_id,current_block_number
             ]
         )
-        signature = self.web3.eth.account.signHash(defunct_hash_message(message), self.account.signer_private_key).signature
+        signature = self.web3.eth.account._sign_hash(defunct_hash_message(message), self.account.signer_private_key).signature
         with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
             state_service_pb2 = importlib.import_module("state_service_pb2")
         request = state_service_pb2.ChannelStateRequest(
