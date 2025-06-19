@@ -144,21 +144,21 @@ def print_service_info():
 def balance():
     """
     The function, which is called when the user enters the command 'balance' in the main menu.
-    Prints the balances of AGIX and MPE. It gets the balances using 'balance_of' and 'escrow_balance'.
+    Prints the balances of FET and MPE. It gets the balances using 'balance_of' and 'escrow_balance'.
     """
     account_balance = snet_sdk.account.token_contract.functions.balanceOf(snet_sdk.account.address).call()
     escrow_balance = snet_sdk.account.escrow_balance()
 
-    print(f"AGIX balance: {account_balance}")
+    print(f"FET balance: {account_balance}")
     print(f"MPE balance: {escrow_balance}")
 
 
 def deposit():
     """
     The function, which is called when the user enters the command 'deposit' in the main menu.
-    Deposits the user-specified amount of AGIX tokens in cogs into MPE contract using 'deposit_to_escrow_account'.
+    Deposits the user-specified amount of FET tokens in cogs into MPE contract using 'deposit_to_escrow_account'.
     """
-    amount = int(input("Enter amount of AGIX tokens in cogs to deposit into an MPE account: "))
+    amount = int(input("Enter amount of FET tokens in cogs to deposit into an MPE account: "))
     snet_sdk.account.deposit_to_escrow_account(amount)
 
 
@@ -209,8 +209,8 @@ def open_channel():
     """
     The function, which is called when the user enters the command 'open' in the channel menu.
     Opens a new channel for the active service. Checks the balance of the MPE contract and asks the user
-    if they want to deposit AGIX tokens into it if there isn't enough funds. Opens the channel using 'open_channel'
-    or 'deposit_and_open_channel' with the user-specified amount of AGIX tokens in cogs and expiration time.
+    if they want to deposit FET tokens into it if there isn't enough funds. Opens the channel using 'open_channel'
+    or 'deposit_and_open_channel' with the user-specified amount of FET tokens in cogs and expiration time.
     """
     global active_service
     global channels
@@ -224,13 +224,13 @@ def open_channel():
         if not is_continue:
             return None
 
-    amount = int(input("Enter amount of AGIX tokens in cogs to put into the channel: ").strip())
+    amount = int(input("Enter amount of FET tokens in cogs to put into the channel: ").strip())
 
     balance = snet_sdk.account.escrow_balance()
     is_deposit = False
     if balance < amount:
         print(f"Insufficient balance!\n\tCurrent MPE balance: {balance}\n\tAmount to put: {amount}")
-        is_deposit = input("Would you like to deposit needed amount of AGIX tokens in advance? (y/n): ").strip() == 'y'
+        is_deposit = input("Would you like to deposit needed amount of FET tokens in advance? (y/n): ").strip() == 'y'
         if not is_deposit:
             print("Channel is not opened!")
             return None
@@ -265,13 +265,13 @@ def add_funds():
     """
     The function, which is called when the user enters the command 'add-funds' in the channel menu.
     Adds funds to the channel. Finds the channel by its id specified by the user and adds the user-specified amount
-    of AGIX tokens in cogs to it using 'add_funds'.
+    of FET tokens in cogs to it using 'add_funds'.
     """
     channel_id = int(input("Enter channel id: ").strip())
     exists = False
     for channel in channels:
         if channel[0].channel_id == channel_id:
-            amount = int(input("Enter amount of AGIX tokens in cogs to add to the channel: ").strip())
+            amount = int(input("Enter amount of FET tokens in cogs to add to the channel: ").strip())
             channel[0].add_funds(amount)
             exists = True
     if not exists:
@@ -322,7 +322,7 @@ commands = {
         "organizations": (list_organizations, "print a list of organization ids from Registry"),
         "services": (list_services_for_org, "print a list of service ids for an organization from Registry"),
         "balance": (balance, "print the account balance and the escrow balance"),
-        "deposit": (deposit, "deposit AGIX tokens into MPE"),
+        "deposit": (deposit, "deposit FET tokens into MPE"),
         "block": (block_number, "print the current block number"),
         "service": (lambda: None, "go to the services menu"),
         "channel": (lambda: None, "go to the channels menu"),
