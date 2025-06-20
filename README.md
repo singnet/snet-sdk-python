@@ -465,6 +465,12 @@ $ pip install -r requirements.txt
 $ pip install -e .
 ```
 
+## Contributing
+
+We are always glad to receive contribution to the development of our project from the community!
+
+Please refer to [Contributing guide](./CONTRIBUTING.md)
+
 ## License  
   
 This project is licensed under the MIT License - see the
