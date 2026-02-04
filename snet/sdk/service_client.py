@@ -10,7 +10,7 @@ import grpc
 from hexbytes import HexBytes
 import web3
 from eth_account.messages import defunct_hash_message
-from rfc3986 import urlparse
+from urllib.parse import urlparse
 
 from snet.sdk import generic_client_interceptor, FreeCallPaymentStrategy
 from snet.sdk.account import Account

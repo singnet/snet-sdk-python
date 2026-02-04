@@ -1,34 +1,73 @@
-import os
-from setuptools import find_namespace_packages, setup
-
-from version import __version__
-
-PACKAGE_NAME = 'snet-sdk'
-
-
-this_directory = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
+from pathlib import Path
+from setuptools import setup
+from setuptools.command.develop import develop as _develop
+from setuptools.command.install import install as _install
+from setuptools.command.build_py import build_py as _build_py
+from grpc_tools import protoc
+import importlib.resources
 
 
-with open("./requirements.txt") as f:
-    requirements_str = f.read()
-requirements = requirements_str.split("\n")
+def install_and_compile_proto():
+    """
+    Compiles protobuf files directly.
+    """
+    proto_dir = Path(__file__).absolute().parent.joinpath(
+        "snet", "sdk", "resources", "proto")
+
+    grpc_protos_include = str(importlib.resources.files('grpc_tools').joinpath('_proto'))
+
+    print(f"Proto directory: {proto_dir}")
+    print(f"Grpc include directory: {grpc_protos_include}")
+
+    if not proto_dir.exists():
+        print(f"Warning: Proto directory not found at {proto_dir}")
+        return
+
+    # glob('*.proto') is non-recursive. It will NOT look inside subfolders.
+    for fn in proto_dir.glob('*.proto'):
+        print(f"Compiling protobuf: {fn}")
+
+        command = [
+            'grpc_tools.protoc',
+            f'-I{proto_dir}',
+            f'-I{grpc_protos_include}',
+            f'--python_out={proto_dir}',
+            f'--grpc_python_out={proto_dir}',
+            str(fn)
+        ]
+
+        if protoc.main(command) != 0:
+            print(f"Error: Failed to compile {fn}")
+            raise RuntimeError(f"Protocol buffer compilation failed for {fn}")
+
+
+class build_py(_build_py):
+    """
+    This is the hook used by 'python -m build'.
+    """
+    def run(self):
+        self.execute(install_and_compile_proto, (), msg="Compile protocol buffers")
+        _build_py.run(self)
+
+
+class develop(_develop):
+    """Post-installation for development mode (pip install -e .)."""
+    def run(self):
+        self.execute(install_and_compile_proto, (), msg="Compile protocol buffers")
+        _develop.run(self)
+
+
+class install(_install):
+    """Post-installation for legacy installation mode."""
+    def run(self):
+        self.execute(install_and_compile_proto, (), msg="Compile protocol buffers")
+        _install.run(self)
 
 
 setup(
-    name=PACKAGE_NAME,
-    version=__version__,
-    packages=find_namespace_packages(include=['snet*']),
-    namespace_packages=['snet'],
-    url='https://github.com/singnet/snet-sdk-python',
-    author='SingularityNET Foundation',
-    author_email='info@singularitynet.io',
-    description='SingularityNET Python SDK',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    license='MIT',
-    python_requires='>=3.10',
-    install_requires=requirements,
-    include_package_data=True
+    cmdclass={
+        'develop': develop,
+        'install': install,
+        'build_py': build_py,
+    },
 )
