@@ -29,10 +29,17 @@ def type_converter(t):
         if "int" in t:
             return lambda x: web3.Web3.to_int(text=x)
         elif "bytes32" in t:
-            return lambda x: web3.Web3.to_bytes(text=x).ljust(32, b"\0") if not x.startswith(
-                "0x") else web3.Web3.to_bytes(hexstr=x).ljust(32, b"\0")
+            return lambda x: (
+                web3.Web3.to_bytes(text=x).ljust(32, b"\0")
+                if not x.startswith("0x")
+                else web3.Web3.to_bytes(hexstr=x).ljust(32, b"\0")
+            )
         elif "byte" in t:
-            return lambda x: web3.Web3.to_bytes(text=x) if not x.startswith("0x") else web3.Web3.to_bytes(hexstr=x)
+            return lambda x: (
+                web3.Web3.to_bytes(text=x)
+                if not x.startswith("0x")
+                else web3.Web3.to_bytes(hexstr=x)
+            )
         elif "address" in t:
             return safe_address_converter
         else:
@@ -48,16 +55,16 @@ def compile_proto(
     codegen_dir: Path,
     proto_file: str | None = None,
     target_language: str = "python",
-    add_training: bool = False
+    add_training: bool = False,
 ) -> bool:
     try:
         if not os.path.exists(codegen_dir):
             os.makedirs(codegen_dir)
-        proto_include = importlib.resources.files('grpc_tools') / '_proto'
+        proto_include = importlib.resources.files("grpc_tools") / "_proto"
 
         compiler_args = [
             "-I{}".format(entry_path),
-            "-I{}".format(proto_include)
+            "-I{}".format(proto_include),
         ]
 
         if add_training:
@@ -109,10 +116,10 @@ def is_valid_endpoint(url):
         result = urlparse(url)
         if result.port:
             _port = int(result.port)
-        return (
-                all([result.scheme, result.netloc]) and
-                result.scheme in ['http', 'https']
-        )
+        return all([result.scheme, result.netloc]) and result.scheme in [
+            "http",
+            "https",
+        ]
     except ValueError:
         return False
 
@@ -158,7 +165,7 @@ def find_file_by_keyword(directory, keyword, exclude=None):
 
 def bytesuri_to_hash(s, to_decode=True):
     if to_decode:
-        s = s.rstrip(b"\0").decode('ascii')
+        s = s.rstrip(b"\0").decode("ascii")
     if s.startswith("ipfs://"):
         return "ipfs", s[7:]
     elif s.startswith("filecoin://"):
@@ -176,11 +183,9 @@ def safe_extract_proto(spec_tar, protodir):
     with tarfile.open(fileobj=io.BytesIO(spec_tar)) as f:
         for m in f.getmembers():
             if os.path.dirname(m.name) != "":
-                raise Exception(
-                    "tarball has directories. We do not support it.")
+                raise Exception("tarball has directories. We do not support it.")
             if not m.isfile():
-                raise Exception(
-                    "tarball contains %s which is not a file" % m.name)
+                raise Exception("tarball contains %s which is not a file" % m.name)
             fullname = os.path.join(protodir, m.name)
             if os.path.exists(fullname):
                 os.remove(fullname)

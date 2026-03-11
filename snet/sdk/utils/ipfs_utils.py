@@ -19,11 +19,11 @@ def get_from_ipfs_and_checkhash(ipfs_client, ipfs_hash_base58, validate=True):
             hash_func_name = decoded.name
             expected_digest = decoded.digest
 
-            if hash_func_name == 'sha2-256': # Standard for IPFS (CIDv0)
+            if hash_func_name == "sha2-256":  # Standard for IPFS (CIDv0)
                 actual_digest = hashlib.sha256(block_data).digest()
             else:
                 # Handle other algorithms supported by hashlib if necessary
-                h = hashlib.new(hash_func_name.replace('-', ''))
+                h = hashlib.new(hash_func_name.replace("-", ""))
                 h.update(block_data)
                 actual_digest = h.digest()
 
@@ -39,4 +39,3 @@ def get_from_ipfs_and_checkhash(ipfs_client, ipfs_hash_base58, validate=True):
 def get_ipfs_client(config):
     ipfs_endpoint = config.get_ipfs_endpoint()
     return ipfshttpclient.connect(ipfs_endpoint)
-

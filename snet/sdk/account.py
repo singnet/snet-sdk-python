@@ -5,8 +5,7 @@ import web3
 from snet.contracts import get_contract_object
 from snet.sdk.config import Config
 from snet.sdk.mpe.mpe_contract import MPEContract
-from snet.sdk.utils.utils import (get_address_from_private,
-                                  normalize_private_key)
+from snet.sdk.utils.utils import get_address_from_private, normalize_private_key
 
 DEFAULT_GAS = 300000
 TRANSACTION_TIMEOUT = 500
@@ -28,27 +27,22 @@ class TransactionError(Exception):
 
 
 class Account:
-    def __init__(self, w3: web3.Web3, config: Config,
-                 mpe_contract: MPEContract):
+    def __init__(self, w3: web3.Web3, config: Config, mpe_contract: MPEContract):
         self.config: Config = config
         self.web3: web3.Web3 = w3
         self.mpe_contract: MPEContract = mpe_contract
-        _token_contract_address: str | None = self.config.get(
-            "token_contract_address", None
-        )
+        _token_contract_address: str | None = self.config.get("token_contract_address", None)
         if _token_contract_address is None:
-            self.token_contract = get_contract_object(
-                self.web3, "FetchToken")
+            self.token_contract = get_contract_object(self.web3, "FetchToken")
         else:
             self.token_contract = get_contract_object(
-                self.web3, "FetchToken", _token_contract_address)
+                self.web3, "FetchToken", _token_contract_address
+            )
 
         if config.get("private_key") is not None:
             self.private_key = normalize_private_key(config.get("private_key"))
         if config.get("signer_private_key") is not None:
-            self.signer_private_key = normalize_private_key(
-                config.get("signer_private_key")
-            )
+            self.signer_private_key = normalize_private_key(config.get("signer_private_key"))
         else:
             self.signer_private_key = self.private_key
         self.address = get_address_from_private(self.private_key)
@@ -75,29 +69,28 @@ class Account:
         return int(gas_price)
 
     def _send_signed_transaction(self, contract_fn, *args):
-        transaction = contract_fn(*args).build_transaction({
-            "chainId": int(self.web3.net.version),
-            "gas": DEFAULT_GAS,
-            "gasPrice": self._get_gas_price(),
-            "nonce": self._get_nonce()
-        })
-        signed_txn = self.web3.eth.account.sign_transaction(
-            transaction, private_key=self.private_key)
-        return self.web3.to_hex(
-            self.web3.eth.send_raw_transaction(signed_txn.raw_transaction)
+        transaction = contract_fn(*args).build_transaction(
+            {
+                "chainId": int(self.web3.net.version),
+                "gas": DEFAULT_GAS,
+                "gasPrice": self._get_gas_price(),
+                "nonce": self._get_nonce(),
+            }
         )
+        signed_txn = self.web3.eth.account.sign_transaction(
+            transaction, private_key=self.private_key
+        )
+        return self.web3.to_hex(self.web3.eth.send_raw_transaction(signed_txn.raw_transaction))
 
     def send_transaction(self, contract_fn, *args):
         txn_hash = self._send_signed_transaction(contract_fn, *args)
-        return self.web3.eth.wait_for_transaction_receipt(txn_hash,
-                                                          TRANSACTION_TIMEOUT)
+        return self.web3.eth.wait_for_transaction_receipt(txn_hash, TRANSACTION_TIMEOUT)
 
     def _parse_receipt(self, receipt, event, encoder=json.JSONEncoder):
         if receipt.status == 0:
             raise TransactionError("Transaction failed", receipt)
         else:
-            return json.dumps(dict(event().processReceipt(receipt)[0]["args"]),
-                              cls=encoder)
+            return json.dumps(dict(event().processReceipt(receipt)[0]["args"]), cls=encoder)
 
     def escrow_balance(self):
         return self.mpe_contract.balance(self.address)
@@ -109,12 +102,13 @@ class Account:
         return self.mpe_contract.deposit(self, amount_in_cogs)
 
     def approve_transfer(self, amount_in_cogs):
-        return self.send_transaction(self.token_contract.functions.approve,
-                                     self.mpe_contract.contract.address,
-                                     amount_in_cogs)
+        return self.send_transaction(
+            self.token_contract.functions.approve,
+            self.mpe_contract.contract.address,
+            amount_in_cogs,
+        )
 
     def allowance(self):
         return self.token_contract.functions.allowance(
-            self.address,
-            self.mpe_contract.contract.address
+            self.address, self.mpe_contract.contract.address
         ).call()

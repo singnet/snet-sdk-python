@@ -108,10 +108,12 @@ class Model:
 
 
 class TrainingMetadata:
-    def __init__(self,
-                 training_enabled: bool,
-                 training_in_proto: bool,
-                 training_methods: Any):
+    def __init__(
+        self,
+        training_enabled: bool,
+        training_in_proto: bool,
+        training_methods: Any,
+    ):
 
         self.__training_enabled = training_enabled
         self.__training_in_proto = training_in_proto
@@ -138,15 +140,17 @@ class TrainingMetadata:
 
 
 class MethodMetadata:
-    def __init__(self,
-                 default_model_id: str,
-                 max_models_per_user: int,
-                 dataset_max_size_mb: int,
-                 dataset_max_count_files: int,
-                 dataset_max_size_single_file_mb: int,
-                 dataset_files_type: str,
-                 dataset_type: str,
-                 dataset_description: str):
+    def __init__(
+        self,
+        default_model_id: str,
+        max_models_per_user: int,
+        dataset_max_size_mb: int,
+        dataset_max_count_files: int,
+        dataset_max_size_single_file_mb: int,
+        dataset_files_type: str,
+        dataset_type: str,
+        dataset_description: str,
+    ):
 
         self.__default_model_id = default_model_id
         self.__max_models_per_user = max_models_per_user
@@ -191,5 +195,3 @@ class MethodMetadata:
     @property
     def dataset_description(self):
         return self.__dataset_description
-
-

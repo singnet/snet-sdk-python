@@ -37,8 +37,7 @@ class TestAccount(unittest.TestCase):
         self.mock_get_contract_object = mock_get_contract_object
         self.mock_get_contract_object.return_value = self.mock_token_contract
 
-        self.account = Account(self.mock_web3, self.mock_config,
-                               self.mock_mpe_contract)
+        self.account = Account(self.mock_web3, self.mock_config, self.mock_mpe_contract)
 
     def test_get_nonce(self):
         for i in [4, 5]:
@@ -87,9 +86,7 @@ class TestAccount(unittest.TestCase):
         mock_receipt = MagicMock()
         mock_receipt.status = 1
         mock_event = MagicMock()
-        mock_event.return_value.processReceipt.return_value = [
-            {"args": {"key": "value"}}
-        ]
+        mock_event.return_value.processReceipt.return_value = [{"args": {"key": "value"}}]
 
         result = self.account._parse_receipt(mock_receipt, mock_event)
         self.assertEqual(result, '{"key": "value"}')
@@ -110,9 +107,7 @@ class TestAccount(unittest.TestCase):
         balance = self.account.escrow_balance()
         self.assertIsInstance(balance, int)
         self.assertEqual(balance, 120000000)
-        self.mock_mpe_contract.balance.assert_called_once_with(
-            self.account.address
-        )
+        self.mock_mpe_contract.balance.assert_called_once_with(self.account.address)
 
     def test_deposit_to_escrow_account(self):
         self.account.allowance = MagicMock(return_value=0)
@@ -121,8 +116,7 @@ class TestAccount(unittest.TestCase):
 
         result = self.account.deposit_to_escrow_account(100)
         self.account.approve_transfer.assert_called_once_with(100)
-        self.mock_mpe_contract.deposit.assert_called_once_with(self.account,
-                                                               100)
+        self.mock_mpe_contract.deposit.assert_called_once_with(self.account, 100)
         self.assertEqual(result, "0x51ec7c89064d95416be4")
 
     def test_approve_transfer(self):
@@ -133,6 +127,7 @@ class TestAccount(unittest.TestCase):
         self.mock_token_contract.functions.approve.assert_called_once_with(
             self.mock_mpe_contract.contract.address, 500
         )
+
     # def test_approve_transfer(self):
     #     self.account.send_transaction = MagicMock()
     #     self.account.send_transaction.return_value = "TxReceipt"
@@ -140,8 +135,7 @@ class TestAccount(unittest.TestCase):
     #     self.assertEqual(result, "TxReceipt")
 
     def test_allowance(self):
-        self.mock_token_contract.functions.allowance.return_value.call \
-            .return_value = 100
+        self.mock_token_contract.functions.allowance.return_value.call.return_value = 100
         allowance = self.account.allowance()
         self.assertEqual(allowance, 100)
         self.mock_token_contract.functions.allowance.assert_called_once_with(

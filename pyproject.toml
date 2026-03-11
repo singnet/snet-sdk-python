@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "snet-sdk"
-version = "5.1.0"
+version = "5.2.0"
 description = "SingularityNET Python SDK"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -19,7 +19,6 @@ authors = [
 ]
 urls = {Homepage = "https://github.com/singnet/snet-sdk-python"}
 
-# Cleaned dependencies list
 dependencies = [
     "protobuf~=6.30",
     "grpcio~=1.71",
@@ -33,6 +32,13 @@ dependencies = [
     "lighthouseweb3~=0.1.4",
     "py-multihash~=3.0"
 ]
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.11"
+pytest = "^8.3"
+
+[tool.ruff]
+line-length = 100
 
 [tool.setuptools.packages.find]
 include = ["snet*"]

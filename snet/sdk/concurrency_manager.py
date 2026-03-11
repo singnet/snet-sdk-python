@@ -7,9 +7,9 @@ from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
 
 
 class ConcurrencyManager:
-    def __init__(self, concurrent_calls: int=1):
+    def __init__(self, concurrent_calls: int = 1):
         self.__concurrent_calls: int = concurrent_calls
-        self.__token: str = ''
+        self.__token: str = ""
         self.__planned_amount: int = 0
         self.__used_amount: int = 0
 
@@ -25,7 +25,9 @@ class ConcurrencyManager:
         if len(self.__token) == 0:
             self.__token = self.__get_token(service_client, channel, service_call_price)
         elif self.__used_amount >= self.__planned_amount:
-            self.__token = self.__get_token(service_client, channel, service_call_price, new_token=True)
+            self.__token = self.__get_token(
+                service_client, channel, service_call_price, new_token=True
+            )
         return self.__token
 
     def __get_token(self, service_client, channel, service_call_price, new_token=False):
@@ -64,19 +66,28 @@ class ConcurrencyManager:
         current_block_number = service_client.sdk_web3.eth.get_block("latest").number
         message = web3.Web3.solidity_keccak(
             ["string", "address", "uint256", "uint256", "uint256"],
-            ["__MPE_claim_message", service_client.mpe_address, channel.channel_id, nonce, amount]
+            [
+                "__MPE_claim_message",
+                service_client.mpe_address,
+                channel.channel_id,
+                nonce,
+                amount,
+            ],
         )
         mpe_signature = service_client.generate_signature(message)
         message = web3.Web3.solidity_keccak(
-            ["bytes", "uint256"],
-            [mpe_signature, current_block_number]
+            ["bytes", "uint256"], [mpe_signature, current_block_number]
         )
         sign_mpe_signature = service_client.generate_signature(message)
 
         request = token_service_pb2.TokenRequest(
-            channel_id=channel.channel_id, current_nonce=nonce, signed_amount=amount,
-            signature=bytes(sign_mpe_signature), claim_signature=bytes(mpe_signature),
-            current_block=current_block_number)
+            channel_id=channel.channel_id,
+            current_nonce=nonce,
+            signed_amount=amount,
+            signature=bytes(sign_mpe_signature),
+            claim_signature=bytes(mpe_signature),
+            current_block=current_block_number,
+        )
         token_reply = stub.GetToken(request)
         return token_reply
 

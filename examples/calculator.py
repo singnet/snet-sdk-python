@@ -1,20 +1,20 @@
 from snet import sdk
 
-config = sdk.config.Config(private_key="YOUR_PRIVATE_KEY",
-                               eth_rpc_endpoint=f"https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
-                               concurrency=False,
-                               force_update=False)
+config = sdk.config.Config(
+    private_key="YOUR_PRIVATE_KEY",
+    eth_rpc_endpoint="https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
+    concurrency=False,
+    force_update=False,
+)
 
-operators = {
-    "+": "add",
-    "-": "sub",
-    "*": "mul",
-    "/": "div"
-}
+operators = {"+": "add", "-": "sub", "*": "mul", "/": "div"}
 
 snet_sdk = sdk.SnetSDK(config)
-calc_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f",
-                                             service_id="Exampleservice", group_name="default_group")
+calc_client = snet_sdk.create_service_client(
+    org_id="26072b8b6a0e448180f8c0e702ab6d2f",
+    service_id="Exampleservice",
+    group_name="default_group",
+)
 
 
 def parse_expression(expression):
@@ -23,12 +23,16 @@ def parse_expression(expression):
         raise Exception(f"Invalid expression '{expression}'. Three items required.")
 
     if elements[1] not in ["+", "-", "*", "/"]:
-        raise Exception(f"Invalid expression '{expression}'. Operation must be '+' or '-' or '*' or '/'.")
+        raise Exception(
+            f"Invalid expression '{expression}'. Operation must be '+' or '-' or '*' or '/'."
+        )
     try:
         a = float(elements[0])
         b = float(elements[2])
     except ValueError:
-        raise Exception(f"Invalid expression '{expression}'. Operands must be integers or floating point numbers.")
+        raise Exception(
+            f"Invalid expression '{expression}'. Operands must be integers or floating point numbers."
+        )
     op = elements[1]
 
     return a, b, op
@@ -54,4 +58,3 @@ Type 'exit' to exit the program.""")
 
 if __name__ == "__main__":
     main()
-

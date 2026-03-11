@@ -1,5 +1,4 @@
 class PaymentStrategy(object):
-
     def get_payment_metadata(self, service_client):
         pass
 

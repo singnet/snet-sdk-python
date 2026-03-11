@@ -1,4 +1,4 @@
-from snet.contracts import get_contract_deployment_block, get_contract_object
+from snet.contracts import get_contract_object
 
 
 class MPEContract:
@@ -16,27 +16,45 @@ class MPEContract:
         return account.send_transaction(self.contract.functions.deposit, amount_in_cogs)
 
     def open_channel(self, account, payment_address, group_id, amount, expiration):
-        return account.send_transaction(self.contract.functions.openChannel, account.signer_address, payment_address,
-                                        group_id, amount, expiration)
+        return account.send_transaction(
+            self.contract.functions.openChannel,
+            account.signer_address,
+            payment_address,
+            group_id,
+            amount,
+            expiration,
+        )
 
     def deposit_and_open_channel(self, account, payment_address, group_id, amount, expiration):
         already_approved_amount = account.allowance()
         if amount > already_approved_amount:
             account.approve_transfer(amount)
-        return account.send_transaction(self.contract.functions.depositAndOpenChannel, account.signer_address,
-                                        payment_address, group_id, amount, expiration)
+        return account.send_transaction(
+            self.contract.functions.depositAndOpenChannel,
+            account.signer_address,
+            payment_address,
+            group_id,
+            amount,
+            expiration,
+        )
 
     def channel_add_funds(self, account, channel_id, amount):
         self._fund_escrow_account(account, amount)
         return account.send_transaction(self.contract.functions.channelAddFunds, channel_id, amount)
 
     def channel_extend(self, account, channel_id, expiration):
-        return account.send_transaction(self.contract.functions.channelExtend, channel_id, expiration)
+        return account.send_transaction(
+            self.contract.functions.channelExtend, channel_id, expiration
+        )
 
     def channel_extend_and_add_funds(self, account, channel_id, expiration, amount):
         self._fund_escrow_account(account, amount)
-        return account.send_transaction(self.contract.functions.channelExtendAndAddFunds, channel_id, expiration,
-                                        amount)
+        return account.send_transaction(
+            self.contract.functions.channelExtendAndAddFunds,
+            channel_id,
+            expiration,
+            amount,
+        )
 
     def _fund_escrow_account(self, account, amount):
         current_escrow_balance = self.balance(account.address)
