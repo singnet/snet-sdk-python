@@ -4,11 +4,13 @@ from web3._utils.events import get_event_data
 from eth_abi.codec import ABICodec
 import pickle
 
+from web3.types import EventData, LogReceipt
+
 from snet.sdk.mpe.payment_channel import PaymentChannel
 from snet.contracts import get_contract_deployment_block
 
 
-BLOCKS_PER_BATCH = 5000
+BLOCKS_PER_BATCH = 50000
 CHANNELS_DIR = Path.home().joinpath(".snet", "cache", "mpe")
 
 
@@ -21,12 +23,11 @@ class PaymentChannelProvider(object):
             text="ChannelOpen(uint256,uint256,address,address,address,bytes32,uint256,uint256)")]
         self.deployment_block = get_contract_deployment_block(self.web3, "MultiPartyEscrow")
         self.mpe_address = mpe_contract.contract.address
-        print(self.mpe_address)
         self.channels_file = CHANNELS_DIR.joinpath(str(self.mpe_address), "channels.pickle")
 
     def update_cache(self):
         channels = []
-        last_read_block = self.deployment_block - 1
+        last_read_block = int(self.deployment_block) - 1
 
         if not self.channels_file.exists():
             print(f"Channels cache is empty. Caching may take some time when first accessing channels.\nCaching in progress...")
@@ -43,21 +44,24 @@ class PaymentChannelProvider(object):
             last_read_block = load_dict["last_read_block"]
             channels = load_dict["channels"]
 
-        current_block_number = self.web3.eth.block_number
+        current_block_number = int(self.web3.eth.block_number)
 
         if last_read_block < current_block_number:
-            new_channels = self._get_all_channels_from_blockchain_logs_to_dicts(last_read_block + 1, current_block_number)
-            channels = channels + new_channels
-            last_read_block = current_block_number
+            new_channels = self._get_all_channels_from_blockchain_logs_to_dicts(last_read_block + 1, int(current_block_number))
 
-            with open(self.channels_file, "wb") as f:
-                dict_to_save = {
-                    "last_read_block": last_read_block,
-                    "channels": channels
-                }
-                pickle.dump(dict_to_save, f)
+            if len(new_channels) > 0:
+                channels = channels + new_channels
+                last_read_block = current_block_number
 
-    def _event_data_args_to_dict(self, event_data):
+                with open(self.channels_file, "wb") as f:
+                    dict_to_save = {
+                        "last_read_block": last_read_block,
+                        "channels": channels
+                    }
+                    pickle.dump(dict_to_save, f)
+
+    @classmethod
+    def _event_data_args_to_dict(cls, event_data: dict) -> dict:
         return {
             "channel_id": event_data["channelId"],
             "sender": event_data["sender"],
@@ -66,25 +70,28 @@ class PaymentChannelProvider(object):
             "group_id": event_data["groupId"],
         }
 
-    def _get_all_channels_from_blockchain_logs_to_dicts(self, starting_block_number, to_block_number):
-        codec: ABICodec = self.web3.codec
+    def _get_all_channels_from_blockchain_logs_to_dicts(self, start_block: int, end_block: int) -> list[dict]:
+        logs: list[LogReceipt] = []
+        from_block = start_block
+        try:
+            it = 1
+            while from_block <= end_block:
+                to_block = min(from_block + BLOCKS_PER_BATCH, end_block)
+                logs = logs + self.web3.eth.get_logs({"fromBlock": from_block,
+                                                      "toBlock": to_block,
+                                                      "address": self.mpe_address,
+                                                      "topics": self.event_topics})
+                from_block = to_block + 1
+                it += 1
+        except Exception as e:
+            print(f"WARNING: during channels caching the error occurred: {e}")
 
-        logs = []
-        from_block = starting_block_number
-        while from_block <= to_block_number:
-            to_block = min(from_block + BLOCKS_PER_BATCH, to_block_number)
-            logs = logs + self.web3.eth.get_logs({"fromBlock": from_block,
-                                                  "toBlock": to_block,
-                                                  "address": self.mpe_address,
-                                                  "topics": self.event_topics})
-            from_block = to_block + 1
+        finally:
+            channel_open_event = self.mpe_contract.contract.events.ChannelOpen()
+            event_data_list = [channel_open_event.process_log(l)["args"] for l in logs]
+            channels_opened = list(map(self._event_data_args_to_dict, event_data_list))
 
-        event_abi = self.mpe_contract.contract.events.ChannelOpen._get_event_abi()
-
-        event_data_list = [get_event_data(codec, event_abi, l)["args"] for l in logs]
-        channels_opened = list(map(self._event_data_args_to_dict, event_data_list))
-
-        return channels_opened
+            return channels_opened
 
     def _get_channels_from_cache(self):
         self.update_cache()
