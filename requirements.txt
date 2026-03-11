@@ -2,6 +2,7 @@ protobuf~=6.30
 grpcio~=1.71
 grpcio-tools~=1.71
 grpcio-health-checking~=1.71
+web3~=7.0
 wheel~=0.45
 rlp~=4.0
 ipfshttpclient==0.4.13.2
