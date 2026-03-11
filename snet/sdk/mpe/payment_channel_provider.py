@@ -1,10 +1,8 @@
 from pathlib import Path
 
-from web3._utils.events import get_event_data
-from eth_abi.codec import ABICodec
 import pickle
 
-from web3.types import EventData, LogReceipt
+from web3.types import LogReceipt
 
 from snet.sdk.mpe.payment_channel import PaymentChannel
 from snet.contracts import get_contract_deployment_block
