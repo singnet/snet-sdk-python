@@ -5,7 +5,6 @@ import warnings
 from enum import Enum
 
 import google.protobuf.internal.api_implementation
-
 from google.protobuf import symbol_database as _symbol_database
 
 from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
@@ -23,11 +22,17 @@ with warnings.catch_warnings():
 
 from snet.contracts import get_contract_object
 from snet.sdk.account import Account
-from snet.sdk.config import Config
+from snet.sdk.config import config
 from snet.sdk.client_lib_generator import ClientLibGenerator
 from snet.sdk.mpe.mpe_contract import MPEContract
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
-from snet.sdk.payment_strategies.default_payment_strategy import *
+from snet.sdk.payment_strategies import (
+    DefaultPaymentStrategy,
+    PaidCallPaymentStrategy,
+    PrePaidPaymentStrategy,
+    FreeCallPaymentStrategy,
+    PaymentStrategy,
+)
 from snet.sdk.service_client import ServiceClient
 from snet.sdk.storage_provider.storage_provider import StorageProvider
 from snet.sdk.custom_typing import ModuleName, ServiceStub
@@ -52,42 +57,26 @@ class PaymentStrategyType(Enum):
 class SnetSDK:
     """Base Snet SDK"""
 
-    def __init__(self, sdk_config: Config, metadata_provider=None):
-        self._sdk_config = sdk_config
-        self._metadata_provider = metadata_provider
+    def __init__(self):
+        self.web3 = web3.Web3(web3.HTTPProvider(config.ETH_RPC_ENDPOINT))
 
-        # Instantiate Ethereum client
-        eth_rpc_endpoint = self._sdk_config["eth_rpc_endpoint"]
-        eth_rpc_request_kwargs = self._sdk_config.get("eth_rpc_request_kwargs")
-
-        provider = web3.HTTPProvider(
-            endpoint_uri=eth_rpc_endpoint, request_kwargs=eth_rpc_request_kwargs
-        )
-
-        self.web3 = web3.Web3(provider)
-
-        # Get MPE contract address from config if specified;
-        # mostly for local testing
-        _mpe_contract_address = self._sdk_config.get("mpe_contract_address", None)
-        if _mpe_contract_address is None:
+        mpe_contract_address = config.MPE_CONTRACT_ADDRESS
+        if not mpe_contract_address:
             self.mpe_contract = MPEContract(self.web3)
         else:
-            self.mpe_contract = MPEContract(self.web3, _mpe_contract_address)
+            self.mpe_contract = MPEContract(self.web3, mpe_contract_address)
 
-        # Get Registry contract address from config if specified;
-        # mostly for local testing
-        _registry_contract_address = self._sdk_config.get("registry_contract_address", None)
-        if _registry_contract_address is None:
+        registry_contract_address = config.REGISTRY_CONTRACT_ADDRESS
+        if registry_contract_address is None:
             self.registry_contract = get_contract_object(self.web3, "Registry")
         else:
             self.registry_contract = get_contract_object(
-                self.web3, "Registry", _registry_contract_address
+                self.web3, "Registry", registry_contract_address
             )
 
-        if self._metadata_provider is None:
-            self._metadata_provider = StorageProvider(self._sdk_config, self.registry_contract)
+        self.metadata_provider = StorageProvider(self.registry_contract)
 
-        self.account = Account(self.web3, sdk_config, self.mpe_contract)
+        self.account = Account(self.web3, self.mpe_contract)
         self.payment_channel_provider = PaymentChannelProvider(self.web3, self.mpe_contract)
 
     def create_service_client(
@@ -103,14 +92,14 @@ class SnetSDK:
 
         # Create and instance of the Config object,
         # so we can create an instance of ClientLibGenerator
-        self.lib_generator = ClientLibGenerator(self._metadata_provider, org_id, service_id)
+        lib_generator = ClientLibGenerator(self.metadata_provider, org_id, service_id)
 
         # Download the proto file and generate stubs if needed
-        force_update = self._sdk_config.get("force_update", False)
+        force_update = config.FORCE_UPDATE
         if force_update:
-            self.lib_generator.generate_client_library()
+            lib_generator.generate_client_library()
         else:
-            path_to_pb_files = self.lib_generator.protodir
+            path_to_pb_files = lib_generator.protodir
             pb_2_file_name = find_file_by_keyword(
                 path_to_pb_files, keyword="pb2.py", exclude=["training"]
             )
@@ -119,22 +108,22 @@ class SnetSDK:
             )
             if not pb_2_file_name or not pb_2_grpc_file_name:
                 print("Generating client library...")
-                self.lib_generator.generate_client_library()
+                lib_generator.generate_client_library()
 
         if options is None:
             options = dict()
-        options["concurrency"] = self._sdk_config.get("concurrency", True)
+        options["concurrency"] = config.CONCURRENCY
         options["concurrent_calls"] = concurrent_calls
 
         if payment_strategy is None:
             payment_strategy = payment_strategy_type.value()
 
-        service_metadata = self._metadata_provider.enhance_service_metadata(org_id, service_id)
+        service_metadata = self.metadata_provider.enhance_service_metadata(org_id, service_id)
         group = self._get_service_group_details(service_metadata, group_name)
 
-        service_stubs = self.get_service_stub()
+        service_stubs = self.get_service_stub(lib_generator)
 
-        pb2_module = self.get_module_by_keyword(keyword="pb2.py")
+        pb2_module = self.get_module_by_keyword("pb2.py", lib_generator)
         _service_client = ServiceClient(
             org_id,
             service_id,
@@ -148,14 +137,14 @@ class SnetSDK:
             self.web3,
             pb2_module,
             self.payment_channel_provider,
-            self.lib_generator.protodir,
-            self.lib_generator.training_added(),
+            lib_generator.protodir,
+            lib_generator.training_added(),
         )
         return _service_client
 
-    def get_service_stub(self) -> list[ServiceStub]:
-        path_to_pb_files = str(self.lib_generator.protodir)
-        module_name = self.get_module_by_keyword(keyword="pb2_grpc.py")
+    def get_service_stub(self, lib_generator: ClientLibGenerator) -> list[ServiceStub]:
+        path_to_pb_files = str(lib_generator.protodir)
+        module_name = self.get_module_by_keyword("pb2_grpc.py", lib_generator)
         sys.path.append(path_to_pb_files)
         try:
             grpc_file = importlib.import_module(module_name)
@@ -169,14 +158,14 @@ class SnetSDK:
         except Exception as e:
             raise Exception(f"Error importing module: {e}")
 
-    def get_module_by_keyword(self, keyword: str) -> ModuleName:
-        path_to_pb_files = self.lib_generator.protodir
+    def get_module_by_keyword(self, keyword: str, lib_generator: ClientLibGenerator) -> ModuleName:
+        path_to_pb_files = lib_generator.protodir
         file_name = find_file_by_keyword(path_to_pb_files, keyword, exclude=["training"])
         module_name = os.path.splitext(file_name)[0]
         return ModuleName(module_name)
 
     def get_service_metadata(self, org_id, service_id):
-        return self._metadata_provider.fetch_service_metadata(org_id, service_id)
+        return self.metadata_provider.fetch_service_metadata(org_id, service_id)
 
     def _get_first_group(self, service_metadata: MPEServiceMetadata) -> dict:
         return service_metadata["groups"][0]
