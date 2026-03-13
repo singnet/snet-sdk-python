@@ -3,7 +3,8 @@ import json
 import web3
 
 from snet.contracts import get_contract_object
-from snet.sdk.config import Config
+
+from snet.sdk.config import config
 from snet.sdk.mpe.mpe_contract import MPEContract
 from snet.sdk.utils.utils import get_address_from_private, normalize_private_key
 
@@ -27,24 +28,25 @@ class TransactionError(Exception):
 
 
 class Account:
-    def __init__(self, w3: web3.Web3, config: Config, mpe_contract: MPEContract):
-        self.config: Config = config
-        self.web3: web3.Web3 = w3
-        self.mpe_contract: MPEContract = mpe_contract
-        _token_contract_address: str | None = self.config.get("token_contract_address", None)
-        if _token_contract_address is None:
+    def __init__(self, w3: web3.Web3, mpe_contract: MPEContract):
+        self.web3 = w3
+        self.mpe_contract = mpe_contract
+
+        token_contract_address = config.TOKEN_CONTRACT_ADDRESS
+        if not token_contract_address:
             self.token_contract = get_contract_object(self.web3, "FetchToken")
         else:
             self.token_contract = get_contract_object(
-                self.web3, "FetchToken", _token_contract_address
+                self.web3, "FetchToken", token_contract_address
             )
 
-        if config.get("private_key") is not None:
-            self.private_key = normalize_private_key(config.get("private_key"))
-        if config.get("signer_private_key") is not None:
-            self.signer_private_key = normalize_private_key(config.get("signer_private_key"))
+        if config.PRIVATE_KEY:
+            self.private_key = normalize_private_key(config.PRIVATE_KEY)
+        if config.SIGNER_PRIVATE_KEY:
+            self.signer_private_key = normalize_private_key(config.SIGNER_PRIVATE_KEY)
         else:
             self.signer_private_key = self.private_key
+
         self.address = get_address_from_private(self.private_key)
         self.signer_address = get_address_from_private(self.signer_private_key)
         self.nonce = 0
