@@ -9,3 +9,4 @@ ipfshttpclient==0.4.13.2
 snet-contracts==1.0.1
 lighthouseweb3~=0.1.4
 py-multihash~=3.0
+pydantic-settings~=2.13

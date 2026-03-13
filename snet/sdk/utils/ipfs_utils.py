@@ -2,6 +2,8 @@ import ipfshttpclient
 import multihash
 import hashlib
 
+from snet.sdk.config import config
+
 
 def get_from_ipfs_and_checkhash(ipfs_client, ipfs_hash_base58, validate=True):
     """
@@ -36,6 +38,5 @@ def get_from_ipfs_and_checkhash(ipfs_client, ipfs_hash_base58, validate=True):
     return data
 
 
-def get_ipfs_client(config):
-    ipfs_endpoint = config.get_ipfs_endpoint()
-    return ipfshttpclient.connect(ipfs_endpoint)
+def get_ipfs_client():
+    return ipfshttpclient.connect(config.IPFS_ENDPOINT)

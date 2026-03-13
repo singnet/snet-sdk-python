@@ -1,38 +1,48 @@
-class Config:
-    def __init__(
-        self,
-        private_key,
-        eth_rpc_endpoint,
-        wallet_index=0,
-        ipfs_endpoint=None,
-        concurrency=True,
-        force_update=False,
-        mpe_contract_address=None,
-        token_contract_address=None,
-        registry_contract_address=None,
-        signer_private_key=None,
-    ):
-        self.__config = {
-            "private_key": private_key,
-            "eth_rpc_endpoint": eth_rpc_endpoint,
-            "wallet_index": wallet_index,
-            "ipfs_endpoint": (
-                ipfs_endpoint if ipfs_endpoint else "/dns/ipfs.singularitynet.io/tcp/80/"
-            ),
-            "concurrency": concurrency,
-            "force_update": force_update,
-            "mpe_contract_address": mpe_contract_address,
-            "token_contract_address": token_contract_address,
-            "registry_contract_address": registry_contract_address,
-            "signer_private_key": signer_private_key,
-            "lighthouse_token": " ",
-        }
+from typing import Optional
 
-    def __getitem__(self, key):
-        return self.__config[key]
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-    def get(self, key, default=None):
-        return self.__config.get(key, default)
 
-    def get_ipfs_endpoint(self):
-        return self["ipfs_endpoint"]
+class Settings(BaseSettings):
+    PRIVATE_KEY: str = ""
+    SIGNER_PRIVATE_KEY: str = ""
+    ETH_RPC_ENDPOINT: str = ""
+    WALLET_INDEX: int = 0
+    IPFS_ENDPOINT: str = "/dns/ipfs.singularitynet.io/tcp/80/"
+    CONCURRENCY: bool = True
+    FORCE_UPDATE: bool = False
+    MPE_CONTRACT_ADDRESS: str = ""
+    REGISTRY_CONTRACT_ADDRESS: str = ""
+    TOKEN_CONTRACT_ADDRESS: str = ""
+    LIGHTHOUSE_TOKEN: str = " "
+
+    model_config = SettingsConfigDict(
+        env_prefix="SNET_", env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+
+config = Settings()
+
+
+def configure(
+    *,
+    private_key: Optional[str] = None,
+    signer_private_key: Optional[str] = None,
+    eth_rpc_endpoint: Optional[str] = None,
+    wallet_index: Optional[int] = None,
+    ipfs_endpoint: Optional[str] = None,
+    concurrency: Optional[bool] = None,
+    force_update: Optional[bool] = None,
+    mpe_contract_address: Optional[str] = None,
+    registry_contract_address: Optional[str] = None,
+    token_contract_address: Optional[str] = None,
+    lighthouse_token: Optional[str] = None,
+):
+    global config
+    for key, value in locals().items():
+        key = key.upper()
+        if hasattr(config, key):
+            if value is not None:
+                setattr(config, key, value)
+        else:
+            raise ValueError(f"Unknown config key: {key.lower()}")

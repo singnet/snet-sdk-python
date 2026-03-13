@@ -11,13 +11,14 @@ from snet.sdk.storage_provider.service_metadata import (
     MPEServiceMetadata,
     mpe_service_metadata_from_json,
 )
+from snet.sdk.config import config
 
 
 class StorageProvider(object):
-    def __init__(self, config, registry_contract):
+    def __init__(self, registry_contract):
         self._registry_contract = registry_contract
-        self._ipfs_client = get_ipfs_client(config)
-        self.lighthouse_client = Lighthouse(config["lighthouse_token"])
+        self._ipfs_client = get_ipfs_client()
+        self.lighthouse_client = Lighthouse(config.LIGHTHOUSE_TOKEN)
 
     def fetch_org_metadata(self, org_id):
         org = web3.Web3.to_bytes(text=org_id).ljust(32, b"\0")
