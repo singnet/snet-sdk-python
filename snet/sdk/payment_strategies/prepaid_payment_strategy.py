@@ -3,8 +3,12 @@ from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
 
 
 class PrePaidPaymentStrategy(PaymentStrategy):
-
-    def __init__(self, concurrent_calls: int=1, block_offset: int = 240, call_allowance: int = 1):
+    def __init__(
+        self,
+        concurrent_calls: int = 1,
+        block_offset: int = 240,
+        call_allowance: int = 1,
+    ):
         self.concurrency_manager = ConcurrencyManager(concurrent_calls)
         self.block_offset = block_offset
         self.call_allowance = call_allowance
@@ -17,18 +21,22 @@ class PrePaidPaymentStrategy(PaymentStrategy):
 
     def get_payment_metadata(self, service_client):
         channel = self.select_channel(service_client)
-        token = self.concurrency_manager.get_token(service_client, channel, self.get_price(service_client))
+        token = self.concurrency_manager.get_token(
+            service_client, channel, self.get_price(service_client)
+        )
         metadata = [
             ("snet-payment-type", "prepaid-call"),
             ("snet-payment-channel-id", str(channel.channel_id)),
             ("snet-payment-channel-nonce", str(channel.state["nonce"])),
-            ("snet-prepaid-auth-token-bin", bytes(token, 'UTF-8'))
+            ("snet-prepaid-auth-token-bin", bytes(token, "UTF-8")),
         ]
         return metadata
 
     def get_concurrency_token_and_channel(self, service_client):
         channel = self.select_channel(service_client)
-        token = self.concurrency_manager.get_token(service_client, channel, self.get_price(service_client))
+        token = self.concurrency_manager.get_token(
+            service_client, channel, self.get_price(service_client)
+        )
         return token, channel
 
     def select_channel(self, service_client):
@@ -43,25 +51,32 @@ class PrePaidPaymentStrategy(PaymentStrategy):
 
         if len(payment_channels) < 1:
             if service_call_price > mpe_balance:
-                payment_channel = service_client.deposit_and_open_channel(service_call_price,
-                                                                          default_expiration + self.block_offset)
+                payment_channel = service_client.deposit_and_open_channel(
+                    service_call_price, default_expiration + self.block_offset
+                )
             else:
-                payment_channel = service_client.open_channel(service_call_price,
-                                                              default_expiration + self.block_offset)
+                payment_channel = service_client.open_channel(
+                    service_call_price, default_expiration + self.block_offset
+                )
         else:
             payment_channel = payment_channels[0]
 
-        if self.__has_sufficient_funds(payment_channel, service_call_price) \
-                and not self.__is_valid(payment_channel, default_expiration):
+        if self.__has_sufficient_funds(payment_channel, service_call_price) and not self.__is_valid(
+            payment_channel, default_expiration
+        ):
             payment_channel.extend_expiration(default_expiration + self.block_offset)
 
-        elif not self.__has_sufficient_funds(payment_channel, service_call_price) and \
-                self.__is_valid(payment_channel, default_expiration):
+        elif not self.__has_sufficient_funds(
+            payment_channel, service_call_price
+        ) and self.__is_valid(payment_channel, default_expiration):
             payment_channel.add_funds(extend_channel_fund)
 
-        elif not self.__has_sufficient_funds(payment_channel, service_call_price) and \
-                not self.__is_valid(payment_channel, default_expiration):
-            payment_channel.extend_and_add_funds(default_expiration + self.block_offset, extend_channel_fund)
+        elif not self.__has_sufficient_funds(
+            payment_channel, service_call_price
+        ) and not self.__is_valid(payment_channel, default_expiration):
+            payment_channel.extend_and_add_funds(
+                default_expiration + self.block_offset, extend_channel_fund
+            )
 
         return payment_channel
 
