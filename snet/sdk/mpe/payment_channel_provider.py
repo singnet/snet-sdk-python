@@ -4,7 +4,7 @@ import pickle
 
 from web3.types import LogReceipt
 
-from snet.sdk import get_we3_object
+from snet.sdk.utils.utils import get_we3_object
 from snet.sdk.mpe.payment_channel import PaymentChannel
 from snet.contracts import get_contract_deployment_block
 

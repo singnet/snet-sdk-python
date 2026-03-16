@@ -2,8 +2,9 @@ from typing import Optional
 
 from snet.contracts import get_contract_object
 
-from snet.sdk import get_we3_object, config, Account
-
+from snet.sdk.account import Account
+from snet.sdk.config import config
+from snet.sdk.utils.utils import get_we3_object
 
 class MPEContract:
     def __init__(self):

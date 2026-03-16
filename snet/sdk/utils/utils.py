@@ -15,7 +15,7 @@ from grpc_tools.protoc import main as protoc
 from web3 import Web3
 
 from snet import sdk
-from snet.sdk import config
+from snet.sdk.config import config
 
 RESOURCES_PATH = PurePath(os.path.dirname(sdk.__file__)).joinpath("resources")
 

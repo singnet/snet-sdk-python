@@ -3,9 +3,8 @@ import json
 
 from snet.contracts import get_contract_object
 
-from snet.sdk import get_we3_object
 from snet.sdk.config import config
-from snet.sdk.utils.utils import get_address_from_private, normalize_private_key
+from snet.sdk.utils.utils import get_address_from_private, normalize_private_key, get_we3_object
 
 DEFAULT_GAS = 300000
 TRANSACTION_TIMEOUT = 500

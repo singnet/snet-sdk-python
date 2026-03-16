@@ -2,7 +2,9 @@ from typing import Union
 
 from snet.contracts import get_contract_object
 
-from snet.sdk import Account, get_we3_object, config, type_converter, bytes32_to_str
+from snet.sdk.account import Account
+from snet.sdk.config import config
+from snet.sdk.utils.utils import type_converter, bytes32_to_str, get_we3_object
 
 
 class RegistryContract:
