@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from snet.sdk.client_lib_generator import ClientLibGenerator
-from snet.sdk.storage_provider.storage_provider import StorageProvider
+from snet.sdk.registry.storage_provider import StorageProvider
 
 
 class TestClientLibGenerator(unittest.TestCase):

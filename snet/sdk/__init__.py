@@ -7,7 +7,8 @@ from enum import Enum
 import google.protobuf.internal.api_implementation
 from google.protobuf import symbol_database as _symbol_database
 
-from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
+from snet.sdk.registry.registry_contract import RegistryContract
+from snet.sdk.registry.service_metadata import MPEServiceMetadata
 
 with warnings.catch_warnings():
     # Suppress the eth-typing package`s warnings related to some new networks
@@ -18,9 +19,6 @@ with warnings.catch_warnings():
         UserWarning,
     )
 
-    import web3
-
-from snet.contracts import get_contract_object
 from snet.sdk.account import Account
 from snet.sdk.config import config
 from snet.sdk.client_lib_generator import ClientLibGenerator
@@ -34,12 +32,11 @@ from snet.sdk.payment_strategies import (
     PaymentStrategy,
 )
 from snet.sdk.service_client import ServiceClient
-from snet.sdk.storage_provider.storage_provider import StorageProvider
+from snet.sdk.registry.storage_provider import StorageProvider
 from snet.sdk.custom_typing import ModuleName, ServiceStub
 from snet.sdk.utils.utils import (
-    bytes32_to_str,
     find_file_by_keyword,
-    type_converter,
+    get_we3_object,
 )
 
 google.protobuf.internal.api_implementation.Type = lambda: "python"
@@ -55,29 +52,13 @@ class PaymentStrategyType(Enum):
 
 
 class SnetSDK:
-    """Base Snet SDK"""
-
     def __init__(self):
-        self.web3 = web3.Web3(web3.HTTPProvider(config.ETH_RPC_ENDPOINT))
-
-        mpe_contract_address = config.MPE_CONTRACT_ADDRESS
-        if not mpe_contract_address:
-            self.mpe_contract = MPEContract(self.web3)
-        else:
-            self.mpe_contract = MPEContract(self.web3, mpe_contract_address)
-
-        registry_contract_address = config.REGISTRY_CONTRACT_ADDRESS
-        if registry_contract_address is None:
-            self.registry_contract = get_contract_object(self.web3, "Registry")
-        else:
-            self.registry_contract = get_contract_object(
-                self.web3, "Registry", registry_contract_address
-            )
-
+        self.w3 = get_we3_object()
+        self.mpe_contract = MPEContract()
+        self.registry_contract = RegistryContract()
         self.metadata_provider = StorageProvider(self.registry_contract)
-
-        self.account = Account(self.web3, self.mpe_contract)
-        self.payment_channel_provider = PaymentChannelProvider(self.web3, self.mpe_contract)
+        self.payment_channel_provider = PaymentChannelProvider(self.mpe_contract)
+        self.account = Account()
 
     def create_service_client(
         self,
@@ -134,7 +115,7 @@ class SnetSDK:
             options,
             self.mpe_contract,
             self.account,
-            self.web3,
+            self.w3,
             pb2_module,
             self.payment_channel_provider,
             lib_generator.protodir,
@@ -190,17 +171,7 @@ class SnetSDK:
         return self._get_group_by_group_name(service_metadata, group_name)
 
     def get_organization_list(self) -> list:
-        org_list = self.registry_contract.functions.listOrganizations().call()
-        organization_list = []
-        for idx, org_id in enumerate(org_list):
-            organization_list.append(bytes32_to_str(org_id))
-        return organization_list
+        return self.registry_contract.list_orgs()
 
     def get_services_list(self, org_id: str) -> list:
-        found, org_service_list = self.registry_contract.functions.listServicesForOrganization(
-            type_converter("bytes32")(org_id)
-        ).call()
-        if not found:
-            raise Exception(f"Organization with id={org_id} doesn't exist!")
-        org_service_list = list(map(bytes32_to_str, org_service_list))
-        return org_service_list
+        return self.registry_contract.list_service_for_org(org_id)

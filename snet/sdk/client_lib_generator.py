@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from snet.sdk.storage_provider.storage_provider import StorageProvider
+from snet.sdk.registry.storage_provider import StorageProvider
 from snet.sdk.utils.utils import compile_proto
 
 

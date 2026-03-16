@@ -2,6 +2,7 @@ import web3
 import importlib
 from eth_account.messages import defunct_hash_message
 
+from snet.sdk import get_we3_object
 from snet.sdk.utils.utils import RESOURCES_PATH, add_to_path
 
 
@@ -9,13 +10,12 @@ class PaymentChannel:
     def __init__(
         self,
         channel_id,
-        w3,
         account,
         payment_channel_state_service_client,
         mpe_contract,
     ):
         self.channel_id = channel_id
-        self.web3 = w3
+        self.web3 = get_we3_object()
         self.account = account
         self.mpe_contract = mpe_contract
         self.payment_channel_state_service_client = payment_channel_state_service_client

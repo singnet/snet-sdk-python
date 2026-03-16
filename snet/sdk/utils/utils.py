@@ -1,6 +1,8 @@
 import json
 import sys
 import importlib.resources
+from functools import lru_cache
+from typing import Optional
 from urllib.parse import urlparse
 from pathlib import Path, PurePath
 import os
@@ -10,10 +12,20 @@ import io
 import web3
 from eth_typing import BlockNumber
 from grpc_tools.protoc import main as protoc
+from web3 import Web3
 
 from snet import sdk
+from snet.sdk import config
 
 RESOURCES_PATH = PurePath(os.path.dirname(sdk.__file__)).joinpath("resources")
+
+
+@lru_cache
+def get_we3_object(eth_rpc_endpoint: Optional[str] = None) -> Web3:
+    if eth_rpc_endpoint is None:
+        eth_rpc_endpoint = config.ETH_RPC_ENDPOINT
+
+    return web3.Web3(web3.HTTPProvider(eth_rpc_endpoint))
 
 
 def safe_address_converter(a):
@@ -22,7 +34,7 @@ def safe_address_converter(a):
     return a
 
 
-def type_converter(t):
+def type_converter(t: str):
     if t.endswith("[]"):
         return lambda x: list(map(type_converter(t.replace("[]", "")), json.loads(x)))
     else:
@@ -137,7 +149,7 @@ def get_address_from_private(private_key):
 
 
 def get_current_block_number() -> BlockNumber:
-    return web3.Web3().eth.block_number
+    return get_we3_object().eth.block_number
 
 
 class add_to_path:

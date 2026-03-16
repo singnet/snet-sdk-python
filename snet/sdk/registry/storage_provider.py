@@ -1,13 +1,13 @@
-import web3
 from lighthouseweb3 import Lighthouse
 import json
 
+from snet.sdk.registry.registry_contract import RegistryContract
 from snet.sdk.utils.ipfs_utils import (
     get_ipfs_client,
     get_from_ipfs_and_checkhash,
 )
 from snet.sdk.utils.utils import bytesuri_to_hash, safe_extract_proto
-from snet.sdk.storage_provider.service_metadata import (
+from snet.sdk.registry.service_metadata import (
     MPEServiceMetadata,
     mpe_service_metadata_from_json,
 )
@@ -15,20 +15,13 @@ from snet.sdk.config import config
 
 
 class StorageProvider(object):
-    def __init__(self, registry_contract):
+    def __init__(self, registry_contract: RegistryContract):
         self._registry_contract = registry_contract
         self._ipfs_client = get_ipfs_client()
         self.lighthouse_client = Lighthouse(config.LIGHTHOUSE_TOKEN)
 
     def fetch_org_metadata(self, org_id):
-        org = web3.Web3.to_bytes(text=org_id).ljust(32, b"\0")
-
-        found, _, org_metadata_uri, _, _, _ = self._registry_contract.functions.getOrganizationById(
-            org
-        ).call()
-        if found is not True:
-            raise Exception('Organization with org ID "{}" not found '.format(org_id))
-
+        org_metadata_uri, _, _, _ = self._registry_contract.get_org(org_id)
         org_provider_type, org_metadata_hash = bytesuri_to_hash(org_metadata_uri)
 
         if org_provider_type == "ipfs":
@@ -40,15 +33,7 @@ class StorageProvider(object):
         return org_metadata
 
     def fetch_service_metadata(self, org_id: str, service_id: str) -> MPEServiceMetadata:
-        org = web3.Web3.to_bytes(text=org_id).ljust(32, b"\0")
-        service = web3.Web3.to_bytes(text=service_id).ljust(32, b"\0")
-
-        found, _, service_metadata_uri = (
-            self._registry_contract.functions.getServiceRegistrationById(org, service).call()
-        )
-        if found is not True:
-            raise Exception(f"No service '{service_id}' found in organization '{org_id}'")
-
+        service_metadata_uri = self._registry_contract.get_service(org_id, service_id)
         service_provider_type, service_metadata_hash = bytesuri_to_hash(s=service_metadata_uri)
 
         if service_provider_type == "ipfs":

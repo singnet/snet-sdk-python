@@ -36,13 +36,12 @@ class PaidCallPaymentStrategy(PaymentStrategy):
         return metadata
 
     def select_channel(self, service_client):
-        account = service_client.account
         service_client.load_open_channels()
         service_client.update_channel_states()
         payment_channels = service_client.payment_channels
         # picking the first pricing strategy as default for now
         service_call_price = self.get_price(service_client)
-        mpe_balance = account.escrow_balance()
+        mpe_balance = service_client.get_mpe_balance()
         default_expiration = service_client.default_channel_expiration()
 
         if len(payment_channels) < 1:

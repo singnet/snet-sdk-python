@@ -1,11 +1,10 @@
 import json
 
-import web3
 
 from snet.contracts import get_contract_object
 
+from snet.sdk import get_we3_object
 from snet.sdk.config import config
-from snet.sdk.mpe.mpe_contract import MPEContract
 from snet.sdk.utils.utils import get_address_from_private, normalize_private_key
 
 DEFAULT_GAS = 300000
@@ -28,17 +27,13 @@ class TransactionError(Exception):
 
 
 class Account:
-    def __init__(self, w3: web3.Web3, mpe_contract: MPEContract):
-        self.web3 = w3
-        self.mpe_contract = mpe_contract
+    def __init__(self):
+        self.w3 = get_we3_object()
+        self.mpe_address = config.MPE_CONTRACT_ADDRESS
 
-        token_contract_address = config.TOKEN_CONTRACT_ADDRESS
-        if not token_contract_address:
-            self.token_contract = get_contract_object(self.web3, "FetchToken")
-        else:
-            self.token_contract = get_contract_object(
-                self.web3, "FetchToken", token_contract_address
-            )
+        self.token_contract = get_contract_object(
+            self.w3, "FetchToken", config.TOKEN_CONTRACT_ADDRESS
+        )
 
         if config.PRIVATE_KEY:
             self.private_key = normalize_private_key(config.PRIVATE_KEY)
@@ -52,19 +47,19 @@ class Account:
         self.nonce = 0
 
     def _get_nonce(self):
-        nonce = self.web3.eth.get_transaction_count(self.address)
+        nonce = self.w3.eth.get_transaction_count(self.address)
         if self.nonce >= nonce:
             nonce = self.nonce + 1
         self.nonce = nonce
         return nonce
 
     def _get_gas_price(self):
-        gas_price = self.web3.eth.gas_price
+        gas_price = self.w3.eth.gas_price
         if gas_price <= 15000000000:
             gas_price += gas_price * 1 / 3
-        elif gas_price > 15000000000 and gas_price <= 50000000000:
+        elif 15000000000 < gas_price <= 50000000000:
             gas_price += gas_price * 1 / 5
-        elif gas_price > 50000000000 and gas_price <= 150000000000:
+        elif 50000000000 < gas_price <= 150000000000:
             gas_price += 7000000000
         elif gas_price > 150000000000:
             gas_price += gas_price * 1 / 10
@@ -73,20 +68,18 @@ class Account:
     def _send_signed_transaction(self, contract_fn, *args):
         transaction = contract_fn(*args).build_transaction(
             {
-                "chainId": int(self.web3.net.version),
+                "chainId": int(self.w3.net.version),
                 "gas": DEFAULT_GAS,
                 "gasPrice": self._get_gas_price(),
                 "nonce": self._get_nonce(),
             }
         )
-        signed_txn = self.web3.eth.account.sign_transaction(
-            transaction, private_key=self.private_key
-        )
-        return self.web3.to_hex(self.web3.eth.send_raw_transaction(signed_txn.raw_transaction))
+        signed_txn = self.w3.eth.account.sign_transaction(transaction, private_key=self.private_key)
+        return self.w3.to_hex(self.w3.eth.send_raw_transaction(signed_txn.raw_transaction))
 
     def send_transaction(self, contract_fn, *args):
         txn_hash = self._send_signed_transaction(contract_fn, *args)
-        return self.web3.eth.wait_for_transaction_receipt(txn_hash, TRANSACTION_TIMEOUT)
+        return self.w3.eth.wait_for_transaction_receipt(txn_hash, TRANSACTION_TIMEOUT)
 
     def _parse_receipt(self, receipt, event, encoder=json.JSONEncoder):
         if receipt.status == 0:
@@ -94,23 +87,12 @@ class Account:
         else:
             return json.dumps(dict(event().processReceipt(receipt)[0]["args"]), cls=encoder)
 
-    def escrow_balance(self):
-        return self.mpe_contract.balance(self.address)
-
-    def deposit_to_escrow_account(self, amount_in_cogs):
-        already_approved = self.allowance()
-        if amount_in_cogs > already_approved:
-            self.approve_transfer(amount_in_cogs)
-        return self.mpe_contract.deposit(self, amount_in_cogs)
-
     def approve_transfer(self, amount_in_cogs):
         return self.send_transaction(
             self.token_contract.functions.approve,
-            self.mpe_contract.contract.address,
+            self.mpe_address,
             amount_in_cogs,
         )
 
     def allowance(self):
-        return self.token_contract.functions.allowance(
-            self.address, self.mpe_contract.contract.address
-        ).call()
+        return self.token_contract.functions.allowance(self.address, self.mpe_address).call()

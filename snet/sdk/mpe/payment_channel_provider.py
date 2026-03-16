@@ -4,6 +4,7 @@ import pickle
 
 from web3.types import LogReceipt
 
+from snet.sdk import get_we3_object
 from snet.sdk.mpe.payment_channel import PaymentChannel
 from snet.contracts import get_contract_deployment_block
 
@@ -13,8 +14,8 @@ CHANNELS_DIR = Path.home().joinpath(".snet", "cache", "mpe")
 
 
 class PaymentChannelProvider(object):
-    def __init__(self, w3, mpe_contract):
-        self.web3 = w3
+    def __init__(self, mpe_contract):
+        self.web3 = get_we3_object()
 
         self.mpe_contract = mpe_contract
         self.event_topics = [

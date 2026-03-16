@@ -21,7 +21,7 @@ from snet.sdk.payment_strategies.prepaid_payment_strategy import (
     PrePaidPaymentStrategy,
 )
 from snet.sdk.resources.root_certificate import certificate
-from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
+from snet.sdk.registry.service_metadata import MPEServiceMetadata
 from snet.sdk.custom_typing import ModuleName, ServiceStub
 from snet.sdk.utils.utils import (
     RESOURCES_PATH,
@@ -59,6 +59,7 @@ class ServiceClient:
         if isinstance(payment_strategy, PrePaidPaymentStrategy):
             self.payment_strategy.set_concurrent_calls(options["concurrent_calls"])
         self.options = options
+        self.mpe_contract = mpe_contract
         self.mpe_address = mpe_contract.contract.address
         self.account = account
         self.sdk_web3 = sdk_web3
@@ -192,6 +193,9 @@ class ServiceClient:
         with add_to_path(str(RESOURCES_PATH.joinpath("proto"))):
             state_service = importlib.import_module("state_service_pb2_grpc")
         return state_service.PaymentChannelStateServiceStub(grpc_channel)
+
+    def get_mpe_balance(self):
+        return self.mpe_contract.balance(self.account)
 
     def open_channel(self, amount: int, expiration: int) -> PaymentChannel:
         payment_address = self.group["payment"]["payment_address"]
