@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Union
 
-from grpc import services
-
 from snet.sdk.utils.utils import bytes32_to_str, bytesuri_to_hash
 
 
@@ -13,7 +11,7 @@ class RawOrgData:
     metadata_uri: bytes
     owner: str
     members: list[str]
-    services: list[bytes] # IDs
+    services: list[bytes]  # IDs
 
 
 @dataclass
@@ -44,11 +42,11 @@ class OrgData:
     @classmethod
     def from_raw_org_data(cls, raw_org_data: RawOrgData):
         return OrgData(
-            org_id = bytes32_to_str(raw_org_data.org_id),
-            metadata_uri = bytesuri_to_hash(raw_org_data.metadata_uri),
-            owner = raw_org_data.owner,
-            members = raw_org_data.members,
-            services = list(map(bytes32_to_str, raw_org_data.services))
+            org_id=bytes32_to_str(raw_org_data.org_id),
+            metadata_uri=bytesuri_to_hash(raw_org_data.metadata_uri),
+            owner=raw_org_data.owner,
+            members=raw_org_data.members,
+            services=list(map(bytes32_to_str, raw_org_data.services)),
         )
 
 
@@ -61,7 +59,7 @@ class ServiceData:
     @classmethod
     def from_raw_service_data(cls, raw_service_data: RawServiceData, org_id: Union[str, bytes]):
         return ServiceData(
-            org_id = bytes32_to_str(org_id) if isinstance(org_id, bytes) else org_id,
-            service_id = bytes32_to_str(raw_service_data.service_id),
-            metadata_uri = bytesuri_to_hash(raw_service_data.metadata_uri)
+            org_id=bytes32_to_str(org_id) if isinstance(org_id, bytes) else org_id,
+            service_id=bytes32_to_str(raw_service_data.service_id),
+            metadata_uri=bytesuri_to_hash(raw_service_data.metadata_uri),
         )

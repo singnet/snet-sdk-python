@@ -181,10 +181,7 @@ def bytesuri_to_hash(s, to_decode=True):
         s = s.rstrip(b"\0").decode("ascii")
     try:
         storage_type, storage_hash = s.split("://")
-        return FileURI(
-            StorageType(storage_type),
-            storage_hash
-        )
+        return FileURI(StorageType(storage_type), storage_hash)
     except ValueError:
         # TODO: configure exceptions
         raise Exception("We support only ipfs and filecoin uri in Registry")

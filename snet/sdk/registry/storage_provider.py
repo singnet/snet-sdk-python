@@ -55,12 +55,10 @@ class StorageProvider(object):
 
     def fetch_and_extract_proto(self, service_api_source, proto_dir):
         try:
-            tar_uri = bytesuri_to_hash(
-                service_api_source, to_decode=False
-            )
+            tar_uri = bytesuri_to_hash(service_api_source, to_decode=False)
         except Exception:
             # TODO: change exception based on bytesuri_to_hash function
-            tar_uri = FileURI(storage_type = StorageType.IPFS, uri_hash = service_api_source)
+            tar_uri = FileURI(storage_type=StorageType.IPFS, uri_hash=service_api_source)
 
         spec_tar = self._get_from_storage(tar_uri)
 

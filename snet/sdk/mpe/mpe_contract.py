@@ -6,6 +6,7 @@ from snet.sdk.account import Account
 from snet.sdk.config import config
 from snet.sdk.utils.utils import get_we3_object
 
+
 class MPEContract:
     def __init__(self):
         self.w3 = get_we3_object()

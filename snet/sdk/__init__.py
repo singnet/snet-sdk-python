@@ -80,7 +80,7 @@ class SnetSDK:
         if force_update:
             lib_generator.generate_client_library()
         else:
-            path_to_pb_files = lib_generator.protodir
+            path_to_pb_files = lib_generator.proto_dir
             pb_2_file_name = find_file_by_keyword(
                 path_to_pb_files, keyword="pb2.py", exclude=["training"]
             )
@@ -118,13 +118,13 @@ class SnetSDK:
             self.w3,
             pb2_module,
             self.payment_channel_provider,
-            lib_generator.protodir,
+            lib_generator.proto_dir,
             lib_generator.training_added(),
         )
         return _service_client
 
     def get_service_stub(self, lib_generator: ClientLibGenerator) -> list[ServiceStub]:
-        path_to_pb_files = str(lib_generator.protodir)
+        path_to_pb_files = str(lib_generator.proto_dir)
         module_name = self.get_module_by_keyword("pb2_grpc.py", lib_generator)
         sys.path.append(path_to_pb_files)
         try:
@@ -140,7 +140,7 @@ class SnetSDK:
             raise Exception(f"Error importing module: {e}")
 
     def get_module_by_keyword(self, keyword: str, lib_generator: ClientLibGenerator) -> ModuleName:
-        path_to_pb_files = lib_generator.protodir
+        path_to_pb_files = lib_generator.proto_dir
         file_name = find_file_by_keyword(path_to_pb_files, keyword, exclude=["training"])
         module_name = os.path.splitext(file_name)[0]
         return ModuleName(module_name)

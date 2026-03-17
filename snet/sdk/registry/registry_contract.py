@@ -23,28 +23,29 @@ class RegistryContract:
             # TODO: configure exceptions
             raise Exception()
 
-        return OrgData.from_raw_org_data(RawOrgData(
-            org_id = found_org_id,
-            metadata_uri = org_metadata_uri,
-            owner = owner,
-            members = members,
-            services = service_ids
-        ))
+        return OrgData.from_raw_org_data(
+            RawOrgData(
+                org_id=found_org_id,
+                metadata_uri=org_metadata_uri,
+                owner=owner,
+                members=members,
+                services=service_ids,
+            )
+        )
 
     def get_service(self, org_id: str, service_id: str) -> ServiceData:
-        found, found_service_id, service_metadata_uri = self.contract.functions.getServiceRegistrationById(
-            type_converter("bytes32")(org_id), type_converter("bytes32")(service_id)
-        ).call()
+        found, found_service_id, service_metadata_uri = (
+            self.contract.functions.getServiceRegistrationById(
+                type_converter("bytes32")(org_id), type_converter("bytes32")(service_id)
+            ).call()
+        )
         if not found:
             # TODO: configure exceptions
             raise Exception()
 
         return ServiceData.from_raw_service_data(
-            RawServiceData(
-                service_id = found_service_id,
-                metadata_uri = service_metadata_uri
-            ),
-            org_id = org_id
+            RawServiceData(service_id=found_service_id, metadata_uri=service_metadata_uri),
+            org_id=org_id,
         )
 
     def list_orgs(self) -> list[str]:
