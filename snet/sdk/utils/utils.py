@@ -16,6 +16,7 @@ from web3 import Web3
 
 from snet import sdk
 from snet.sdk.config import config
+from snet.sdk.types import StorageType, FileURI
 
 RESOURCES_PATH = PurePath(os.path.dirname(sdk.__file__)).joinpath("resources")
 
@@ -178,11 +179,14 @@ def find_file_by_keyword(directory, keyword, exclude=None):
 def bytesuri_to_hash(s, to_decode=True):
     if to_decode:
         s = s.rstrip(b"\0").decode("ascii")
-    if s.startswith("ipfs://"):
-        return "ipfs", s[7:]
-    elif s.startswith("filecoin://"):
-        return "filecoin", s[11:]
-    else:
+    try:
+        storage_type, storage_hash = s.split("://")
+        return FileURI(
+            StorageType(storage_type),
+            storage_hash
+        )
+    except ValueError:
+        # TODO: configure exceptions
         raise Exception("We support only ipfs and filecoin uri in Registry")
 
 

@@ -4,6 +4,7 @@ from snet.contracts import get_contract_object
 
 from snet.sdk.account import Account
 from snet.sdk.config import config
+from snet.sdk.types import RawOrgData, OrgData, ServiceData, RawServiceData
 from snet.sdk.utils.utils import type_converter, bytes32_to_str, get_we3_object
 
 
@@ -14,32 +15,43 @@ class RegistryContract:
 
     # READ METHODS
 
-    def get_org(self, org_id: str):
-        found, _, org_metadata_uri, owner, members, service_ids = (
+    def get_org(self, org_id: str) -> OrgData:
+        found, found_org_id, org_metadata_uri, owner, members, service_ids = (
             self.contract.functions.getOrganizationById(type_converter("bytes32")(org_id)).call()
         )
         if not found:
             # TODO: configure exceptions
             raise Exception()
 
-        # TODO: new type
-        return org_metadata_uri, owner, members, service_ids
+        return OrgData.from_raw_org_data(RawOrgData(
+            org_id = found_org_id,
+            metadata_uri = org_metadata_uri,
+            owner = owner,
+            members = members,
+            services = service_ids
+        ))
 
-    def get_service(self, org_id: str, service_id: str) -> bytes:
-        found, _, service_metadata_uri = self.contract.functions.getServiceRegistrationById(
+    def get_service(self, org_id: str, service_id: str) -> ServiceData:
+        found, found_service_id, service_metadata_uri = self.contract.functions.getServiceRegistrationById(
             type_converter("bytes32")(org_id), type_converter("bytes32")(service_id)
         ).call()
         if not found:
             # TODO: configure exceptions
             raise Exception()
 
-        return service_metadata_uri
+        return ServiceData.from_raw_service_data(
+            RawServiceData(
+                service_id = found_service_id,
+                metadata_uri = service_metadata_uri
+            ),
+            org_id = org_id
+        )
 
-    def list_orgs(self):
+    def list_orgs(self) -> list[str]:
         org_list = self.contract.functions.listOrganizations().call()
         return list(map(bytes32_to_str, org_list))
 
-    def list_service_for_org(self, org_id: str):
+    def list_service_for_org(self, org_id: str) -> list[str]:
         found, org_service_list = self.contract.functions.listServicesForOrganization(
             type_converter("bytes32")(org_id)
         ).call()
