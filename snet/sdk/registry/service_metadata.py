@@ -39,9 +39,13 @@ assets {}       -  asset type and its ipfs value/values
 import re
 import json
 import base64
+import secrets
 
 from collections import defaultdict
 from enum import Enum
+from typing import Literal, Any, Optional
+
+from pydantic import BaseModel, Field, model_validator, ValidationInfo
 
 from snet.sdk.utils.utils import is_valid_endpoint
 
@@ -61,6 +65,75 @@ class AssetType(Enum):
             or asset_type == AssetType.TERMS_OF_USE.value
         ):
             return True
+
+
+def generate_group_id() -> str:
+    return base64.b64encode(secrets.token_bytes(32)).decode()
+
+
+class Pricing(BaseModel):
+    price_model: Literal["fixed_price", "method_price"] = Field(default="fixed_price")
+    price_in_cogs: int = Field(ge=1)
+    default: bool = Field(default=True)
+
+
+class Group(BaseModel):
+    group_name: str = Field(min_length=1, default="default_group")
+    group_id: str = Field(default_factory=generate_group_id, init=False)
+    free_calls: int = Field(ge=1)
+    free_call_signer_address: str
+    daemon_addresses: list[str]
+
+
+class ServiceDescription(BaseModel): ...
+
+
+class Media(BaseModel): ...
+
+
+class Contributor(BaseModel): ...
+
+
+class ServiceMetadata(BaseModel):
+    version: int = Field(ge=1, default=1)
+    display_name: str
+    encoding: Literal["proto", "json"] = Field(default="proto")
+    service_type: Literal["grpc", "http", "jsonrpc"]
+    service_api_source: Optional[str] = Field(min_length=1, default=None, init=False)
+    model_ipfs_hash: Optional[str] = Field(min_length=1, default=None, init=False, deprecated=True)
+    mpe_address: str
+    groups: list[Group]
+    service_description: ServiceDescription
+    media: list[Media]
+    contributors: list[Contributor]
+    tags: list[str]
+
+    @model_validator(mode="before")
+    @classmethod
+    def restrict_deprecated_fields(cls, data: Any, info: ValidationInfo) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        is_fetching = info.context and info.context.get("from_storage") is True
+
+        if not is_fetching and data.get("model_ipfs_hash"):
+            # TODO: configure exceptions
+            raise ValueError(
+                "The 'model_ipfs_hash' field is deprecated and cannot be used "
+                "to create new metadata. Please use 'service_api_source' instead."
+            )
+
+        return data
+
+    def generate_final_json(self):
+        if self.service_api_source is None:
+            if self.model_ipfs_hash is None:
+                # TODO: configure exceptions
+                raise ValueError("The 'service_api_source' field is missing!")
+            else:
+                self.service_api_source, self.model_ipfs_hash = self.model_ipfs_hash, None
+
+        return self.model_dump_json(indent=2, exclude_none=True)
 
 
 # TODO: we should use some standard solution here

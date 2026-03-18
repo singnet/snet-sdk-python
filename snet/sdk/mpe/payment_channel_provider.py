@@ -7,6 +7,7 @@ from web3.types import LogReceipt
 from snet.sdk.utils.utils import get_we3_object
 from snet.sdk.mpe.payment_channel import PaymentChannel
 from snet.contracts import get_contract_deployment_block
+from snet.sdk.mpe.mpe_contract import MPEContract
 
 
 BLOCKS_PER_BATCH = 50000
@@ -14,7 +15,7 @@ CHANNELS_DIR = Path.home().joinpath(".snet", "cache", "mpe")
 
 
 class PaymentChannelProvider(object):
-    def __init__(self, mpe_contract):
+    def __init__(self, mpe_contract: MPEContract):
         self.web3 = get_we3_object()
 
         self.mpe_contract = mpe_contract
@@ -139,7 +140,6 @@ class PaymentChannelProvider(object):
             map(
                 lambda channel: PaymentChannel(
                     channel["channel_id"],
-                    self.web3,
                     account,
                     payment_channel_state_service_client,
                     self.mpe_contract,

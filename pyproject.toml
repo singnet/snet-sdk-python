@@ -31,6 +31,7 @@ dependencies = [
     "snet-contracts==1.0.1",
     "lighthouseweb3~=0.1.4",
     "py-multihash~=3.0",
+    "pydantic~=2.11",
     "pydantic-settings~=2.13"
 ]
 

@@ -157,7 +157,8 @@ class SnetSDK:
         for group in service_metadata["groups"]:
             if group["group_name"] == group_name:
                 return group
-        return {}
+        # TODO: configure exceptions
+        raise Exception()
 
     def _get_service_group_details(
         self, service_metadata: MPEServiceMetadata, group_name: str
