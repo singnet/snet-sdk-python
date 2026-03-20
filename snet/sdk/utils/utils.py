@@ -2,12 +2,10 @@ import json
 import sys
 import importlib.resources
 from functools import lru_cache
-from typing import Optional, Union
+from typing import Optional
 from urllib.parse import urlparse
 from pathlib import Path, PurePath
 import os
-import tarfile
-import io
 
 import web3
 from eth_typing import BlockNumber
@@ -16,29 +14,8 @@ from web3 import Web3
 
 from snet import sdk
 from snet.sdk.config import config
-from snet.sdk.types import StorageType, FileURI, RawOrgData, OrgData, RawServiceData, ServiceData
 
 RESOURCES_PATH = PurePath(os.path.dirname(sdk.__file__)).joinpath("resources")
-
-
-def convert_raw_org_data(raw_org_data: RawOrgData) -> OrgData:
-    return OrgData(
-        org_id=bytes32_to_str(raw_org_data.org_id),
-        metadata_uri=bytesuri_to_hash(raw_org_data.metadata_uri),
-        owner=raw_org_data.owner,
-        members=raw_org_data.members,
-        services=list(map(bytes32_to_str, raw_org_data.services)),
-    )
-
-
-def convert_raw_service_data(
-    raw_service_data: RawServiceData, org_id: Union[str, bytes]
-) -> ServiceData:
-    return ServiceData(
-        org_id=bytes32_to_str(org_id) if isinstance(org_id, bytes) else org_id,
-        service_id=bytes32_to_str(raw_service_data.service_id),
-        metadata_uri=bytesuri_to_hash(raw_service_data.metadata_uri),
-    )
 
 
 @lru_cache
@@ -194,34 +171,3 @@ def find_file_by_keyword(directory, keyword, exclude=None):
         for file in files:
             if keyword in file and all(e not in file for e in exclude):
                 return file
-
-
-def bytesuri_to_hash(s, to_decode=True):
-    if to_decode:
-        s = s.rstrip(b"\0").decode("ascii")
-    try:
-        storage_type, storage_hash = s.split("://")
-        return FileURI(StorageType(storage_type), storage_hash)
-    except ValueError:
-        # TODO: configure exceptions
-        raise Exception("We support only ipfs and filecoin uri in Registry")
-
-
-def safe_extract_proto(spec_tar, protodir):
-    """
-    Tar files might be dangerous (see https://bugs.python.org/issue21109,
-    and https://docs.python.org/3/library/tarfile.html, TarFile.extractall warning)
-    we extract only simple files
-    """
-    with tarfile.open(fileobj=io.BytesIO(spec_tar)) as f:
-        for m in f.getmembers():
-            if os.path.dirname(m.name) != "":
-                raise Exception("tarball has directories. We do not support it.")
-            if not m.isfile():
-                raise Exception("tarball contains %s which is not a file" % m.name)
-            fullname = os.path.join(protodir, m.name)
-            if os.path.exists(fullname):
-                os.remove(fullname)
-                print(f"{fullname} removed.")
-        # now it is safe to call extractall
-        f.extractall(path=protodir)

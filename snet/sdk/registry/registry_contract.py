@@ -4,13 +4,11 @@ from snet.contracts import get_contract_object
 
 from snet.sdk.account import Account
 from snet.sdk.config import config
-from snet.sdk.types import RawOrgData, OrgData, ServiceData, RawServiceData
+from snet.sdk.registry.models import RawOrgData, OrgData, ServiceData, RawServiceData
 from snet.sdk.utils.utils import (
     type_converter,
     bytes32_to_str,
     get_we3_object,
-    convert_raw_service_data,
-    convert_raw_org_data,
 )
 
 
@@ -29,7 +27,7 @@ class RegistryContract:
             # TODO: configure exceptions
             raise Exception()
 
-        return convert_raw_org_data(
+        return OrgData.from_raw_data(
             RawOrgData(
                 org_id=found_org_id,
                 metadata_uri=org_metadata_uri,
@@ -49,7 +47,7 @@ class RegistryContract:
             # TODO: configure exceptions
             raise Exception()
 
-        return convert_raw_service_data(
+        return ServiceData.from_raw_data(
             RawServiceData(service_id=found_service_id, metadata_uri=service_metadata_uri),
             org_id=org_id,
         )

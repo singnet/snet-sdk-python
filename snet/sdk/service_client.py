@@ -22,7 +22,7 @@ from snet.sdk.payment_strategies.prepaid_payment_strategy import (
 )
 from snet.sdk.resources.root_certificate import certificate
 from snet.sdk.registry.service_metadata import MPEServiceMetadata
-from snet.sdk.custom_typing import ModuleName, ServiceStub
+from snet.sdk.types import ModuleName, ServiceStub
 from snet.sdk.utils.utils import (
     RESOURCES_PATH,
     add_to_path,

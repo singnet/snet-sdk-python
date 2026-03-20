@@ -47,6 +47,7 @@ from typing import Literal, Any, Optional
 
 from pydantic import BaseModel, Field, model_validator, ValidationInfo
 
+from snet.sdk.registry.models import FileURI
 from snet.sdk.utils.utils import is_valid_endpoint
 
 
@@ -67,46 +68,76 @@ class AssetType(Enum):
             return True
 
 
+class FileType(Enum):
+    IMAGE = "image"
+    VIDEO = "video"
+    ARCHIVE = "archive"
+
+
+# class AssetType(Enum):
+#     HERO_IMAGE = "hero_image"
+#     PROTO_FILE = "proto_file"
+#     DEMO_COMPONENT = "demo_component"
+
+
+class ServiceType(Enum):
+    GRPC = "grpc"
+    HTTP = "http"
+    JSONRPC = "jsonrpc"
+
+
 def generate_group_id() -> str:
     return base64.b64encode(secrets.token_bytes(32)).decode()
 
 
 class Pricing(BaseModel):
     price_model: Literal["fixed_price", "method_price"] = Field(default="fixed_price")
-    price_in_cogs: int = Field(ge=1)
+    price_in_cogs: int = Field(ge=1, default=1)
     default: bool = Field(default=True)
 
 
 class Group(BaseModel):
     group_name: str = Field(min_length=1, default="default_group")
     group_id: str = Field(default_factory=generate_group_id, init=False)
-    free_calls: int = Field(ge=1)
-    free_call_signer_address: str
-    daemon_addresses: list[str]
+    free_calls: int = Field(ge=1, default=3)
+    free_call_signer_address: str = Field(default="")
+    daemon_addresses: list[str] = Field(default=[])
+    endpoints: list[str] = Field(default=[])
+    pricing: list[Pricing] = Field(default=[])
 
 
-class ServiceDescription(BaseModel): ...
+class ServiceDescription(BaseModel):
+    url: str = Field(default="")
+    short_description: str = Field(default="")
+    description: str = Field(default="")
 
 
-class Media(BaseModel): ...
+class Media(BaseModel):
+    order: int = Field(ge=1, default=1)
+    url: str = Field(min_length=1)
+    file_type: FileType
+    alt_text: str = Field(default="")
+    asset_type: AssetType
 
 
-class Contributor(BaseModel): ...
+class Contributor(BaseModel):
+    name: str = Field(min_length=1)
+    email_id: str = Field(default="")
 
 
 class ServiceMetadata(BaseModel):
     version: int = Field(ge=1, default=1)
-    display_name: str
+    display_name: str = Field(min_length=1)
     encoding: Literal["proto", "json"] = Field(default="proto")
     service_type: Literal["grpc", "http", "jsonrpc"]
-    service_api_source: Optional[str] = Field(min_length=1, default=None, init=False)
+    service_api_source: Optional[str] = Field(default=None, init=False)
     model_ipfs_hash: Optional[str] = Field(min_length=1, default=None, init=False, deprecated=True)
-    mpe_address: str
-    groups: list[Group]
-    service_description: ServiceDescription
-    media: list[Media]
-    contributors: list[Contributor]
-    tags: list[str]
+    mpe_address: Optional[str] = Field(default=None, init=False)
+    groups: list[Group] = Field(default=[])
+    service_description: Optional[ServiceDescription] = Field(default=None)
+    media: list[Media] = Field(default=[])
+    contributors: list[Contributor] = Field(default=[])
+    tags: list[str] = Field(default=[])
 
     @model_validator(mode="before")
     @classmethod
@@ -117,7 +148,6 @@ class ServiceMetadata(BaseModel):
         is_fetching = info.context and info.context.get("from_storage") is True
 
         if not is_fetching and data.get("model_ipfs_hash"):
-            # TODO: configure exceptions
             raise ValueError(
                 "The 'model_ipfs_hash' field is deprecated and cannot be used "
                 "to create new metadata. Please use 'service_api_source' instead."
@@ -128,10 +158,22 @@ class ServiceMetadata(BaseModel):
     def generate_final_json(self):
         if self.service_api_source is None:
             if self.model_ipfs_hash is None:
-                # TODO: configure exceptions
                 raise ValueError("The 'service_api_source' field is missing!")
             else:
-                self.service_api_source, self.model_ipfs_hash = self.model_ipfs_hash, None
+                self.service_api_source = FileURI.normalize_string_uri(self.model_ipfs_hash)
+                self.model_ipfs_hash = None
+
+        if not self.mpe_address:
+            raise ValueError("The 'mpe_address' field is missing!")
+
+        if len(self.groups) == 0:
+            raise ValueError("There must be one item in 'groups' field at least!")
+
+        if len(self.contributors) == 0:
+            raise ValueError("There must be one item in 'contributors' field at least!")
+
+        if not self.service_description:
+            raise ValueError("The 'mpe_address' field is missing!")
 
         return self.model_dump_json(indent=2, exclude_none=True)
 

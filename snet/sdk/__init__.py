@@ -33,7 +33,7 @@ from snet.sdk.payment_strategies import (
 )
 from snet.sdk.service_client import ServiceClient
 from snet.sdk.registry.storage_provider import StorageProvider
-from snet.sdk.custom_typing import ModuleName, ServiceStub
+from snet.sdk.types import ModuleName, ServiceStub
 from snet.sdk.utils.utils import (
     find_file_by_keyword,
     get_we3_object,
