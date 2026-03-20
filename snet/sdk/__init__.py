@@ -7,6 +7,7 @@ from enum import Enum
 import google.protobuf.internal.api_implementation
 from google.protobuf import symbol_database as _symbol_database
 
+from snet.sdk.registry.organization_metadata import OrganizationMetadata
 from snet.sdk.registry.registry_contract import RegistryContract
 from snet.sdk.registry.service_metadata import MPEServiceMetadata
 
@@ -56,7 +57,7 @@ class SnetSDK:
         self.w3 = get_we3_object()
         self.mpe_contract = MPEContract()
         self.registry_contract = RegistryContract()
-        self.metadata_provider = StorageProvider(self.registry_contract)
+        self.storage_provider = StorageProvider(self.registry_contract)
         self.payment_channel_provider = PaymentChannelProvider(self.mpe_contract)
         self.account = Account()
 
@@ -73,7 +74,7 @@ class SnetSDK:
 
         # Create and instance of the Config object,
         # so we can create an instance of ClientLibGenerator
-        lib_generator = ClientLibGenerator(self.metadata_provider, org_id, service_id)
+        lib_generator = ClientLibGenerator(self.storage_provider, org_id, service_id)
 
         # Download the proto file and generate stubs if needed
         force_update = config.FORCE_UPDATE
@@ -99,7 +100,7 @@ class SnetSDK:
         if payment_strategy is None:
             payment_strategy = payment_strategy_type.value()
 
-        service_metadata = self.metadata_provider.enhance_service_metadata(org_id, service_id)
+        service_metadata = self._enhance_service_metadata(org_id, service_id)
         group = self._get_service_group_details(service_metadata, group_name)
 
         service_stubs = self.get_service_stub(lib_generator)
@@ -122,6 +123,19 @@ class SnetSDK:
             lib_generator.training_added(),
         )
         return _service_client
+
+    def _enhance_service_metadata(self, org_id, service_id):
+        service_metadata = self.get_service_metadata(org_id, service_id)
+        org_metadata = self.get_organization_metadata(org_id)
+
+        org_group_map = {}
+        for group in org_metadata.groups:
+            org_group_map[group.group_name] = group
+
+        for group in service_metadata.groups:
+            group.payment = org_group_map[group.group_name].payment
+
+        return service_metadata
 
     def get_service_stub(self, lib_generator: ClientLibGenerator) -> list[ServiceStub]:
         path_to_pb_files = str(lib_generator.proto_dir)
@@ -146,7 +160,12 @@ class SnetSDK:
         return ModuleName(module_name)
 
     def get_service_metadata(self, org_id, service_id):
-        return self.metadata_provider.fetch_service_metadata(org_id, service_id)
+        service = self.registry_contract.get_service(org_id, service_id)
+        return self.storage_provider.fetch_service_metadata(service.metadata_uri)
+
+    def get_organization_metadata(self, org_id: str) -> OrganizationMetadata:
+        org = self.registry_contract.get_org(org_id)
+        return self.storage_provider.fetch_org_metadata(org.metadata_uri)
 
     def _get_first_group(self, service_metadata: MPEServiceMetadata) -> dict:
         return service_metadata["groups"][0]

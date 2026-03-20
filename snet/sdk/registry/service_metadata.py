@@ -48,6 +48,7 @@ from typing import Literal, Any, Optional
 from pydantic import BaseModel, Field, model_validator, ValidationInfo
 
 from snet.sdk.registry.models import FileURI
+from snet.sdk.registry.organization_metadata import Payment
 from snet.sdk.utils.utils import is_valid_endpoint
 
 
@@ -68,24 +69,6 @@ class AssetType(Enum):
             return True
 
 
-class FileType(Enum):
-    IMAGE = "image"
-    VIDEO = "video"
-    ARCHIVE = "archive"
-
-
-# class AssetType(Enum):
-#     HERO_IMAGE = "hero_image"
-#     PROTO_FILE = "proto_file"
-#     DEMO_COMPONENT = "demo_component"
-
-
-class ServiceType(Enum):
-    GRPC = "grpc"
-    HTTP = "http"
-    JSONRPC = "jsonrpc"
-
-
 def generate_group_id() -> str:
     return base64.b64encode(secrets.token_bytes(32)).decode()
 
@@ -104,6 +87,9 @@ class Group(BaseModel):
     daemon_addresses: list[str] = Field(default=[])
     endpoints: list[str] = Field(default=[])
     pricing: list[Pricing] = Field(default=[])
+    payment: Optional[Payment] = Field(
+        default=None
+    )  # The field from org metadata for service client functionality
 
 
 class ServiceDescription(BaseModel):
@@ -115,9 +101,9 @@ class ServiceDescription(BaseModel):
 class Media(BaseModel):
     order: int = Field(ge=1, default=1)
     url: str = Field(min_length=1)
-    file_type: FileType
+    file_type: Literal["image", "video", "archive"]
     alt_text: str = Field(default="")
-    asset_type: AssetType
+    asset_type: Literal["hero_image", "proto_file", "demo_component"]
 
 
 class Contributor(BaseModel):

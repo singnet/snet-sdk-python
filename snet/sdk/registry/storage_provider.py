@@ -9,48 +9,28 @@ import json
 import multihash
 import hashlib
 
-from snet.sdk.registry.registry_contract import RegistryContract
+from snet.sdk.registry.organization_metadata import OrganizationMetadata
 from snet.sdk.registry.models import StorageType, FileURI
-from snet.sdk.registry.service_metadata import (
-    MPEServiceMetadata,
-    mpe_service_metadata_from_json,
-)
+from snet.sdk.registry.service_metadata import ServiceMetadata
 from snet.sdk.config import config
 
 
 class StorageProvider(object):
-    def __init__(self, registry_contract: RegistryContract):
-        self._registry_contract = registry_contract
+    def __init__(self):
         self._ipfs_client = ipfshttpclient.connect(config.IPFS_ENDPOINT)
         self._lighthouse_client = Lighthouse(config.LIGHTHOUSE_TOKEN)
 
-    def fetch_org_metadata(self, org_id):
-        org = self._registry_contract.get_org(org_id)
-
-        org_metadata_json = self._get_from_storage(org.metadata_uri)
-        org_metadata = json.loads(org_metadata_json)
+    def fetch_org_metadata(self, metadata_uri: FileURI):
+        org_metadata_json = self._get_from_storage(metadata_uri)
+        raw_org_metadata = json.loads(org_metadata_json)
+        org_metadata = OrganizationMetadata(**raw_org_metadata)
 
         return org_metadata
 
-    def fetch_service_metadata(self, org_id: str, service_id: str) -> MPEServiceMetadata:
-        service = self._registry_contract.get_service(org_id, service_id)
-
-        service_metadata_json = self._get_from_storage(service.metadata_uri)
-        service_metadata = mpe_service_metadata_from_json(service_metadata_json)
-
-        return service_metadata
-
-    def enhance_service_metadata(self, org_id, service_id):
-        service_metadata = self.fetch_service_metadata(org_id, service_id)
-        org_metadata = self.fetch_org_metadata(org_id)
-
-        org_group_map = {}
-        for group in org_metadata["groups"]:
-            org_group_map[group["group_name"]] = group
-
-        for group in service_metadata.m["groups"]:
-            # merge service group with org_group
-            group["payment"] = org_group_map[group["group_name"]]["payment"]
+    def fetch_service_metadata(self, metadata_uri: FileURI) -> ServiceMetadata:
+        service_metadata_json = self._get_from_storage(metadata_uri)
+        raw_service_metadata = json.loads(service_metadata_json)
+        service_metadata = ServiceMetadata(**raw_service_metadata)
 
         return service_metadata
 
