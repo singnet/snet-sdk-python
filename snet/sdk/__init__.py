@@ -9,10 +9,11 @@ from typing import Union
 import google.protobuf.internal.api_implementation
 from google.protobuf import symbol_database as _symbol_database
 
+from snet.sdk.exceptions import NoGroupsFoundError, GroupNotFoundError
 from snet.sdk.registry.models import StorageType
 from snet.sdk.registry.organization_metadata import OrganizationMetadata
 from snet.sdk.registry.registry_contract import RegistryContract
-from snet.sdk.registry.service_metadata import MPEServiceMetadata, ServiceMetadata
+from snet.sdk.registry.service_metadata import ServiceMetadata, Group
 
 with warnings.catch_warnings():
     # Suppress the eth-typing package`s warnings related to some new networks
@@ -104,7 +105,7 @@ class SnetSDK:
             payment_strategy = payment_strategy_type.value()
 
         service_metadata = self._enhance_service_metadata(org_id, service_id)
-        group = self._get_service_group_details(service_metadata, group_name)
+        group = self._get_service_group(org_id, service_id, service_metadata, group_name)
 
         service_stubs = self.get_service_stub(lib_generator)
 
@@ -112,7 +113,6 @@ class SnetSDK:
         _service_client = ServiceClient(
             org_id,
             service_id,
-            service_metadata,
             group,
             service_stubs,
             payment_strategy,
@@ -170,28 +170,20 @@ class SnetSDK:
         org = self.registry_contract.get_org(org_id)
         return self.storage_provider.fetch_org_metadata(org.metadata_uri)
 
-    def _get_first_group(self, service_metadata: MPEServiceMetadata) -> dict:
-        return service_metadata["groups"][0]
-
-    def _get_group_by_group_name(
-        self, service_metadata: MPEServiceMetadata, group_name: str
-    ) -> dict:
-        for group in service_metadata["groups"]:
-            if group["group_name"] == group_name:
-                return group
-        # TODO: configure exceptions
-        raise Exception()
-
-    def _get_service_group_details(
-        self, service_metadata: MPEServiceMetadata, group_name: str
-    ) -> dict:
-        if len(service_metadata["groups"]) == 0:
-            raise Exception("No Groups found for given service, Please add group to the service")
+    def _get_service_group(
+        self, org_id: str, service_id: str, service_metadata: ServiceMetadata, group_name: str
+    ) -> Group:
+        if len(service_metadata.groups) == 0:
+            raise NoGroupsFoundError(org_id, service_id)
 
         if group_name is None:
-            return self._get_first_group(service_metadata)
+            return service_metadata.groups[0]
 
-        return self._get_group_by_group_name(service_metadata, group_name)
+        for group in service_metadata.groups:
+            if group.group_name == group_name:
+                return group
+
+        raise GroupNotFoundError(org_id, service_id, group_name)
 
     def get_organization_list(self) -> list:
         return self.registry_contract.list_orgs()
