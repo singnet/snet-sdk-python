@@ -47,6 +47,7 @@ from typing import Literal, Any, Optional
 
 from pydantic import BaseModel, Field, model_validator, ValidationInfo
 
+from snet.sdk.exceptions import ServiceMetadataMismatchError
 from snet.sdk.registry.models import FileURI
 from snet.sdk.registry.organization_metadata import Payment
 from snet.sdk.utils.utils import is_valid_endpoint
@@ -150,16 +151,18 @@ class ServiceMetadata(BaseModel):
                 self.model_ipfs_hash = None
 
         if not self.mpe_address:
-            raise ValueError("The 'mpe_address' field is missing!")
+            raise ServiceMetadataMismatchError("The 'mpe_address' field is missing!")
 
         if len(self.groups) == 0:
-            raise ValueError("There must be one item in 'groups' field at least!")
+            raise ServiceMetadataMismatchError("There must be one item in 'groups' field at least!")
 
         if len(self.contributors) == 0:
-            raise ValueError("There must be one item in 'contributors' field at least!")
+            raise ServiceMetadataMismatchError(
+                "There must be one item in 'contributors' field at least!"
+            )
 
         if not self.service_description:
-            raise ValueError("The 'mpe_address' field is missing!")
+            raise ServiceMetadataMismatchError("The 'service_description' field is missing!")
 
         return self.model_dump_json(indent=2, exclude_none=True)
 

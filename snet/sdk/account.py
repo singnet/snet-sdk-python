@@ -1,34 +1,27 @@
-import json
+from typing import Callable, Optional, Union
 
-
+from hexbytes import HexBytes
 from snet.contracts import get_contract_object
+from web3.contract.contract import ContractEvent
+from web3.exceptions import TimeExhausted
+from web3.types import TxReceipt, EventData
 
 from snet.sdk.config import config
+from snet.sdk.exceptions import (
+    TransactionTimeoutError,
+    TransactionRevertedError,
+    EventNotFoundError,
+)
 from snet.sdk.utils.utils import get_address_from_private, normalize_private_key, get_we3_object
 
 DEFAULT_GAS = 300000
 TRANSACTION_TIMEOUT = 500
 
 
-class TransactionError(Exception):
-    """
-    Raised when an Ethereum transaction receipt has a status of 0.
-    Can provide a custom message. Optionally includes receipt
-    """
-
-    def __init__(self, message, receipt=None):
-        super().__init__(message)
-        self.message = message
-        self.receipt = receipt
-
-    def __str__(self):
-        return self.message
-
-
 class Account:
-    def __init__(self):
+    def __init__(self, mpe_address: str):
         self.w3 = get_we3_object()
-        self.mpe_address = config.MPE_CONTRACT_ADDRESS
+        self.mpe_address = mpe_address
 
         self.token_contract = get_contract_object(
             self.w3, "FetchToken", config.TOKEN_CONTRACT_ADDRESS
@@ -64,27 +57,52 @@ class Account:
             gas_price += gas_price * 1 / 10
         return int(gas_price)
 
-    def _send_signed_transaction(self, contract_fn, *args):
+    def _send_signed_transaction(self, contract_fn, *args) -> HexBytes:
+        try:
+            estimated_gas = contract_fn(*args).estimate_gas({"from": self.address})
+            gas_limit = int(estimated_gas * 1.2)
+        except Exception:
+            gas_limit = DEFAULT_GAS
+
         transaction = contract_fn(*args).build_transaction(
             {
-                "chainId": int(self.w3.net.version),
-                "gas": DEFAULT_GAS,
+                "chainId": self.w3.eth.chain_id,
+                "gas": gas_limit,
                 "gasPrice": self._get_gas_price(),
                 "nonce": self._get_nonce(),
             }
         )
+
         signed_txn = self.w3.eth.account.sign_transaction(transaction, private_key=self.private_key)
-        return self.w3.to_hex(self.w3.eth.send_raw_transaction(signed_txn.raw_transaction))
+        return self.w3.eth.send_raw_transaction(signed_txn.raw_transaction)
 
-    def send_transaction(self, contract_fn, *args):
+    def send_transaction(
+        self, contract_fn: Callable, *args, event: Optional[ContractEvent] = None
+    ) -> Union[TxReceipt, EventData]:
         txn_hash = self._send_signed_transaction(contract_fn, *args)
-        return self.w3.eth.wait_for_transaction_receipt(txn_hash, TRANSACTION_TIMEOUT)
 
-    def _parse_receipt(self, receipt, event, encoder=json.JSONEncoder):
-        if receipt.status == 0:
-            raise TransactionError("Transaction failed", receipt)
-        else:
-            return json.dumps(dict(event().processReceipt(receipt)[0]["args"]), cls=encoder)
+        try:
+            tx_receipt = self.w3.eth.wait_for_transaction_receipt(
+                txn_hash, timeout=TRANSACTION_TIMEOUT
+            )
+        except TimeExhausted:
+            raise TransactionTimeoutError(self.w3.to_hex(txn_hash), TRANSACTION_TIMEOUT)
+
+        if event is not None:
+            return self._parse_receipt(tx_receipt, event)
+
+        return tx_receipt
+
+    def _parse_receipt(self, receipt: TxReceipt, event: ContractEvent) -> EventData:
+        if receipt["status"] == 0:
+            raise TransactionRevertedError(self.w3.to_hex(receipt["transactionHash"]))
+
+        processed_logs = event().process_receipt(receipt)
+
+        if not processed_logs:
+            raise EventNotFoundError(self.w3.to_hex(receipt["transactionHash"]), event.event_name)
+
+        return processed_logs[0]
 
     def approve_transfer(self, amount_in_cogs):
         return self.send_transaction(

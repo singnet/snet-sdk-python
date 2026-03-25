@@ -3,13 +3,16 @@ import os
 import sys
 import warnings
 from enum import Enum
+from pathlib import Path
+from typing import Union
 
 import google.protobuf.internal.api_implementation
 from google.protobuf import symbol_database as _symbol_database
 
+from snet.sdk.registry.models import StorageType
 from snet.sdk.registry.organization_metadata import OrganizationMetadata
 from snet.sdk.registry.registry_contract import RegistryContract
-from snet.sdk.registry.service_metadata import MPEServiceMetadata
+from snet.sdk.registry.service_metadata import MPEServiceMetadata, ServiceMetadata
 
 with warnings.catch_warnings():
     # Suppress the eth-typing package`s warnings related to some new networks
@@ -57,9 +60,9 @@ class SnetSDK:
         self.w3 = get_we3_object()
         self.mpe_contract = MPEContract()
         self.registry_contract = RegistryContract()
-        self.storage_provider = StorageProvider(self.registry_contract)
+        self.storage_provider = StorageProvider()
         self.payment_channel_provider = PaymentChannelProvider(self.mpe_contract)
-        self.account = Account()
+        self.account = Account(self.mpe_contract.contract.address)
 
     def create_service_client(
         self,
@@ -195,3 +198,30 @@ class SnetSDK:
 
     def get_services_list(self, org_id: str) -> list:
         return self.registry_contract.list_service_for_org(org_id)
+
+    def publish_service_comprehensively(
+        self,
+        org_id: str,
+        service_id: str,
+        metadata: ServiceMetadata,
+        proto_dir: Union[str, Path],
+        storage_type: StorageType = StorageType.IPFS,
+    ) -> bool:
+        """
+        1. publish .proto files as .tar.gz archive into the storage
+        2. add other fields to the service metadata
+        3. validate service metadata
+        4. publish service metadata into the storage
+        5. publish service into Registry contract
+        """
+        proto_uri = self.storage_provider.publish_proto(proto_dir, storage_type)
+
+        metadata.service_api_source = str(proto_uri)
+        metadata.mpe_address = self.mpe_contract.contract.address
+
+        metadata_uri = self.storage_provider.publish_service_metadata(metadata, storage_type)
+        receipt = self.registry_contract.create_service(
+            self.account, org_id, service_id, metadata_uri
+        )
+
+        return receipt["status"] != 0

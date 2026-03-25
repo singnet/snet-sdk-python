@@ -1,10 +1,16 @@
 from typing import Union
 
 from snet.contracts import get_contract_object
+from web3.types import TxReceipt
 
 from snet.sdk.account import Account
 from snet.sdk.config import config
-from snet.sdk.registry.models import RawOrgData, OrgData, ServiceData, RawServiceData
+from snet.sdk.exceptions import (
+    OrganizationNotFoundError,
+    ServiceNotFoundError,
+    UnauthorizedOrgMemberError,
+)
+from snet.sdk.registry.models import RawOrgData, OrgData, ServiceData, RawServiceData, FileURI
 from snet.sdk.utils.utils import (
     type_converter,
     bytes32_to_str,
@@ -24,8 +30,7 @@ class RegistryContract:
             self.contract.functions.getOrganizationById(type_converter("bytes32")(org_id)).call()
         )
         if not found:
-            # TODO: configure exceptions
-            raise Exception()
+            raise OrganizationNotFoundError(org_id)
 
         return OrgData.from_raw_data(
             RawOrgData(
@@ -44,8 +49,7 @@ class RegistryContract:
             ).call()
         )
         if not found:
-            # TODO: configure exceptions
-            raise Exception()
+            raise ServiceNotFoundError(org_id, service_id)
 
         return ServiceData.from_raw_data(
             RawServiceData(service_id=found_service_id, metadata_uri=service_metadata_uri),
@@ -61,8 +65,7 @@ class RegistryContract:
             type_converter("bytes32")(org_id)
         ).call()
         if not found:
-            # TODO: configure exceptions
-            raise Exception()
+            raise OrganizationNotFoundError(org_id)
         else:
             return list(map(bytes32_to_str, org_service_list))
 
@@ -80,7 +83,20 @@ class RegistryContract:
         self, account: Account, org_id: str, metadata_uri: str, members: Union[str, list[str], None]
     ): ...
 
-    def create_service(self, account: Account, org_id: str, service_id: str, metadata_uri: str): ...
+    def create_service(
+        self, account: Account, org_id: str, service_id: str, metadata_uri: FileURI
+    ) -> TxReceipt:
+        org = self.get_org(org_id)
+
+        if account.address not in org.members:
+            raise UnauthorizedOrgMemberError(account.address, org_id)
+
+        return account.send_transaction(
+            self.contract.functions.createServiceRegistration,
+            type_converter("bytes32")(org_id),
+            type_converter("bytes32")(service_id),
+            metadata_uri.to_bytes_uri(),
+        )
 
     def delete_org(self, account: Account, org_id: str): ...
 

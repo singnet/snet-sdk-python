@@ -36,7 +36,7 @@ class FileURI:
             raise ValueError("'string_uri' cannot be empty!")
 
         if isinstance(string_uri, bytes):
-            string_uri = string_uri.rstrip(b"\0").decode("ascii")
+            string_uri = string_uri.rstrip(b"\0").decode()
 
         try:
             s_t_str, u_h = string_uri.split("://")
@@ -54,6 +54,10 @@ class FileURI:
     @classmethod
     def normalize_string_uri(cls, string_uri: str) -> str:
         return str(FileURI.from_raw_uri(string_uri))
+
+    def to_bytes_uri(self) -> bytes:
+        s = str(self)
+        return s.encode().ljust(32 * (len(s) // 32 + 1), b"\0")
 
 
 @dataclass

@@ -2,6 +2,8 @@ from typing import Optional, Literal
 
 from pydantic import BaseModel, Field
 
+from snet.sdk.exceptions import OrganizationMetadataMismatchError
+
 
 class Description(BaseModel):
     url: str = Field(default="")
@@ -49,18 +51,20 @@ class OrganizationMetadata(BaseModel):
 
     def generate_final_json(self):
         if not self.org_id:
-            raise ValueError("The 'org_id' field is missing!")
+            raise OrganizationMetadataMismatchError("The 'org_id' field is missing!")
 
         if not self.description:
-            raise ValueError("The 'description' field is missing!")
+            raise OrganizationMetadataMismatchError("The 'description' field is missing!")
 
         if not self.assets:
-            raise ValueError("The 'assets' field is missing!")
+            raise OrganizationMetadataMismatchError("The 'assets' field is missing!")
 
         if not self.contacts:
-            raise ValueError("The 'contacts' field is missing!")
+            raise OrganizationMetadataMismatchError("The 'contacts' field is missing!")
 
         if len(self.groups) == 0:
-            raise ValueError("There must be one item in 'groups' field at least!")
+            raise OrganizationMetadataMismatchError(
+                "There must be one item in 'groups' field at least!"
+            )
 
         return self.model_dump_json(indent=2, exclude_none=True)

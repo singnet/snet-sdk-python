@@ -19,7 +19,7 @@ class MPEContract:
             address = account.address
         return self.contract.functions.balances(address).call()
 
-    def deposit(self, account, amount_in_cogs):
+    def deposit(self, account: Account, amount_in_cogs: int):
         already_approved = account.allowance()
         if amount_in_cogs > already_approved:
             account.approve_transfer(amount_in_cogs)

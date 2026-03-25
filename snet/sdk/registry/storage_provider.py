@@ -1,5 +1,6 @@
 import io
 import tarfile
+import tempfile
 from pathlib import Path
 from typing import Union
 
@@ -9,6 +10,12 @@ import json
 import multihash
 import hashlib
 
+from snet.sdk.exceptions import (
+    UnsupportedStorageTypeError,
+    LighthouseError,
+    WrongDirectoryError,
+    ProtoFilesNotFoundError,
+)
 from snet.sdk.registry.organization_metadata import OrganizationMetadata
 from snet.sdk.registry.models import StorageType, FileURI
 from snet.sdk.registry.service_metadata import ServiceMetadata
@@ -19,6 +26,7 @@ class StorageProvider(object):
     def __init__(self):
         self._ipfs_client = ipfshttpclient.connect(config.IPFS_ENDPOINT)
         self._lighthouse_client = Lighthouse(config.LIGHTHOUSE_TOKEN)
+        self._ipfs_client.add()
 
     def fetch_org_metadata(self, metadata_uri: FileURI):
         org_metadata_json = self._get_from_storage(metadata_uri)
@@ -37,7 +45,71 @@ class StorageProvider(object):
     def fetch_and_extract_proto(self, service_api_source, proto_dir):
         tar_uri = FileURI.from_raw_uri(service_api_source)
         spec_tar = self._get_from_storage(tar_uri)
-        self.safe_extract_proto(spec_tar, proto_dir)
+        self._safe_extract_proto(spec_tar, proto_dir)
+
+    def publish_organization_metadata(
+        self,
+        organization_metadata: OrganizationMetadata,
+        storage_type: StorageType = StorageType.IPFS,
+    ) -> FileURI:
+        return self._publish_metadata(
+            organization_metadata, storage_type, "organization_metadata.json"
+        )
+
+    def publish_service_metadata(
+        self, service_metadata: ServiceMetadata, storage_type: StorageType = StorageType.IPFS
+    ) -> FileURI:
+        return self._publish_metadata(service_metadata, storage_type, "service_metadata.json")
+
+    def publish_proto(
+        self, proto_dir: Union[str, Path], storage_type: StorageType = StorageType.IPFS
+    ) -> FileURI:
+        target_dir = Path(proto_dir).resolve()
+        if not target_dir.is_dir():
+            raise WrongDirectoryError(str(target_dir))
+
+        proto_files = sorted(target_dir.glob("*.proto"))
+        if not proto_files:
+            raise ProtoFilesNotFoundError(str(target_dir))
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_tar_path = Path(temp_dir) / "proto_files.tar.gz"
+            with tarfile.open(temp_tar_path, mode="w:gz") as tar:
+                for f in proto_files:
+                    tar.add(f, arcname=f.name)
+
+            return self._publish_file_in_storage(str(temp_tar_path), storage_type)
+
+    def _publish_metadata(
+        self,
+        metadata: Union[ServiceMetadata, OrganizationMetadata],
+        storage_type: StorageType,
+        file_name: str,
+    ) -> FileURI:
+        json_metadata = metadata.generate_final_json()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            metadata_path = Path(temp_dir) / file_name
+            with open(metadata_path, "w") as f:
+                f.write(json_metadata)
+
+            return self._publish_file_in_storage(metadata_path, storage_type)
+
+    def _publish_file_in_storage(
+        self, file_path: Union[str, Path], storage_type: StorageType
+    ) -> FileURI:
+        match storage_type:
+            case StorageType.IPFS:
+                uri_hash = self._ipfs_client.add(file_path)["Hash"]
+            case StorageType.FILECOIN:
+                try:
+                    uri_hash = self._lighthouse_client.upload(file_path)["data"]["Hash"]
+                except Exception as e:
+                    raise LighthouseError() from e
+            case _:
+                raise UnsupportedStorageTypeError(storage_type.value)
+
+        return FileURI(storage_type=storage_type, uri_hash=uri_hash)
 
     def _get_from_storage(self, uri: FileURI, decode: bool = True) -> Union[bytes, str]:
         match uri.storage_type:
@@ -46,7 +118,7 @@ class StorageProvider(object):
             case StorageType.FILECOIN:
                 file, _ = self._lighthouse_client.download(uri.uri_hash)
             case _:
-                raise ValueError(f"Unsupported storage type: {uri.storage_type}")
+                raise UnsupportedStorageTypeError(uri.storage_type.value)
         if decode:
             file = file.decode()
         return file
@@ -80,7 +152,7 @@ class StorageProvider(object):
         return data
 
     @staticmethod
-    def safe_extract_proto(spec_tar: bytes, proto_dir: Union[str, Path]) -> None:
+    def _safe_extract_proto(spec_tar: bytes, proto_dir: Union[str, Path]) -> None:
         dest_dir = Path(proto_dir).resolve()
         dest_dir.mkdir(parents=True, exist_ok=True)
 
