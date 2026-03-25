@@ -8,7 +8,7 @@ from snet.sdk.account import Account
 from snet.sdk.mpe.mpe_contract import MPEContract
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
 from snet.sdk.service_client import ServiceClient
-from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
+from snet.sdk.registry.service_metadata import MPEServiceMetadata
 
 
 class TestServiceClient(unittest.TestCase):

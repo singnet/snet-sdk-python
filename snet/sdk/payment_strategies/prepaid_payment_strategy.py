@@ -40,13 +40,12 @@ class PrePaidPaymentStrategy(PaymentStrategy):
         return token, channel
 
     def select_channel(self, service_client):
-        account = service_client.account
         service_client.load_open_channels()
         service_client.update_channel_states()
         payment_channels = service_client.payment_channels
         service_call_price = self.get_price(service_client)
         extend_channel_fund = service_call_price * self.call_allowance
-        mpe_balance = account.escrow_balance()
+        mpe_balance = service_client.get_mpe_balance()
         default_expiration = service_client.default_channel_expiration()
 
         if len(payment_channels) < 1:

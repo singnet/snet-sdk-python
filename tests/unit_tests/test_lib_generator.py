@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from snet.sdk.client_lib_generator import ClientLibGenerator
-from snet.sdk.storage_provider.storage_provider import StorageProvider
+from snet.sdk.registry.storage_provider import StorageProvider
 
 
 class TestClientLibGenerator(unittest.TestCase):
@@ -18,29 +18,29 @@ class TestClientLibGenerator(unittest.TestCase):
             metadata_provider=self.mock_metadata_provider,
             org_id=self.org_id,
             service_id=self.service_id,
-            protodir=self.protodir,
+            proto_dir=self.protodir,
         )
 
     @patch("pathlib.Path.mkdir")
     def test_generate_directories_by_params_by_absolute_path(self, mock_mkdir):
         expected_library_dir = self.protodir.joinpath(self.org_id, self.service_id, self.language)
         self.generator.generate_directories_by_params()
-        self.assertEqual(self.generator.protodir, expected_library_dir)
+        self.assertEqual(self.generator.proto_dir, expected_library_dir)
         mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
     @patch("pathlib.Path.mkdir")
     def test_generate_directories_by_params_by_relative_path(self, mock_mkdir):
-        self.generator.protodir = Path(".snet_test")
+        self.generator.proto_dir = Path(".snet_test")
         expected_library_dir = Path.cwd().joinpath(
-            self.generator.protodir, self.org_id, self.service_id, self.language
+            self.generator.proto_dir, self.org_id, self.service_id, self.language
         )
         self.generator.generate_directories_by_params()
-        self.assertEqual(self.generator.protodir, expected_library_dir)
+        self.assertEqual(self.generator.proto_dir, expected_library_dir)
         mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
     def test_create_service_client_libraries_path(self):
         mock_protodir = Mock(spec=Path)
-        self.generator.protodir = mock_protodir
+        self.generator.proto_dir = mock_protodir
         mock_library_path = Mock(spec=Path)
         mock_protodir.joinpath.return_value = mock_library_path
 
@@ -52,7 +52,7 @@ class TestClientLibGenerator(unittest.TestCase):
         mock_library_path.mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
         # Assert that the protodir is updated correctly
-        self.assertEqual(self.generator.protodir, mock_library_path)
+        self.assertEqual(self.generator.proto_dir, mock_library_path)
 
     def test_receive_proto_files_success(self):
         # Set up mocks
@@ -61,8 +61,8 @@ class TestClientLibGenerator(unittest.TestCase):
             "model_ipfs_hash": os.getenv("MODEL_IPFS_HASH"),
         }
         self.mock_metadata_provider.fetch_service_metadata.return_value = mock_metadata
-        self.generator.protodir = Mock()
-        self.generator.protodir.exists.return_value = True
+        self.generator.proto_dir = Mock()
+        self.generator.proto_dir.exists.return_value = True
 
         # Call the method
         self.generator.receive_proto_files()
@@ -75,12 +75,12 @@ class TestClientLibGenerator(unittest.TestCase):
             org_id=self.org_id, service_id=self.service_id
         )
         self.mock_metadata_provider.fetch_and_extract_proto.assert_called_once_with(
-            service_api_source, self.generator.protodir
+            service_api_source, self.generator.proto_dir
         )
 
     def test_receive_proto_files_failed(self):
-        self.generator.protodir = Mock()
-        self.generator.protodir.exists.return_value = False
+        self.generator.proto_dir = Mock()
+        self.generator.proto_dir.exists.return_value = False
 
         with self.assertRaises(Exception) as context:
             self.generator.receive_proto_files()
