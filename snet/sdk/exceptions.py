@@ -35,7 +35,7 @@ class EventNotFoundError(TransactionError):
         )
 
 
-class RegistryContractError(ContractError):
+class RegistryContractError(ValueError, ContractError):
     pass
 
 
@@ -49,13 +49,25 @@ class ServiceNotFoundError(RegistryContractError):
         super().__init__(f"Service with org_id={org_id} service_id={service_id} doesn't exist!")
 
 
-class UnauthorizedCallerError(TransactionError):
+class UnauthorizedCallerError(RegistryContractError):
     pass
 
 
 class UnauthorizedOrgMemberError(UnauthorizedCallerError):
     def __init__(self, org_id: str, address: str):
-        super().__init__(f"Address {address} isn't owner or member of the organization {org_id}!")
+        super().__init__(
+            f"Address {address} isn't an owner or a member of the organization {org_id}!"
+        )
+
+
+class UnauthorizedOrgOwnerError(UnauthorizedCallerError):
+    def __init__(self, org_id: str, address: str):
+        super().__init__(f"Address {address} isn't an owner of the organization {org_id}!")
+
+
+class IncorrectWalletAddressError(RegistryContractError):
+    def __init__(self, address: str):
+        super().__init__(f"Address {address} is not a correct Ethereum address!")
 
 
 # ==================== Metadata Errors ====================
@@ -92,6 +104,20 @@ class LighthouseError(StorageProviderError):
         )
 
 
+class IPFSError(StorageProviderError):
+    pass
+
+
+class IPFSHashMismatchError(IPFSError):
+    def __init__(self):
+        super().__init__("IPFS hash mismatch with data")
+
+
+class IPFSHashCheckError(IPFSError):
+    def __init__(self):
+        super().__init__("IPFS hash integrity check failed!")
+
+
 class PublishProtoError(ValueError, StorageProviderError):
     pass
 
@@ -104,6 +130,10 @@ class WrongDirectoryError(PublishProtoError):
 class ProtoFilesNotFoundError(PublishProtoError):
     def __init__(self, dir_path: str):
         super().__init__(f"Cannot find any .proto file in {dir_path}!")
+
+
+class ExtractingProtoError(ValueError, StorageProviderError):
+    pass
 
 
 # ==================== Training Errors ====================

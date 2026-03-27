@@ -15,6 +15,9 @@ from snet.sdk.exceptions import (
     LighthouseError,
     WrongDirectoryError,
     ProtoFilesNotFoundError,
+    IPFSHashMismatchError,
+    IPFSHashCheckError,
+    ExtractingProtoError,
 )
 from snet.sdk.registry.organization_metadata import OrganizationMetadata
 from snet.sdk.registry.models import StorageType, FileURI
@@ -26,9 +29,8 @@ class StorageProvider(object):
     def __init__(self):
         self._ipfs_client = ipfshttpclient.connect(config.IPFS_ENDPOINT)
         self._lighthouse_client = Lighthouse(config.LIGHTHOUSE_TOKEN)
-        self._ipfs_client.add()
 
-    def fetch_org_metadata(self, metadata_uri: FileURI):
+    def fetch_org_metadata(self, metadata_uri: FileURI) -> OrganizationMetadata:
         org_metadata_json = self._get_from_storage(metadata_uri)
         raw_org_metadata = json.loads(org_metadata_json)
         org_metadata = OrganizationMetadata(**raw_org_metadata)
@@ -42,7 +44,7 @@ class StorageProvider(object):
 
         return service_metadata
 
-    def fetch_and_extract_proto(self, service_api_source, proto_dir):
+    def fetch_and_extract_proto(self, service_api_source, proto_dir) -> None:
         tar_uri = FileURI.from_raw_uri(service_api_source)
         spec_tar = self._get_from_storage(tar_uri)
         self._safe_extract_proto(spec_tar, proto_dir)
@@ -144,10 +146,10 @@ class StorageProvider(object):
                     actual_digest = h.digest()
 
                 if actual_digest != expected_digest:
-                    raise Exception("IPFS hash mismatch with data")
+                    raise IPFSHashMismatchError()
 
             except Exception as e:
-                raise ValueError(f"Integrity check failed: {str(e)}") from e
+                raise IPFSHashCheckError() from e
 
         return data
 
@@ -161,15 +163,15 @@ class StorageProvider(object):
 
             for m in f.getmembers():
                 if not m.isfile():
-                    raise ValueError(
+                    raise ExtractingProtoError(
                         f"Security/Format Error: Tarball contains a non-file item: '{m.name}'"
                     )
                 if Path(m.name).parent != Path("."):
-                    raise ValueError(
+                    raise ExtractingProtoError(
                         f"Format Error: Tarball contains nested paths ('{m.name}'). Only flat archives are supported."
                     )
                 if not m.name.endswith(".proto"):
-                    raise ValueError(
+                    raise ExtractingProtoError(
                         f"Format Error: Unexpected file type '{m.name}'. Only .proto files allowed."
                     )
                 target_file = dest_dir / m.name

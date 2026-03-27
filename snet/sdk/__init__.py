@@ -9,7 +9,7 @@ from typing import Union
 import google.protobuf.internal.api_implementation
 from google.protobuf import symbol_database as _symbol_database
 
-from snet.sdk.exceptions import NoGroupsFoundError, GroupNotFoundError
+from snet.sdk.exceptions import NoGroupsFoundError, GroupNotFoundError, ServiceMetadataMismatchError
 from snet.sdk.registry.models import StorageType
 from snet.sdk.registry.organization_metadata import OrganizationMetadata
 from snet.sdk.registry.registry_contract import RegistryContract
@@ -162,7 +162,7 @@ class SnetSDK:
         module_name = os.path.splitext(file_name)[0]
         return ModuleName(module_name)
 
-    def get_service_metadata(self, org_id, service_id):
+    def get_service_metadata(self, org_id, service_id) -> ServiceMetadata:
         service = self.registry_contract.get_service(org_id, service_id)
         return self.storage_provider.fetch_service_metadata(service.metadata_uri)
 
@@ -207,13 +207,55 @@ class SnetSDK:
         5. publish service into Registry contract
         """
         proto_uri = self.storage_provider.publish_proto(proto_dir, storage_type)
-
         metadata.service_api_source = str(proto_uri)
         metadata.mpe_address = self.mpe_contract.contract.address
 
+        self._check_and_update_service_groups(org_id, metadata.groups)
         metadata_uri = self.storage_provider.publish_service_metadata(metadata, storage_type)
+
         receipt = self.registry_contract.create_service(
             self.account, org_id, service_id, metadata_uri
         )
 
         return receipt["status"] != 0
+
+    def update_service(
+        self,
+        org_id: str,
+        service_id: str,
+        metadata: ServiceMetadata,
+        proto_dir: Union[str, Path, None] = None,
+        storage_type: StorageType = StorageType.IPFS,
+    ) -> bool:
+        if proto_dir is not None:
+            proto_uri = self.storage_provider.publish_proto(proto_dir, storage_type)
+            metadata.service_api_source = str(proto_uri)
+
+        if not metadata.mpe_address:
+            metadata.mpe_address = self.mpe_contract.contract.address
+
+        self._check_and_update_service_groups(org_id, metadata.groups)
+        metadata_uri = self.storage_provider.publish_service_metadata(metadata, storage_type)
+
+        receipt = self.registry_contract.update_service_metadata(
+            self.account, org_id, service_id, metadata_uri
+        )
+
+        return receipt["status"] != 0
+
+    def _check_and_update_service_groups(
+        self, org_id: str, service_groups: list[Group]
+    ) -> list[Group]:
+        org = self.registry_contract.get_org(org_id)
+        org_metadata = self.storage_provider.fetch_org_metadata(org.metadata_uri)
+        org_groups_map = {g.group_name: g for g in org_metadata.groups}
+
+        for group in service_groups:
+            try:
+                group.group_id = org_groups_map[group.group_name].group_id
+            except KeyError:
+                raise ServiceMetadataMismatchError(
+                    "All groups added to the service must also exist in the organization!"
+                )
+
+        return service_groups
