@@ -1,5 +1,6 @@
-from typing import Union
+from typing import Optional
 
+from eth_utils import is_checksum_address
 from snet.contracts import get_contract_object
 from web3.types import TxReceipt
 
@@ -9,6 +10,8 @@ from snet.sdk.exceptions import (
     OrganizationNotFoundError,
     ServiceNotFoundError,
     UnauthorizedOrgMemberError,
+    UnauthorizedOrgOwnerError,
+    IncorrectWalletAddressError,
 )
 from snet.sdk.registry.models import RawOrgData, OrgData, ServiceData, RawServiceData, FileURI
 from snet.sdk.utils.utils import (
@@ -71,17 +74,67 @@ class RegistryContract:
 
     # WRITE METHODS
 
-    def add_org_members(
-        self, account: Account, org_id: str, members: Union[str, list[str], None]
-    ): ...
+    def add_org_members(self, account: Account, org_id: str, new_members: list[str]) -> TxReceipt:
+        org = self.get_org(org_id)
 
-    def update_org_metadata(self, account: Account, org_id: str, metadata_uri: str): ...
+        if account.address != org.owner:
+            raise UnauthorizedOrgOwnerError(account.address, org_id)
 
-    def change_org_owner(self, account: Account, org_id: str, new_owner: str): ...
+        for member in new_members:
+            if not is_checksum_address(member):
+                raise IncorrectWalletAddressError(member)
+
+        return account.send_transaction(
+            self.contract.functions.changeOrganizationMetadataURI,
+            type_converter("bytes32")(org_id),
+            new_members,
+        )
+
+    def update_org_metadata(
+        self, account: Account, org_id: str, metadata_uri: FileURI
+    ) -> TxReceipt:
+        org = self.get_org(org_id)
+
+        if account.address != org.owner:
+            raise UnauthorizedOrgOwnerError(account.address, org_id)
+
+        return account.send_transaction(
+            self.contract.functions.changeOrganizationMetadataURI,
+            type_converter("bytes32")(org_id),
+            metadata_uri.to_bytes_uri(),
+        )
+
+    def change_org_owner(self, account: Account, org_id: str, new_owner: str) -> TxReceipt:
+        org = self.get_org(org_id)
+
+        if account.address != org.owner:
+            raise UnauthorizedOrgOwnerError(account.address, org_id)
+
+        if not is_checksum_address(new_owner):
+            raise IncorrectWalletAddressError(new_owner)
+
+        return account.send_transaction(
+            self.contract.functions.changeOrganizationOwner,
+            type_converter("bytes32")(org_id),
+            new_owner,
+        )
 
     def create_org(
-        self, account: Account, org_id: str, metadata_uri: str, members: Union[str, list[str], None]
-    ): ...
+        self,
+        account: Account,
+        org_id: str,
+        metadata_uri: FileURI,
+        members: Optional[list[str]] = None,
+    ) -> TxReceipt:
+        if members is None:
+            members = []
+
+        return account.send_transaction(
+            self.contract.functions.createOrganization,
+            type_converter("bytes32")(org_id),
+            metadata_uri.to_bytes_uri(),
+            members,
+        )
 
     def create_service(
         self, account: Account, org_id: str, service_id: str, metadata_uri: FileURI
@@ -98,14 +151,55 @@ class RegistryContract:
             metadata_uri.to_bytes_uri(),
         )
 
-    def delete_org(self, account: Account, org_id: str): ...
+    def delete_org(self, account: Account, org_id: str) -> TxReceipt:
+        org = self.get_org(org_id)
 
-    def delete_service(self, account: Account, org_id: str, service_id: str): ...
+        if account.address != org.owner:
+            raise UnauthorizedOrgOwnerError(account.address, org_id)
+
+        return account.send_transaction(
+            self.contract.functions.deleteOrganization, type_converter("bytes32")(org_id)
+        )
+
+    def delete_service(self, account: Account, org_id: str, service_id: str):
+        org = self.get_org(org_id)
+        if account.address not in org.members:
+            raise UnauthorizedOrgMemberError(account.address, org_id)
+
+        self.get_service(org_id, service_id)  # to check if the service exists
+
+        return account.send_transaction(
+            self.contract.functions.deleteServiceRegistration,
+            type_converter("bytes32")(org_id),
+            type_converter("bytes32")(service_id),
+        )
 
     def remove_org_members(
-        self, account: Account, org_id: str, members_to_remove: Union[str, list[str]]
-    ): ...
+        self, account: Account, org_id: str, members_to_remove: list[str]
+    ) -> TxReceipt:
+        org = self.get_org(org_id)
+
+        if account.address != org.owner:
+            raise UnauthorizedOrgOwnerError(account.address, org_id)
+
+        return account.send_transaction(
+            self.contract.functions.deleteOrganization,
+            type_converter("bytes32")(org_id),
+            members_to_remove,
+        )
 
     def update_service_metadata(
-        self, account: Account, org_id: str, service_id: str, metadata_uri: str
-    ): ...
+        self, account: Account, org_id: str, service_id: str, metadata_uri: FileURI
+    ) -> TxReceipt:
+        org = self.get_org(org_id)
+        if account.address not in org.members:
+            raise UnauthorizedOrgMemberError(account.address, org_id)
+
+        self.get_service(org_id, service_id)  # to check if the service exists
+
+        return account.send_transaction(
+            self.contract.functions.updateServiceRegistration,
+            type_converter("bytes32")(org_id),
+            type_converter("bytes32")(service_id),
+            metadata_uri.to_bytes_uri(),
+        )

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from snet.sdk.registry.models import FileURI
 from snet.sdk.registry.storage_provider import StorageProvider
 from snet.sdk.utils.utils import compile_proto
 
@@ -20,9 +21,9 @@ class ClientLibGenerator:
         self.proto_dir: Path = proto_dir if proto_dir else Path.home().joinpath(".snet")
         self.generate_directories_by_params()
 
-    def generate_client_library(self) -> None:
+    def generate_client_library(self, service_api_source: FileURI) -> None:
         try:
-            self.receive_proto_files()
+            self.receive_proto_files(service_api_source)
             compilation_result = compile_proto(
                 entry_path=self.proto_dir,
                 codegen_dir=self.proto_dir,
@@ -35,8 +36,8 @@ class ClientLibGenerator:
                     f'in org with id "{self.org_id}" '
                     f"generated at {self.proto_dir}"
                 )
-        except Exception as e:
-            print(str(e))
+        except Exception:
+            raise Exception("Error while proto compilation!")
 
     def generate_directories_by_params(self) -> None:
         if not self.proto_dir.is_absolute():
@@ -47,13 +48,7 @@ class ClientLibGenerator:
         self.proto_dir = self.proto_dir.joinpath(self.org_id, self.service_id, self.language)
         self.proto_dir.mkdir(parents=True, exist_ok=True)
 
-    def receive_proto_files(self) -> None:
-        metadata = self._metadata_provider.fetch_service_metadata(
-            org_id=self.org_id, service_id=self.service_id
-        )
-        service_api_source = metadata.get("service_api_source") or metadata.get("model_ipfs_hash")
-
-        # Receive proto files
+    def receive_proto_files(self, service_api_source: FileURI) -> None:
         if self.proto_dir.exists():
             self._metadata_provider.fetch_and_extract_proto(service_api_source, self.proto_dir)
         else:

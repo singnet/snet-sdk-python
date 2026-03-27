@@ -21,7 +21,7 @@ from snet.sdk.payment_strategies.prepaid_payment_strategy import (
     PrePaidPaymentStrategy,
 )
 from snet.sdk.resources.root_certificate import certificate
-from snet.sdk.registry.service_metadata import MPEServiceMetadata
+from snet.sdk.registry.service_metadata import Group
 from snet.sdk.types import ModuleName, ServiceStub
 from snet.sdk.utils.utils import (
     RESOURCES_PATH,
@@ -29,7 +29,7 @@ from snet.sdk.utils.utils import (
     find_file_by_keyword,
 )
 from snet.sdk.training.training import Training
-from snet.sdk.training.exceptions import NoTrainingException
+from snet.sdk.exceptions import NoTrainingError
 from snet.sdk.utils.call_utils import create_intercept_call_func
 
 
@@ -38,8 +38,7 @@ class ServiceClient:
         self,
         org_id: str,
         service_id: str,
-        service_metadata: MPEServiceMetadata,
-        group: dict,
+        group: Group,
         service_stubs: list[ServiceStub],
         payment_strategy,
         options: dict,
@@ -53,7 +52,6 @@ class ServiceClient:
     ):
         self.org_id = org_id
         self.service_id = service_id
-        self.service_metadata = service_metadata
         self.group = group
         self.payment_strategy = payment_strategy
         if isinstance(payment_strategy, PrePaidPaymentStrategy):
@@ -69,7 +67,7 @@ class ServiceClient:
         self.payment_channel_provider = payment_channel_provider
         self.path_to_pb_files = path_to_pb_files
 
-        self.expiry_threshold: int = self.group["payment"]["payment_expiration_threshold"]
+        self.expiry_threshold: int = self.group.payment.payment_expiration_threshold
         self.__base_grpc_channel = self._get_grpc_channel()
         _intercept_call_func = create_intercept_call_func(
             self.payment_strategy.get_payment_metadata, self
@@ -120,9 +118,7 @@ class ServiceClient:
     def _get_grpc_channel(self) -> grpc.Channel:
         endpoint = self.options.get("endpoint", None)
         if endpoint is None:
-            endpoint = self.service_metadata.get_all_endpoints_for_group(self.group["group_name"])[
-                0
-            ]
+            endpoint = self.group.endpoints[0]
         endpoint_object = urlparse(endpoint)
         if endpoint_object.port is not None:
             channel_endpoint = endpoint_object.hostname + ":" + str(endpoint_object.port)
@@ -161,8 +157,8 @@ class ServiceClient:
 
     def load_open_channels(self) -> list[PaymentChannel]:
         current_block_number = self.sdk_web3.eth.block_number
-        payment_address = self.group["payment"]["payment_address"]
-        group_id = base64.b64decode(str(self.group["group_id"]))
+        payment_address = self.group.payment.payment_address
+        group_id = base64.b64decode(str(self.group.group_id))
         new_payment_channels = self.payment_channel_provider.get_past_open_channels(
             self.account,
             payment_address,
@@ -185,7 +181,7 @@ class ServiceClient:
         return self.payment_channels
 
     def default_channel_expiration(self) -> int:
-        current_block_number = self.sdk_web3.eth.get_block("latest").number
+        current_block_number = self.sdk_web3.eth.block_number
         return current_block_number + self.expiry_threshold
 
     def _generate_payment_channel_state_service_client(self) -> Any:
@@ -198,8 +194,8 @@ class ServiceClient:
         return self.mpe_contract.balance(self.account)
 
     def open_channel(self, amount: int, expiration: int) -> PaymentChannel:
-        payment_address = self.group["payment"]["payment_address"]
-        group_id = base64.b64decode(str(self.group["group_id"]))
+        payment_address = self.group.payment.payment_address
+        group_id = base64.b64decode(str(self.group.group_id))
         return self.payment_channel_provider.open_channel(
             self.account,
             amount,
@@ -210,8 +206,8 @@ class ServiceClient:
         )
 
     def deposit_and_open_channel(self, amount: int, expiration: int) -> PaymentChannel:
-        payment_address = self.group["payment"]["payment_address"]
-        group_id = base64.b64decode(str(self.group["group_id"]))
+        payment_address = self.group.payment.payment_address
+        group_id = base64.b64decode(str(self.group.group_id))
         return self.payment_channel_provider.deposit_and_open_channel(
             self.account,
             amount,
@@ -222,7 +218,7 @@ class ServiceClient:
         )
 
     def get_price(self) -> int:
-        return self.group["pricing"][0]["price_in_cogs"]
+        return self.group.pricing[0].price_in_cogs
 
     def generate_signature(self, message: bytes) -> bytes:
         return bytes(
@@ -247,13 +243,13 @@ class ServiceClient:
             self.org_id,
             self.service_id,
             self.group["group_id"],
-            self.service_metadata.get_all_endpoints_for_group(self.group["group_name"])[0],
+            self.group.endpoints[0],
         )
 
     @property
     def training(self) -> Training:
         if not self.__training.is_enabled:
-            raise NoTrainingException(self.org_id, self.service_id)
+            raise NoTrainingError(self.org_id, self.service_id)
         return self.__training
 
     def _get_training_model_id(self, model_id: str) -> Any:

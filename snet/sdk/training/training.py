@@ -11,11 +11,11 @@ from snet.sdk.payment_strategies.training_payment_strategy import (
 )
 from snet.sdk.utils.call_utils import create_intercept_call_func
 from snet.sdk.utils.utils import add_to_path, RESOURCES_PATH
-from snet.sdk.training.exceptions import (
-    WrongDatasetException,
-    WrongMethodException,
-    GRPCException,
-    NoSuchModelException,
+from snet.sdk.exceptions import (
+    WrongDatasetError,
+    WrongMethodError,
+    GRPCError,
+    NoSuchModelError,
 )
 from snet.sdk.training.responses import (
     ModelStatus,
@@ -85,9 +85,9 @@ class Training:
                 "validate_model_price",
                 request_data=validate_model_price_request,
             )
-        except GRPCException as e:
+        except GRPCError as e:
             if "unable to access model" in str(e):
-                raise NoSuchModelException(model_id)
+                raise NoSuchModelError(model_id)
             else:
                 raise e
 
@@ -100,9 +100,9 @@ class Training:
         )
         try:
             response = self._call_method("train_model_price", request_data=common_request)
-        except GRPCException as e:
+        except GRPCError as e:
             if "unable to access model" in str(e):
-                raise NoSuchModelException(model_id)
+                raise NoSuchModelError(model_id)
             else:
                 raise e
 
@@ -115,9 +115,9 @@ class Training:
         )
         try:
             response = self._call_method("delete_model", request_data=common_request)
-        except GRPCException as e:
+        except GRPCError as e:
             if "unable to access model" in str(e):
-                raise NoSuchModelException(model_id)
+                raise NoSuchModelError(model_id)
             else:
                 raise e
 
@@ -172,9 +172,9 @@ class Training:
         )
         try:
             response = self._call_method("get_model", request_data=common_request)
-        except GRPCException as e:
+        except GRPCError as e:
             if "unable to access model" in str(e):
-                raise NoSuchModelException(model_id)
+                raise NoSuchModelError(model_id)
             else:
                 raise e
         model = Model(response)
@@ -226,9 +226,9 @@ class Training:
 
         try:
             response = self._call_method("update_model", request_data=update_model_request)
-        except GRPCException as e:
+        except GRPCError as e:
             if "unable to access model" in str(e):
-                raise NoSuchModelException(model_id)
+                raise NoSuchModelError(model_id)
             else:
                 raise e
 
@@ -281,9 +281,9 @@ class Training:
             response = self._call_method(
                 "upload_and_validate", request_data=request_iter(f), paid=True
             )
-        except GRPCException as e:
+        except GRPCError as e:
             if "unable to access model" in str(e):
-                raise NoSuchModelException(model_id)
+                raise NoSuchModelError(model_id)
             else:
                 raise e
         finally:
@@ -301,9 +301,9 @@ class Training:
 
         try:
             response = self._call_method("train_model", request_data=common_request, paid=True)
-        except GRPCException as e:
+        except GRPCError as e:
             if "unable to access model" in str(e):
-                raise NoSuchModelException(model_id)
+                raise NoSuchModelError(model_id)
             else:
                 raise e
 
@@ -317,7 +317,7 @@ class Training:
             response = getattr(stub, method_name)(request_data)
             return response
         except grpc.RpcError as e:
-            raise GRPCException(e)
+            raise GRPCError(e)
 
     def _get_training_stub(self, paid=False) -> Any:
         grpc_channel = self.service_client.get_grpc_base_channel()
@@ -345,12 +345,12 @@ class Training:
             for method in methods:
                 if method[0] == method_name:
                     return service, method[0]
-        raise WrongMethodException(method_name)
+        raise WrongMethodError(method_name)
 
     def _check_training(self) -> bool:
         try:
             service_methods = self.get_training_metadata().training_methods
-        except GRPCException:
+        except GRPCError:
             return False
         if len(service_methods.keys()) == 0:
             return False
@@ -402,7 +402,7 @@ class Training:
                 )
 
         if len(failed_checks) > 0:
-            raise WrongDatasetException(failed_checks)
+            raise WrongDatasetError(failed_checks)
 
     def _get_grpc_channel(self, base_channel: grpc.Channel) -> grpc.Channel:
         intercept_call_func = create_intercept_call_func(
