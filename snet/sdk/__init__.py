@@ -10,7 +10,7 @@ import google.protobuf.internal.api_implementation
 from google.protobuf import symbol_database as _symbol_database
 
 from snet.sdk.exceptions import NoGroupsFoundError, GroupNotFoundError, ServiceMetadataMismatchError
-from snet.sdk.registry.models import StorageType
+from snet.sdk.registry.models import StorageType, FileURI
 from snet.sdk.registry.organization_metadata import OrganizationMetadata
 from snet.sdk.registry.registry_contract import RegistryContract
 from snet.sdk.registry.service_metadata import ServiceMetadata, Group
@@ -75,15 +75,18 @@ class SnetSDK:
         options=None,
         concurrent_calls: int = 1,
     ):
-
-        # Create and instance of the Config object,
-        # so we can create an instance of ClientLibGenerator
+        service_metadata = self._enhance_service_metadata(org_id, service_id)
         lib_generator = ClientLibGenerator(self.storage_provider, org_id, service_id)
 
-        # Download the proto file and generate stubs if needed
+        if service_metadata.service_api_source is not None:
+            service_api_source = service_metadata.service_api_source
+        else:
+            service_api_source = service_metadata.model_ipfs_hash
+        service_api_source = FileURI.from_raw_uri(service_api_source)
+
         force_update = config.FORCE_UPDATE
         if force_update:
-            lib_generator.generate_client_library()
+            lib_generator.generate_client_library(service_api_source)
         else:
             path_to_pb_files = lib_generator.proto_dir
             pb_2_file_name = find_file_by_keyword(
@@ -94,7 +97,7 @@ class SnetSDK:
             )
             if not pb_2_file_name or not pb_2_grpc_file_name:
                 print("Generating client library...")
-                lib_generator.generate_client_library()
+                lib_generator.generate_client_library(service_api_source)
 
         if options is None:
             options = dict()
@@ -104,7 +107,6 @@ class SnetSDK:
         if payment_strategy is None:
             payment_strategy = payment_strategy_type.value()
 
-        service_metadata = self._enhance_service_metadata(org_id, service_id)
         group = self._get_service_group(org_id, service_id, service_metadata, group_name)
 
         service_stubs = self.get_service_stub(lib_generator)
@@ -249,7 +251,9 @@ class SnetSDK:
         organization_metadata: OrganizationMetadata,
         storage_type: StorageType = StorageType.IPFS,
     ) -> bool:
-        metadata_uri = self.storage_provider.publish_organization_metadata(organization_metadata, storage_type)
+        metadata_uri = self.storage_provider.publish_organization_metadata(
+            organization_metadata, storage_type
+        )
         receipt = self.registry_contract.update_org_metadata(self.account, org_id, metadata_uri)
 
         return receipt["status"] != 0

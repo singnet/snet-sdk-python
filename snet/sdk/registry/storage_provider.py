@@ -44,9 +44,8 @@ class StorageProvider(object):
 
         return service_metadata
 
-    def fetch_and_extract_proto(self, service_api_source, proto_dir) -> None:
-        tar_uri = FileURI.from_raw_uri(service_api_source)
-        spec_tar = self._get_from_storage(tar_uri)
+    def fetch_and_extract_proto(self, service_api_source: FileURI, proto_dir) -> None:
+        spec_tar = self._get_from_storage(service_api_source, decode=False)
         self._safe_extract_proto(spec_tar, proto_dir)
 
     def publish_organization_metadata(

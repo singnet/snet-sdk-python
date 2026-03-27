@@ -69,6 +69,6 @@ class MPEContract:
         )
 
     def _fund_escrow_account(self, account: Account, amount):
-        current_escrow_balance = self.balance(account.address)
+        current_escrow_balance = self.balance(account)
         if amount > current_escrow_balance:
             self.deposit(account, amount - current_escrow_balance)
