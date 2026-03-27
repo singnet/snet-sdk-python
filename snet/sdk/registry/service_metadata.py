@@ -153,3 +153,11 @@ class ServiceMetadata(BaseModel):
             raise ServiceMetadataMismatchError("The 'service_description' field is missing!")
 
         return self.model_dump_json(indent=2, exclude_none=True)
+
+    def validate_metadata(self) -> tuple[bool, str]:
+        try:
+            self.generate_final_json()
+        except ServiceMetadataMismatchError as e:
+            return False, str(e)
+
+        return True, ""

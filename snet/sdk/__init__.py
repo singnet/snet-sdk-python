@@ -243,6 +243,17 @@ class SnetSDK:
 
         return receipt["status"] != 0
 
+    def update_organization(
+        self,
+        org_id: str,
+        organization_metadata: OrganizationMetadata,
+        storage_type: StorageType = StorageType.IPFS,
+    ) -> bool:
+        metadata_uri = self.storage_provider.publish_organization_metadata(organization_metadata, storage_type)
+        receipt = self.registry_contract.update_org_metadata(self.account, org_id, metadata_uri)
+
+        return receipt["status"] != 0
+
     def _check_and_update_service_groups(
         self, org_id: str, service_groups: list[Group]
     ) -> list[Group]:
