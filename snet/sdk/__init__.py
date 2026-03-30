@@ -109,9 +109,9 @@ class SnetSDK:
 
         group = self._get_service_group(org_id, service_id, service_metadata, group_name)
 
-        service_stubs = self.get_service_stub(lib_generator)
+        service_stubs = self._get_service_stub(lib_generator)
 
-        pb2_module = self.get_module_by_keyword("pb2.py", lib_generator)
+        pb2_module = self._get_module_by_keyword("pb2.py", lib_generator)
         _service_client = ServiceClient(
             org_id,
             service_id,
@@ -142,9 +142,9 @@ class SnetSDK:
 
         return service_metadata
 
-    def get_service_stub(self, lib_generator: ClientLibGenerator) -> list[ServiceStub]:
+    def _get_service_stub(self, lib_generator: ClientLibGenerator) -> list[ServiceStub]:
         path_to_pb_files = str(lib_generator.proto_dir)
-        module_name = self.get_module_by_keyword("pb2_grpc.py", lib_generator)
+        module_name = self._get_module_by_keyword("pb2_grpc.py", lib_generator)
         sys.path.append(path_to_pb_files)
         try:
             grpc_file = importlib.import_module(module_name)
@@ -158,7 +158,7 @@ class SnetSDK:
         except Exception as e:
             raise Exception(f"Error importing module: {e}")
 
-    def get_module_by_keyword(self, keyword: str, lib_generator: ClientLibGenerator) -> ModuleName:
+    def _get_module_by_keyword(self, keyword: str, lib_generator: ClientLibGenerator) -> ModuleName:
         path_to_pb_files = lib_generator.proto_dir
         file_name = find_file_by_keyword(path_to_pb_files, keyword, exclude=["training"])
         module_name = os.path.splitext(file_name)[0]

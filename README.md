@@ -19,76 +19,70 @@ To handle payment of services, SingularityNET uses
 [Ethereum state channels](https://dev.singularitynet.io/docs/products/DecentralizedAIPlatform/CoreConcepts/SmartContracts/mpe).
 The SingularityNET SDK abstracts and manages state channels with service providers on behalf of the user and 
 handles authentication with the SingularityNET services.
+To call a service on a SingularityNET platform, the user must be able to deposit funds (FET tokens) to the 
+[Multi-Party Escrow](https://dev.singularitynet.io/docs/products/DecentralizedAIPlatform/CoreConcepts/SmartContracts/mpe) Smart Contract.
+To deposit these tokens or do any other transaction on the Ethereum blockchain.
 
 ## Getting Started  
   
 These instructions are for the development and use of the SingularityNET SDK for Python.
 
-### Usage
+### Installation
 
-To call a service on a SingularityNET platform, the user must be able to deposit funds (FET tokens) to the 
-[Multi-Party Escrow](https://dev.singularitynet.io/docs/products/DecentralizedAIPlatform/CoreConcepts/SmartContracts/mpe) Smart Contract.
-To deposit these tokens or do any other transaction on the Ethereum blockchain.
+To install SingularityNET Python SDK package run:
 
-Once you have installed snet-sdk in your current environment, you can import it into your Python script and create an 
-instance of the base sdk class:
-```python
-from snet import sdk
-
-"""
-SDK configuration provided by the application provider.
-To run the application, replace 'private_key' and 'eth_rpc_endpoint' with your values.
-"""
-config = sdk.config.Config(
-    private_key="YOUR_PRIVATE_KEY",  # Replace with your Ethereum private key
-    eth_rpc_endpoint="https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_API_KEY",  # Replace with your Alchemy API key
-    concurrency=False, 
-    force_update=False 
-)
-
-# Initialize the SnetSDK instance
-snet_sdk = sdk.SnetSDK(config)
+```shell
+pip install snet-sdk
 ```
 
-The `config` parameter is an instance of the `Config` class.
-See [config.py](https://dev.singularitynet.io/docs/products/DecentralizedAIPlatform/SDK/PythonSDK/Documentation/config/) 
-for a reference.
+### Config
+
+There are three ways to configure the SDK (set variables):
+
+- `.env` file
+
+```dotenv
+SNET_PRIVATE_KEY=12345678...
+SNET_ETH_RPC_ENDPOINT=https://mainnet.infura.io/v3/12345678...
+SNET_FORCE_UPDATE=False
+SNET_LIGHTHOUSE_TOKEN=12345678...
+```
+
+- environment variables
+
+- `configure()` function
+
+```python
+from snet.sdk.config import configure
+
+
+PRIVATE_KEY = "12345678..."
+INFURA_KEY = "12345678..."
+
+configure(
+    private_key=PRIVATE_KEY,
+    eth_rpc_endpoint=f"https://mainnet.infura.io/v3/{INFURA_KEY}",
+    force_update=False,
+    lighthouse_token="12345678...",
+)
+```
+
+>Please note that variables in the '.env` file and environment variables must start with "SNET_" and must be uppercase!
 
 #### Config parameters description
 
-- `private_key`: Your wallet's private key that will be used to pay for calls. Is **required** in config;   
+- `private_key`: Your wallet's private key that will be used to sign transactions (and pay for calls). Is **required** in config;
+- `signer_private_key`: Is equal to `private_key`, if not specified. Your wallet's private key that will be used to pay for calls.
 - `eth_rpc_endpoint`: RPC endpoint that is used to access the Ethereum network. Is **required** in config;
 > To get your **Alchemy API Key**, follow [this guide](https://dev.singularitynet.io/docs/products/DecentralizedAIPlatform/Daemon/alchemy-api/).
-
 - `wallet_index`: The index of the wallet that will be used to pay for calls;
 - `ipfs_endpoint`: IPFS endpoint that is used to access IPFS;
 - `concurrency`: If set to True, will enable concurrency for the SDK;
 - `force_update`: If set to False, will reuse the existing gRPC stubs (if any) instead of downloading proto and regenerating them every time.   
-- `mpe_contract_address`: The address of the Multi-Party Escrow smart contract;
-- `token_contract_address`: The address of the SingularityNET token smart contract;
-- `registry_contract_address`: The address of the Registry smart contract;
-- `signer_private_key`: The private key of the signer. Used to sign the service call. Equals to `private_key` by default.
-
-#### List organizations and their services
-
-You can use the sdk client instance`s methods get_organization_list() to list all organizations and get_services_list("org_id") to list all services of a given organization.  
-
-```python
-orgs_list = snet_sdk.get_organization_list()
-print(*orgs_list, sep="\n")
-# ...
-# GoogleOrg3
-# 26072b8b6a0e448180f8c0e702ab6d2f
-# 43416d873fcb454589900189474b2eaa
-# ...
-```
-
-```python
-org_id = "26072b8b6a0e448180f8c0e702ab6d2f"
-services_list = snet_sdk.get_services_list(org_id=org_id)
-print(*services_list, sep="\n")
-# Exampleservice
-```
+- `mpe_contract_address`: Custom address of the Multi-Party Escrow smart contract;
+- `token_contract_address`: Custom address of ASI (FET) token smart contract;
+- `registry_contract_address`: Custom address of the Registry smart contract;
+- `lighthouse_token`: Personal Lighthouse storage token to save files into it.
 
 ### Calling the service
 
@@ -99,7 +93,7 @@ organization:
 ```python
 service_client = snet_sdk.create_service_client(org_id="26072b8b6a0e448180f8c0e702ab6d2f", 
                                                 service_id="Exampleservice",
-                                                group_name="default_group")
+                                                payment_strategy_type=PaymentStrategyType.PAID_CALL)
 ```
 
 After executing this code, you should have client libraries created for this service. They are located at the following 
@@ -144,6 +138,90 @@ _Note_: In this example, the user doesn't deposit funds to MPE, doesn't open a c
 perform other actions related to payment. In this case, the choice of payment strategy, as well as, if necessary, 
 opening a channel and depositing funds into MPE occurs automatically. For more information on payment, please 
 visit the [Payment](#payment) section.
+
+## Organization and service managing
+
+### Getting data
+
+Here are useful methods for getting data
+
+```python
+from snet.sdk import SnetSDK
+
+sdk = SnetSDK()
+org_id = "<ORG_ID>"
+service_id = "<SERVICE_ID>"
+
+orgs_list = sdk.get_organization_list()
+services_list = sdk.get_services_list(org_id=org_id)
+
+org_metadata = sdk.get_organization_metadata(org_id)
+service_metadata = sdk.get_service_metadata(org_id, service_id)
+```
+
+### Creating and publishing the service
+
+- create service metadata instance using chaining methods
+
+```python
+from snet.sdk import SnetSDK, ServiceMetadata
+
+sdk = SnetSDK()
+org_id = "<ORG_ID>"
+service_id = "<SERVICE_ID>"
+
+service_metadata = (
+    ServiceMetadata(
+        version=1, display_name=service_id, service_type="grpc", tags=["first", "second"]
+    )
+    .add_group(free_call_signer_address="0x123456qweasd", endpoints=["https://test-daemon.com"])
+    .add_contributor("me")
+)
+```
+
+- publish the service into blockchain including saving `.proto` files and service metadata into storage
+
+```python
+sdk.publish_service_comprehensively(
+    org_id,
+    service_id,
+    service_metadata,
+    proto_dir="<PATH_TO_DIR_WITH_PROTO_FILES>",
+    storage_type=StorageType.FILECOIN,
+)
+```
+
+### Updating the service
+
+- fetch and edit service metadata 
+
+```python
+from snet.sdk import SnetSDK
+
+sdk = SnetSDK()
+org_id = "<ORG_ID>"
+service_id = "<SERVICE_ID>"
+
+service_metadata = sdk.get_service_metadata(org_id, service_id)
+service_metadata.change_description(
+    short_description="new_short_description", description="new_description"
+)
+```
+
+- update the service in blockchain including saving `.proto` files and service metadata into storage
+
+```python
+sdk.update_service(org_id, service_id, service_metadata)
+```
+
+> Please note that the Python SDK provides all the features for interacting with the SNET platform. 
+> You can use them separately using the following entities:
+> 
+> - sdk.mpe_contract
+> - sdk.registry_contract
+> - sdk.storage_provider
+> - sdk.payment_channel_provider
+> - sdk.account
 
 ## Payment
 
