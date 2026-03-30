@@ -104,7 +104,7 @@ class StorageProvider(object):
                 uri_hash = self._ipfs_client.add(file_path)["Hash"]
             case StorageType.FILECOIN:
                 try:
-                    uri_hash = self._lighthouse_client.upload(file_path)["data"]["Hash"]
+                    uri_hash = self._lighthouse_client.upload(str(file_path))["data"]["Hash"]
                 except Exception as e:
                     raise LighthouseError() from e
             case _:

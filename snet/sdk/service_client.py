@@ -242,7 +242,7 @@ class ServiceClient:
         return (
             self.org_id,
             self.service_id,
-            self.group["group_id"],
+            self.group.group_id,
             self.group.endpoints[0],
         )
 

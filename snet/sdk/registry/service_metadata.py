@@ -84,21 +84,23 @@ class ServiceMetadata(BaseModel):
                 free_call_signer_address=free_call_signer_address,
                 daemon_addresses=daemon_addresses,
                 endpoints=endpoints,
-                pricing=Pricing(
-                    price_model=price_model, price_in_cogs=price_in_cogs, default=default
-                ),
+                pricing=[
+                    Pricing(price_model=price_model, price_in_cogs=price_in_cogs, default=default)
+                ],
             )
         )
 
         return self
 
-    def add_description(
+    def change_description(
         self,
         url: Optional[str] = None,
         short_description: Optional[str] = None,
         description: Optional[str] = None,
     ) -> "ServiceMetadata":
-        for key, value in locals().items():
+        updates = {"url": url, "short_description": short_description, "description": description}
+
+        for key, value in updates.items():
             if value is not None:
                 setattr(self.service_description, key, value)
 
