@@ -135,7 +135,7 @@ class ServiceMetadata(BaseModel):
     def generate_final_json(self):
         if self.service_api_source is None:
             if self.model_ipfs_hash is None:
-                raise ValueError("The 'service_api_source' field is missing!")
+                raise ServiceMetadataMismatchError("The 'service_api_source' field is missing!")
             else:
                 self.service_api_source = FileURI.normalize_string_uri(self.model_ipfs_hash)
                 self.model_ipfs_hash = None

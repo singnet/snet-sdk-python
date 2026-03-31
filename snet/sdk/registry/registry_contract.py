@@ -78,14 +78,14 @@ class RegistryContract:
         org = self.get_org(org_id)
 
         if account.address != org.owner:
-            raise UnauthorizedOrgOwnerError(account.address, org_id)
+            raise UnauthorizedOrgOwnerError(org_id, account.address)
 
         for member in new_members:
             if not is_checksum_address(member):
                 raise IncorrectWalletAddressError(member)
 
         return account.send_transaction(
-            self.contract.functions.changeOrganizationMetadataURI,
+            self.contract.functions.addOrganizationMembers,
             type_converter("bytes32")(org_id),
             new_members,
         )
@@ -96,7 +96,7 @@ class RegistryContract:
         org = self.get_org(org_id)
 
         if account.address != org.owner:
-            raise UnauthorizedOrgOwnerError(account.address, org_id)
+            raise UnauthorizedOrgOwnerError(org_id, account.address)
 
         return account.send_transaction(
             self.contract.functions.changeOrganizationMetadataURI,
@@ -108,7 +108,7 @@ class RegistryContract:
         org = self.get_org(org_id)
 
         if account.address != org.owner:
-            raise UnauthorizedOrgOwnerError(account.address, org_id)
+            raise UnauthorizedOrgOwnerError(org_id, account.address)
 
         if not is_checksum_address(new_owner):
             raise IncorrectWalletAddressError(new_owner)
@@ -142,7 +142,7 @@ class RegistryContract:
         org = self.get_org(org_id)
 
         if account.address not in org.members:
-            raise UnauthorizedOrgMemberError(account.address, org_id)
+            raise UnauthorizedOrgMemberError(org_id, account.address)
 
         return account.send_transaction(
             self.contract.functions.createServiceRegistration,
@@ -155,7 +155,7 @@ class RegistryContract:
         org = self.get_org(org_id)
 
         if account.address != org.owner:
-            raise UnauthorizedOrgOwnerError(account.address, org_id)
+            raise UnauthorizedOrgOwnerError(org_id, account.address)
 
         return account.send_transaction(
             self.contract.functions.deleteOrganization, type_converter("bytes32")(org_id)
@@ -164,7 +164,7 @@ class RegistryContract:
     def delete_service(self, account: Account, org_id: str, service_id: str):
         org = self.get_org(org_id)
         if account.address not in org.members:
-            raise UnauthorizedOrgMemberError(account.address, org_id)
+            raise UnauthorizedOrgMemberError(org_id, account.address)
 
         self.get_service(org_id, service_id)  # to check if the service exists
 
@@ -180,10 +180,10 @@ class RegistryContract:
         org = self.get_org(org_id)
 
         if account.address != org.owner:
-            raise UnauthorizedOrgOwnerError(account.address, org_id)
+            raise UnauthorizedOrgOwnerError(org_id, account.address)
 
         return account.send_transaction(
-            self.contract.functions.deleteOrganization,
+            self.contract.functions.removeOrganizationMembers,
             type_converter("bytes32")(org_id),
             members_to_remove,
         )
@@ -193,7 +193,7 @@ class RegistryContract:
     ) -> TxReceipt:
         org = self.get_org(org_id)
         if account.address not in org.members:
-            raise UnauthorizedOrgMemberError(account.address, org_id)
+            raise UnauthorizedOrgMemberError(org_id, account.address)
 
         self.get_service(org_id, service_id)  # to check if the service exists
 
