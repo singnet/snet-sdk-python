@@ -1,6 +1,8 @@
 import web3
 
-from snet.sdk.payment_strategies.paidcall_payment_strategy import PaidCallPaymentStrategy
+from snet.sdk.payment_strategies.paidcall_payment_strategy import (
+    PaidCallPaymentStrategy,
+)
 
 
 class TrainingPaymentStrategy(PaidCallPaymentStrategy):
@@ -28,9 +30,13 @@ class TrainingPaymentStrategy(PaidCallPaymentStrategy):
         amount = channel.state["last_signed_amount"] + int(self.get_price(service_client))
         message = web3.Web3.solidity_keccak(
             ["string", "address", "uint256", "uint256", "uint256"],
-            ["__MPE_claim_message", service_client.mpe_address, channel.channel_id,
-             channel.state["nonce"],
-             amount]
+            [
+                "__MPE_claim_message",
+                service_client.mpe_address,
+                channel.channel_id,
+                channel.state["nonce"],
+                amount,
+            ],
         )
         signature = service_client.generate_signature(message)
 
@@ -40,7 +46,7 @@ class TrainingPaymentStrategy(PaidCallPaymentStrategy):
             ("snet-payment-channel-nonce", str(channel.state["nonce"])),
             ("snet-payment-channel-amount", str(amount)),
             ("snet-train-model-id", self.get_model_id()),
-            ("snet-payment-channel-signature-bin", signature)
+            ("snet-payment-channel-signature-bin", signature),
         ]
 
         return metadata

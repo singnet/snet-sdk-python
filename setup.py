@@ -8,13 +8,9 @@ import importlib.resources
 
 
 def install_and_compile_proto():
-    """
-    Compiles protobuf files directly.
-    """
-    proto_dir = Path(__file__).absolute().parent.joinpath(
-        "snet", "sdk", "resources", "proto")
+    proto_dir = Path(__file__).absolute().parent.joinpath("snet", "sdk", "resources", "proto")
 
-    grpc_protos_include = str(importlib.resources.files('grpc_tools').joinpath('_proto'))
+    grpc_protos_include = str(importlib.resources.files("grpc_tools").joinpath("_proto"))
 
     print(f"Proto directory: {proto_dir}")
     print(f"Grpc include directory: {grpc_protos_include}")
@@ -23,17 +19,16 @@ def install_and_compile_proto():
         print(f"Warning: Proto directory not found at {proto_dir}")
         return
 
-    # glob('*.proto') is non-recursive. It will NOT look inside subfolders.
-    for fn in proto_dir.glob('*.proto'):
+    for fn in proto_dir.glob("*.proto"):
         print(f"Compiling protobuf: {fn}")
 
         command = [
-            'grpc_tools.protoc',
-            f'-I{proto_dir}',
-            f'-I{grpc_protos_include}',
-            f'--python_out={proto_dir}',
-            f'--grpc_python_out={proto_dir}',
-            str(fn)
+            "grpc_tools.protoc",
+            f"-I{proto_dir}",
+            f"-I{grpc_protos_include}",
+            f"--python_out={proto_dir}",
+            f"--grpc_python_out={proto_dir}",
+            str(fn),
         ]
 
         if protoc.main(command) != 0:
@@ -42,23 +37,18 @@ def install_and_compile_proto():
 
 
 class build_py(_build_py):
-    """
-    This is the hook used by 'python -m build'.
-    """
     def run(self):
         self.execute(install_and_compile_proto, (), msg="Compile protocol buffers")
         _build_py.run(self)
 
 
 class develop(_develop):
-    """Post-installation for development mode (pip install -e .)."""
     def run(self):
         self.execute(install_and_compile_proto, (), msg="Compile protocol buffers")
         _develop.run(self)
 
 
 class install(_install):
-    """Post-installation for legacy installation mode."""
     def run(self):
         self.execute(install_and_compile_proto, (), msg="Compile protocol buffers")
         _install.run(self)
@@ -66,8 +56,8 @@ class install(_install):
 
 setup(
     cmdclass={
-        'develop': develop,
-        'install': install,
-        'build_py': build_py,
+        "develop": develop,
+        "install": install,
+        "build_py": build_py,
     },
 )

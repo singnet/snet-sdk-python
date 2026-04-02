@@ -23,7 +23,7 @@ def check_channel_status(service_client, last_signed_amount):
     service_client.load_open_channels()
     channels = service_client.update_channel_states()
     assert channels[0].channel_id == 0
-    assert channels[0].state['last_signed_amount'] == last_signed_amount
+    assert channels[0].state["last_signed_amount"] == last_signed_amount
 
 
 def test_sdk():
@@ -40,16 +40,21 @@ def test_sdk():
         "ipfs_rpc_endpoint": "http://localhost:5002",
         "free_call_auth_token-bin": "f2548d27ffd319b9c05918eeac15ebab934e5cfcd68e1ec3db2b927653892959012b48da17a7973d57f72fac3c1eccd97862a4fa953c3726da65dec42f5989ee1b",
         "free-call-token-expiry-block": 172800,
-        "email": "test@test.com"
+        "email": "test@test.com",
     }
 
     snet_sdk = sdk.SnetSDK(config)
-    service_client = snet_sdk.create_service_client(org_id, service_id, examples_service_pb2_grpc.CalculatorStub,
-                                                    group_name, concurrent_calls=3)
+    service_client = snet_sdk.create_service_client(
+        org_id,
+        service_id,
+        examples_service_pb2_grpc.CalculatorStub,
+        group_name,
+        concurrent_calls=3,
+    )
     check_channel_status(service_client, 3000)
     make_cuncurrent_calls(service_client)
     check_channel_status(service_client, 6000)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_sdk()

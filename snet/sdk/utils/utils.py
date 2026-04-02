@@ -1,19 +1,29 @@
 import json
 import sys
 import importlib.resources
+from functools import lru_cache
+from typing import Optional
 from urllib.parse import urlparse
 from pathlib import Path, PurePath
 import os
-import tarfile
-import io
 
 import web3
 from eth_typing import BlockNumber
 from grpc_tools.protoc import main as protoc
+from web3 import Web3
 
 from snet import sdk
+from snet.sdk.config import config
 
 RESOURCES_PATH = PurePath(os.path.dirname(sdk.__file__)).joinpath("resources")
+
+
+@lru_cache
+def get_we3_object(eth_rpc_endpoint: Optional[str] = None) -> Web3:
+    if eth_rpc_endpoint is None:
+        eth_rpc_endpoint = config.ETH_RPC_ENDPOINT
+
+    return web3.Web3(web3.HTTPProvider(eth_rpc_endpoint))
 
 
 def safe_address_converter(a):
@@ -22,17 +32,24 @@ def safe_address_converter(a):
     return a
 
 
-def type_converter(t):
+def type_converter(t: str):
     if t.endswith("[]"):
         return lambda x: list(map(type_converter(t.replace("[]", "")), json.loads(x)))
     else:
         if "int" in t:
             return lambda x: web3.Web3.to_int(text=x)
         elif "bytes32" in t:
-            return lambda x: web3.Web3.to_bytes(text=x).ljust(32, b"\0") if not x.startswith(
-                "0x") else web3.Web3.to_bytes(hexstr=x).ljust(32, b"\0")
+            return lambda x: (
+                web3.Web3.to_bytes(text=x).ljust(32, b"\0")
+                if not x.startswith("0x")
+                else web3.Web3.to_bytes(hexstr=x).ljust(32, b"\0")
+            )
         elif "byte" in t:
-            return lambda x: web3.Web3.to_bytes(text=x) if not x.startswith("0x") else web3.Web3.to_bytes(hexstr=x)
+            return lambda x: (
+                web3.Web3.to_bytes(text=x)
+                if not x.startswith("0x")
+                else web3.Web3.to_bytes(hexstr=x)
+            )
         elif "address" in t:
             return safe_address_converter
         else:
@@ -48,16 +65,16 @@ def compile_proto(
     codegen_dir: Path,
     proto_file: str | None = None,
     target_language: str = "python",
-    add_training: bool = False
+    add_training: bool = False,
 ) -> bool:
     try:
         if not os.path.exists(codegen_dir):
             os.makedirs(codegen_dir)
-        proto_include = importlib.resources.files('grpc_tools') / '_proto'
+        proto_include = importlib.resources.files("grpc_tools") / "_proto"
 
         compiler_args = [
             "-I{}".format(entry_path),
-            "-I{}".format(proto_include)
+            "-I{}".format(proto_include),
         ]
 
         if add_training:
@@ -109,10 +126,10 @@ def is_valid_endpoint(url):
         result = urlparse(url)
         if result.port:
             _port = int(result.port)
-        return (
-                all([result.scheme, result.netloc]) and
-                result.scheme in ['http', 'https']
-        )
+        return all([result.scheme, result.netloc]) and result.scheme in [
+            "http",
+            "https",
+        ]
     except ValueError:
         return False
 
@@ -130,7 +147,7 @@ def get_address_from_private(private_key):
 
 
 def get_current_block_number() -> BlockNumber:
-    return web3.Web3().eth.block_number
+    return get_we3_object().eth.block_number
 
 
 class add_to_path:
@@ -154,36 +171,3 @@ def find_file_by_keyword(directory, keyword, exclude=None):
         for file in files:
             if keyword in file and all(e not in file for e in exclude):
                 return file
-
-
-def bytesuri_to_hash(s, to_decode=True):
-    if to_decode:
-        s = s.rstrip(b"\0").decode('ascii')
-    if s.startswith("ipfs://"):
-        return "ipfs", s[7:]
-    elif s.startswith("filecoin://"):
-        return "filecoin", s[11:]
-    else:
-        raise Exception("We support only ipfs and filecoin uri in Registry")
-
-
-def safe_extract_proto(spec_tar, protodir):
-    """
-    Tar files might be dangerous (see https://bugs.python.org/issue21109,
-    and https://docs.python.org/3/library/tarfile.html, TarFile.extractall warning)
-    we extract only simple files
-    """
-    with tarfile.open(fileobj=io.BytesIO(spec_tar)) as f:
-        for m in f.getmembers():
-            if os.path.dirname(m.name) != "":
-                raise Exception(
-                    "tarball has directories. We do not support it.")
-            if not m.isfile():
-                raise Exception(
-                    "tarball contains %s which is not a file" % m.name)
-            fullname = os.path.join(protodir, m.name)
-            if os.path.exists(fullname):
-                os.remove(fullname)
-                print(f"{fullname} removed.")
-        # now it is safe to call extractall
-        f.extractall(path=protodir)

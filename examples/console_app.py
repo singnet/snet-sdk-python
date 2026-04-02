@@ -6,7 +6,6 @@ It is assumed that there is an application provider (developer), who pays for al
 transactions and service calls. So, to run the application, you will need to change the values in 'config'.
 """
 
-
 from snet import sdk
 
 
@@ -17,7 +16,7 @@ def list_organizations():
     The list is got from the MPE contract using 'get_organization_list'.
     """
     print("Organizations:")
-    print(*map(lambda x: '\t' + x, snet_sdk.get_organization_list()), sep="\n")
+    print(*map(lambda x: "\t" + x, snet_sdk.get_organization_list()), sep="\n")
 
 
 def list_services_for_org():
@@ -28,7 +27,10 @@ def list_services_for_org():
     """
     org_id = input("Enter organization id: ").strip()
     print("Services:")
-    print(*map(lambda x: '\t' + x, snet_sdk.get_services_list(org_id=org_id)), sep="\n")
+    print(
+        *map(lambda x: "\t" + x, snet_sdk.get_services_list(org_id=org_id)),
+        sep="\n",
+    )
 
 
 def create_service_client():
@@ -41,7 +43,9 @@ def create_service_client():
     service_id = input("Enter service id: ").strip()
     group_name = input("Enter payment group name: ").strip()
 
-    service = snet_sdk.create_service_client(org_id=org_id, service_id=service_id, group_name=group_name)
+    service = snet_sdk.create_service_client(
+        org_id=org_id, service_id=service_id, group_name=group_name
+    )
     initialized_services.append(service)
 
     global active_service
@@ -57,7 +61,7 @@ def commands_help():
     global active_commands
     print("Available commands:")
     for command in active_commands.items():
-        print(f'\t{command[0]} - {command[1][1]}')
+        print(f"\t{command[0]} - {command[1][1]}")
 
 
 def list_initialized_services():
@@ -94,8 +98,10 @@ def call():
     """
     global active_service
     if active_service is None:
-        print("No initialized services!\n"
-              "Please enter 'service' to go to the service menu and then enter 'add' to add a service.")
+        print(
+            "No initialized services!\n"
+            "Please enter 'service' to go to the service menu and then enter 'add' to add a service."
+        )
         return None
 
     method_name = input("Enter method name: ")
@@ -135,8 +141,10 @@ def print_service_info():
     """
     global active_service
     if active_service is None:
-        print("No initialized services!\n"
-              "Please enter 'service' to go to the service menu and then enter 'add' to add a service.")
+        print(
+            "No initialized services!\n"
+            "Please enter 'service' to go to the service menu and then enter 'add' to add a service."
+        )
         return None
     print(active_service.get_services_and_messages_info_as_pretty_string())
 
@@ -146,7 +154,9 @@ def balance():
     The function, which is called when the user enters the command 'balance' in the main menu.
     Prints the balances of FET and MPE. It gets the balances using 'balance_of' and 'escrow_balance'.
     """
-    account_balance = snet_sdk.account.token_contract.functions.balanceOf(snet_sdk.account.address).call()
+    account_balance = snet_sdk.account.token_contract.functions.balanceOf(
+        snet_sdk.account.address
+    ).call()
     escrow_balance = snet_sdk.account.escrow_balance()
 
     print(f"FET balance: {account_balance}")
@@ -168,8 +178,10 @@ def block_number():
     Prints the current block number. It gets the block number using 'get_current_block_number'.
     """
     if active_service is None:
-        print("No initialized services!\n"
-              "Please enter 'service' to go to the service menu and then enter 'add' to add a service.")
+        print(
+            "No initialized services!\n"
+            "Please enter 'service' to go to the service menu and then enter 'add' to add a service."
+        )
         return None
     print("Current block number: ", active_service.get_current_block_number())
 
@@ -183,13 +195,18 @@ def update_channels():
     to work, so there is a warning for the user about this at the beginning.
     """
     if active_service is None:
-        print("No initialized services!\n"
-              "Please enter 'service' to go to the service menu and then enter 'add' to add a service.")
+        print(
+            "No initialized services!\n"
+            "Please enter 'service' to go to the service menu and then enter 'add' to add a service."
+        )
         return None
 
-    is_continue = input("""Updating the channel list makes sense if the channel data has changed through other entry points. 
+    is_continue = (
+        input("""Updating the channel list makes sense if the channel data has changed through other entry points. 
 This procedure may take several minutes. 
-Continue? (y/n): """).strip() == 'y'
+Continue? (y/n): """).strip()
+        == "y"
+    )
     if not is_continue:
         return None
 
@@ -200,7 +217,14 @@ Continue? (y/n): """).strip() == 'y'
     for service in initialized_services:
         load_channels = service.load_open_channels()
         for channel in load_channels:
-            channels.append((channel, service.org_id, service.service_id, service.group['group_name']))
+            channels.append(
+                (
+                    channel,
+                    service.org_id,
+                    service.service_id,
+                    service.group["group_name"],
+                )
+            )
 
     print("Channels updated! Enter 'list' to print the updated list.")
 
@@ -214,13 +238,19 @@ def open_channel():
     """
     global active_service
     global channels
-    additions = False
     if active_service is None:
-        print("No initialized services! The channel can only be opened for the service!\n"
-              "Please enter 'service' to go to the service menu and then enter 'add' to add a service.")
+        print(
+            "No initialized services! The channel can only be opened for the service!\n"
+            "Please enter 'service' to go to the service menu and then enter 'add' to add a service."
+        )
         return None
     else:
-        is_continue = input("The new channel will be opened for the active service. Continue? (y/n): ").strip() == 'y'
+        is_continue = (
+            input(
+                "The new channel will be opened for the active service. Continue? (y/n): "
+            ).strip()
+            == "y"
+        )
         if not is_continue:
             return None
 
@@ -230,7 +260,12 @@ def open_channel():
     is_deposit = False
     if balance < amount:
         print(f"Insufficient balance!\n\tCurrent MPE balance: {balance}\n\tAmount to put: {amount}")
-        is_deposit = input("Would you like to deposit needed amount of FET tokens in advance? (y/n): ").strip() == 'y'
+        is_deposit = (
+            input(
+                "Would you like to deposit needed amount of FET tokens in advance? (y/n): "
+            ).strip()
+            == "y"
+        )
         if not is_deposit:
             print("Channel is not opened!")
             return None
@@ -241,7 +276,14 @@ def open_channel():
         channel = active_service.open_channel(amount=amount, expiration=expiration)
     else:
         channel = active_service.deposit_and_open_channel(amount=amount, expiration=expiration)
-    channels.append((channel, active_service.org_id, active_service.service_id, active_service.group['group_name']))
+    channels.append(
+        (
+            channel,
+            active_service.org_id,
+            active_service.service_id,
+            active_service.group["group_name"],
+        )
+    )
 
 
 def list_channels():
@@ -253,12 +295,14 @@ def list_channels():
     print("ORGANIZATION_ID    SERVICE_ID    GROUP_NAME    CHANNEL_ID    AMOUNT    EXPIRATION")
     for channel in channels:
         channel[0].sync_state()
-        print(channel[1],
-              channel[2],
-              channel[3],
-              channel[0].channel_id,
-              channel[0].state['available_amount'],
-              channel[0].state['expiration'])
+        print(
+            channel[1],
+            channel[2],
+            channel[3],
+            channel[0].channel_id,
+            channel[0].state["available_amount"],
+            channel[0].state["expiration"],
+        )
 
 
 def add_funds():
@@ -271,7 +315,9 @@ def add_funds():
     exists = False
     for channel in channels:
         if channel[0].channel_id == channel_id:
-            amount = int(input("Enter amount of FET tokens in cogs to add to the channel: ").strip())
+            amount = int(
+                input("Enter amount of FET tokens in cogs to add to the channel: ").strip()
+            )
             channel[0].add_funds(amount)
             exists = True
     if not exists:
@@ -304,10 +350,12 @@ def extend_expiration():
 SDK configuration that is configured by the application provider.
 To run the application you need to change the 'private_key', 'eth_rpc_endpoint' and 'identity_name' values.
 """
-config = sdk.config.Config(private_key="YOUR_PRIVATE_KEY",
-                               eth_rpc_endpoint=f"https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
-                               concurrency=False,
-                               force_update=False)
+config = sdk.config.Config(
+    private_key="YOUR_PRIVATE_KEY",
+    eth_rpc_endpoint="https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
+    concurrency=False,
+    force_update=False,
+)
 
 snet_sdk = sdk.SnetSDK(config)  # the 'SnetSDK' instance
 initialized_services = []  # the list of initialized service clients
@@ -319,42 +367,72 @@ Commands available in the application with their descriptions and functions to c
 """
 commands = {
     "main": {
-        "organizations": (list_organizations, "print a list of organization ids from Registry"),
-        "services": (list_services_for_org, "print a list of service ids for an organization from Registry"),
-        "balance": (balance, "print the account balance and the escrow balance"),
+        "organizations": (
+            list_organizations,
+            "print a list of organization ids from Registry",
+        ),
+        "services": (
+            list_services_for_org,
+            "print a list of service ids for an organization from Registry",
+        ),
+        "balance": (
+            balance,
+            "print the account balance and the escrow balance",
+        ),
         "deposit": (deposit, "deposit FET tokens into MPE"),
         "block": (block_number, "print the current block number"),
         "service": (lambda: None, "go to the services menu"),
         "channel": (lambda: None, "go to the channels menu"),
-        "help": (commands_help, "print a list of available commands in the main menu"),
-        "exit": (lambda: exit(0), "exit the application")
+        "help": (
+            commands_help,
+            "print a list of available commands in the main menu",
+        ),
+        "exit": (lambda: exit(0), "exit the application"),
     },
-
     "service": {
-        "add": (create_service_client,
-                "create a new service client. If it the first time, the new service becomes active"),
+        "add": (
+            create_service_client,
+            "create a new service client. If it the first time, the new service becomes active",
+        ),
         "use": (switch_service, "switch the active service"),
         "call": (call, "call the active service method"),
-        "info": (print_service_info, "output services, methods and messages in a service"),
-        "list": (list_initialized_services, "print a list of initialized services"),
-        "help": (commands_help, "print a list of available commands in the services menu"),
+        "info": (
+            print_service_info,
+            "output services, methods and messages in a service",
+        ),
+        "list": (
+            list_initialized_services,
+            "print a list of initialized services",
+        ),
+        "help": (
+            commands_help,
+            "print a list of available commands in the services menu",
+        ),
         "back": (lambda: None, "return to the main menu"),
-        "exit": (lambda: exit(0), "exit the application")
+        "exit": (lambda: exit(0), "exit the application"),
     },
-
     "channel": {
-        "update": (update_channels, "update a list of initialized payment channels"),
+        "update": (
+            update_channels,
+            "update a list of initialized payment channels",
+        ),
         "list": (list_channels, "print a list of initialized payment channels"),
         "open": (open_channel, "open a new payment channel"),
         "add-funds": (add_funds, "add funds to a channel"),
-        "extend-expiration": (extend_expiration, "extend expiration of a channel"),
-        "help": (commands_help, "print a list of available commands in the channels menu"),
+        "extend-expiration": (
+            extend_expiration,
+            "extend expiration of a channel",
+        ),
+        "help": (
+            commands_help,
+            "print a list of available commands in the channels menu",
+        ),
         "back": (lambda: None, "return to the main menu"),
-        "exit": (lambda: exit(0), "exit the application")
-    }
+        "exit": (lambda: exit(0), "exit the application"),
+    },
 }
 
-active_commands: dict = commands["main"] # the list of available commands in the active menu
+active_commands: dict = commands["main"]  # the list of available commands in the active menu
 
 
 def main():

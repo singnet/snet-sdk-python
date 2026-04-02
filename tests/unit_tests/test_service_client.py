@@ -1,6 +1,6 @@
 from pathlib import Path
 import unittest
-from unittest.mock import MagicMock, Mock, patch, create_autospec
+from unittest.mock import MagicMock, Mock, patch
 
 from web3 import Web3
 
@@ -8,7 +8,7 @@ from snet.sdk.account import Account
 from snet.sdk.mpe.mpe_contract import MPEContract
 from snet.sdk.mpe.payment_channel_provider import PaymentChannelProvider
 from snet.sdk.service_client import ServiceClient
-from snet.sdk.storage_provider.service_metadata import MPEServiceMetadata
+from snet.sdk.registry.service_metadata import MPEServiceMetadata
 
 
 class TestServiceClient(unittest.TestCase):
@@ -17,44 +17,38 @@ class TestServiceClient(unittest.TestCase):
         self.mock_service_id = "Exampleservice"
         self.mock_service_metadata = MagicMock(spec=MPEServiceMetadata)
         self.mock_group = {
-            'free_calls': 0,
-            'free_call_signer_address': '0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F',
-            'daemon_addresses': [
-                '0x0709e9b78756b740ab0c64427f43f8305fd6d1a7'
-            ],
-            'pricing': [
+            "free_calls": 0,
+            "free_call_signer_address": "0x7DF35C98f41F3Af0df1dc4c7F7D4C19a71Dd059F",
+            "daemon_addresses": ["0x0709e9b78756b740ab0c64427f43f8305fd6d1a7"],
+            "pricing": [
                 {
-                    'default': True,
-                    'price_model': 'fixed_price',
-                    'price_in_cogs': 1
+                    "default": True,
+                    "price_model": "fixed_price",
+                    "price_in_cogs": 1,
                 }
             ],
-            'endpoints': [
-                'http://node1.naint.tech:62400'
-            ],
-            'group_id': '/mb90Qs8VktxGQmU0uRu0bSlGgqeDlYrKrs+WbsOvOQ=',
-            'group_name': 'default_group',
-            'payment': {
-                'payment_address': '0x0709e9B78756B740ab0C64427f43f8305fD6D1A7',
-                'payment_expiration_threshold': 40320,
-                'payment_channel_storage_type': 'etcd',
-                'payment_channel_storage_client': {
-                    'endpoints': [
-                        'https://127.0.0.1:2379'
-                    ],
-                    'request_timeout': '3s',
-                    'connection_timeout': '5s'
-                }
-            }
+            "endpoints": ["http://node1.naint.tech:62400"],
+            "group_id": "/mb90Qs8VktxGQmU0uRu0bSlGgqeDlYrKrs+WbsOvOQ=",
+            "group_name": "default_group",
+            "payment": {
+                "payment_address": "0x0709e9B78756B740ab0C64427f43f8305fD6D1A7",
+                "payment_expiration_threshold": 40320,
+                "payment_channel_storage_type": "etcd",
+                "payment_channel_storage_client": {
+                    "endpoints": ["https://127.0.0.1:2379"],
+                    "request_timeout": "3s",
+                    "connection_timeout": "5s",
+                },
+            },
         }
         self.mock_service_stub = MagicMock()
         self.mock_payment_strategy = MagicMock()
         self.mock_options = {
-            'free_call_auth_token-bin': '',
-            'free-call-token-expiry-block': 0,
-            'email': '',
-            'concurrency': False,
-            "endpoint": "http://localhost:5000"
+            "free_call_auth_token-bin": "",
+            "free-call-token-expiry-block": 0,
+            "email": "",
+            "concurrency": False,
+            "endpoint": "http://localhost:5000",
         }
         self.mock_mpe_contract = MagicMock(spec=MPEContract)
         self.mock_mpe_contract.contract = MagicMock()
@@ -63,9 +57,7 @@ class TestServiceClient(unittest.TestCase):
         self.mock_sdk_web3 = MagicMock(spec=Web3)
         self.mock_sdk_web3.eth = MagicMock()
         self.mock_pb2_module = MagicMock()
-        self.mock_payment_channel_provider = MagicMock(
-            spec=PaymentChannelProvider
-        )
+        self.mock_payment_channel_provider = MagicMock(spec=PaymentChannelProvider)
         self.mock_path_to_pb_files = MagicMock(spec=Path)
 
         self.client = ServiceClient(
@@ -81,7 +73,7 @@ class TestServiceClient(unittest.TestCase):
             self.mock_sdk_web3,
             self.mock_pb2_module,
             self.mock_payment_channel_provider,
-            self.mock_path_to_pb_files
+            self.mock_path_to_pb_files,
         )
 
     def test_call_rpc(self):
@@ -96,9 +88,7 @@ class TestServiceClient(unittest.TestCase):
 
         # Assert that Numbers was called with correct arguments
         self.mock_pb2_module.Numbers.assert_called_once_with(a=2, b=4)
-        mock_rpc_method.assert_called_once_with(
-            self.mock_pb2_module.Numbers.return_value
-        )
+        mock_rpc_method.assert_called_once_with(self.mock_pb2_module.Numbers.return_value)
         self.assertEqual(result, mock_rpc_method.return_value)
 
     @patch("snet.sdk.service_client.grpc.insecure_channel")
@@ -109,15 +99,12 @@ class TestServiceClient(unittest.TestCase):
 
     @patch("snet.sdk.service_client.grpc.ssl_channel_credentials")
     @patch("snet.sdk.service_client.grpc.secure_channel")
-    def test_get_grpc_channel_https(self,
-                                    mock_secure_channel,
-                                    mock_ssl_channel_credentials):
+    def test_get_grpc_channel_https(self, mock_secure_channel, mock_ssl_channel_credentials):
         self.mock_options["endpoint"] = "https://localhost:5000"
         channel = self.client._get_grpc_channel()
         mock_ssl_channel_credentials.assert_called_once()
         mock_secure_channel.assert_called_once_with(
-            "localhost:5000",
-            mock_ssl_channel_credentials.return_value
+            "localhost:5000", mock_ssl_channel_credentials.return_value
         )
         self.assertEqual(channel, mock_secure_channel.return_value)
 
@@ -126,7 +113,7 @@ class TestServiceClient(unittest.TestCase):
         mock_new_channel_1 = MagicMock(channel_id=2)
         mock_new_channel_2 = MagicMock(channel_id=3)
         self.client.payment_channels = [mock_existing_channel]
-        result = self.client._filter_existing_channels_from_new_payment_channels(   # noqa E501
+        result = self.client._filter_existing_channels_from_new_payment_channels(  # noqa E501
             [mock_existing_channel, mock_new_channel_1, mock_new_channel_2]
         )
         self.assertEqual(result, [mock_new_channel_1, mock_new_channel_2])
@@ -156,8 +143,7 @@ class TestServiceClient(unittest.TestCase):
         self.client.sdk_web3.eth.account._sign_hash = MagicMock(
             return_value=MagicMock(signature=mock_signature)
         )
-        result = self.client.generate_training_signature(text, address,
-                                                         block_number)
+        result = self.client.generate_training_signature(text, address, block_number)
         self.assertEqual(result, mock_signature)
 
 

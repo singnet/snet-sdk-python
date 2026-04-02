@@ -1,11 +1,16 @@
-from snet.sdk.payment_strategies.freecall_payment_strategy import FreeCallPaymentStrategy
-from snet.sdk.payment_strategies.paidcall_payment_strategy import PaidCallPaymentStrategy
-from snet.sdk.payment_strategies.prepaid_payment_strategy import PrePaidPaymentStrategy
+from snet.sdk.payment_strategies.freecall_payment_strategy import (
+    FreeCallPaymentStrategy,
+)
+from snet.sdk.payment_strategies.paidcall_payment_strategy import (
+    PaidCallPaymentStrategy,
+)
+from snet.sdk.payment_strategies.prepaid_payment_strategy import (
+    PrePaidPaymentStrategy,
+)
 from snet.sdk.payment_strategies.payment_strategy import PaymentStrategy
 
 
 class DefaultPaymentStrategy(PaymentStrategy):
-
     def __init__(self):
         self.channel = None
 
