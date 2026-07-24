@@ -551,6 +551,6 @@ Please refer to [Contributing guide](./CONTRIBUTING.md)
 
 ## License  
   
-This project is licensed under the MIT License - see the
-[LICENSE](https://github.com/singnet/snet-sdk-python/blob/master/LICENSE) file for details.
+This project is licensed under the Apache 2.0 License - see the
+[LICENSE](LICENSE) file for details.
 
